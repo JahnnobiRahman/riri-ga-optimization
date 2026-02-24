@@ -136,21 +136,12 @@ The GA implements:
 
 ## 6. GA Workflow
 
-Population Initialization  
-↓  
-Fitness Evaluation  
-↓  
-Tournament Selection  
-↓  
-Crossover  
-↓  
-Mutation  
-↓  
-Elitism  
-↓  
-Next Generation  
-↓  
-Repeat (20 generations)
+## Figure 1 — Genetic Algorithm Framework
+
+![GA Framework](figures/fig1_ga_framework.png)
+
+*Figure 1. Genetic Algorithm framework for prompt configuration optimization.* 
+
 
 ---
 
