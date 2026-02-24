@@ -4,7 +4,7 @@
 
 This repository contains Version 1 of a Genetic Algorithm (GA)–based framework for optimizing prompt configuration parameters in a culturally adaptive mental health conversational assistant ("Riri").
 
-The system optimizes multi-dimensional conversational behavior — empathy, safety compliance, structural guidance, and response efficiency — using evolutionary search over configurable prompt parameters.
+The system optimizes multi-dimensional conversational behavior:  empathy, safety compliance, structural guidance, and response efficiency using evolutionary search over configurable prompt parameters.
 
 The work is currently being prepared for submission to an MDPI journal.
 
