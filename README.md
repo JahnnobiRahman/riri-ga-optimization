@@ -23,11 +23,11 @@ Manual prompt tuning is insufficient to systematically explore these trade-offs.
 This study proposes a stochastic evolutionary optimization approach.
 
 
-## Figure 1 — Experimental Pipeline
+##Experimental Pipeline
 
 ![Experimental Pipeline](figures/fig1_experimental_pipeline.png)
 
-*Figure 1. Experimental pipeline for genetic algorithm–based prompt configuration optimization. The pipeline includes data preprocessing (risk labeling and prompt construction), optimization via genetic algorithm (population = 30, generations = 20, five independent runs), validation evaluation, statistical testing, and experiment logging.*
+*Experimental pipeline for genetic algorithm–based prompt configuration optimization. The pipeline includes data preprocessing (risk labeling and prompt construction), optimization via genetic algorithm (population = 30, generations = 20, five independent runs), validation evaluation, statistical testing, and experiment logging.*
 
 ---
 
@@ -143,11 +143,11 @@ The GA implements:
 
 ## 6. GA Workflow
 
-## Figure 2 — Genetic Algorithm Framework
+## Genetic Algorithm Framework
 
 ![GA Framework](figures/fig2_ga_framework.png)
 
-*Figure 2. Genetic Algorithm framework for prompt configuration optimization.* 
+*Genetic Algorithm framework for prompt configuration optimization.* 
 
 
 ---
