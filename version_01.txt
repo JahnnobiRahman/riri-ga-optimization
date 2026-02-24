@@ -1,0 +1,141 @@
+Imports + global setup (L1–L17)
+L1: imports os for filesystem paths.
+L2–L3: pandas, numpy for data handling + numeric ops.
+L4: random for GA randomness.
+L5: dataclass, asdict for genome objects and copying.
+L6: matplotlib.pyplot for plots.
+L7: typing helpers for clearer function signatures.
+L9–L10: defines OUT_DIR as “directory where this script lives” (used to save outputs reliably).
+L12–L17: sets a global seed (SEED = 7) and seeds both random + numpy for reproducibility.
+
+Load + sanitize dataset (L19–L50)
+L25: hard-coded DATA_PATH to your CSV.
+L27: reads CSV into df.
+L29–L32: ensures text columns exist; if missing, creates them as empty strings.
+L34–L35: ensures total_score exists; if missing, creates it as 0.
+L37–L40: fills nulls for the key columns.
+L42–L47: builds user_prompt by concatenating common_themes + thought_progression with " | ".
+L49: drops rows where user_prompt is empty.
+L50: prints usable row count.
+
+Risk labeling (proxy “ground truth”) (L52–L67)
+L55–L65: label_risk(row):
+Uses total_score and whether risk_assessment has meaningful text.
+Returns "high" if risk text exists or PHQ4 ≥ 9, "mid" if ≥ 6, else "low".
+L67: applies the labeling row-wise to create df["risk_label"].
+
+Train/validation split (L69–L77)
+L72: shuffles the dataset.
+L73–L75: splits 80/20 into train_df and val_df.
+L77: prints split sizes.
+
+Prompt “building blocks” (L79–L155)
+These are banks of lines the generator samples from; the GA doesn’t directly write text, it tunes weights that control which banks and how many lines get used.
+L82–L86: BASE_TEMPLATES (3 personas/tones).
+L88–L105: EMPATHY_LINES grouped by intensity: low/mid/high.
+L107–L132: STRUCTURE_PACK grouped by intensity:
+Each level has lists for grounding, action, question.
+L134–L144: SAFETY_LINES grouped by intensity.
+L146–L150: ESCALATION_LINES (used when risk is high or thresholds trigger escalation).
+L152–L155: marker lists used by scoring functions to detect empathy/escalation/grounding content.
+
+Weight bucketing helper (L157–L160)
+L157–L160: weight_to_level(w) maps a float weight into "low", "mid", "high" using cutoffs 0.33 and 0.66.
+
+Genome definition (what GA evolves) (L162–L199)
+L165–L173: Genome fields:
+p_id: which base template/persona
+w_s, w_e, w_c: safety/empathy/structure weights
+memory_window: affects response truncation
+theta_mid, theta_high: thresholds controlling escalation behavior
+L175–L185: Genome.normalize():
+Floors each weight to at least MIN_W = 0.10
+Renormalizes so 
+ws+we+wc=1
+L187–L198: random_genome() creates a random genome and normalizes it.
+
+Response generator (core behavior the GA “optimizes”) (L200–L262)
+L204–L218: determines:
+safety/empathy/structure levels based on weights
+risk_score from label
+escalate based on theta_mid/theta_high and safety strictness
+L219–L232: converts weights into structure decisions:
+empathy weight controls how many empathy lines
+structure weight controls whether to include grounding/action/question
+safety weight can add extra safety reminder
+L233–L261: builds the response:
+adds [TEMPLATE] ... and [SAFETY] ...
+adds empathy lines
+conditionally adds escalation lines
+adds structure components (grounding/action/question)
+truncates if memory_window <= 256
+Key idea: the GA gets signal because different genomes produce measurably different text patterns.
+
+Scoring + fitness (L263–L313)
+L266–L270: score_empathy counts marker hits; uses tanh scaling to saturate smoothly near 1.0.
+L272–L282: score_structure checks for grounding/action/question markers and gives weighted reward.
+L284–L296: score_safety rewards escalation for high risk, partial for mid, penalizes over-escalation for low.
+L298–L301: length_penalty penalizes very long outputs (>140 words).
+L303–L312: fitness(g, data) computes the weighted sum:
+0.30⋅empathy+0.50⋅safety+0.15⋅structure−0.05⋅lengthPenalty
+0.30⋅empathy+0.50⋅safety+0.15⋅structure−0.05⋅lengthPenalty
+
+GA operators (L314–L358)
+L317–L320: tournament selection.
+L322–L333: crossover mixes fields from parents; normalizes child.
+L335–L357: mutation perturbs weights/thresholds/memory/template, then normalizes.
+
+Run GA (L359–L406)
+L362–L373: selects an evaluation subset (eval_data) from training for speed.
+L374–L376: initializes population and fitness list.
+L377: initializes logging arrays (best, avg, var).
+L379–L403: GA loop:
+prints generation stats + best genome
+elitism: keeps top 2
+fills rest via selection → crossover → mutate
+recomputes fitnesses
+L404–L405: returns final best genome + log.
+
+Evaluation helper (L410–L425)
+Computes mean empathy/safety/structure/lengthPenalty on a sample and recomputes fitness.
+
+“Main” execution (L427–L435)
+L430: runs GA on train_df.
+L433–L435: defines a manual baseline genome and normalizes it.
+
+Length distribution analysis (L437–L475)
+L441–L446: collect_response_lengths generates responses and stores their word counts.
+L448–L461: computes and prints summary stats.
+L464–L474: histogram plot saved to length_distribution.png under OUT_DIR.
+
+Validation results (L477–L486)
+Computes baseline and best metrics on val_df and prints them.
+
+Save GA logs + plot (L487–L517)
+L490–L495: builds out_history dataframe from GA logs.
+L497–L500: sets output filenames (ga_history_complete.csv, ga_fitness_complete.png) under OUT_DIR.
+Note: L498 redefines OUT_DIR again; it’s redundant because you already set it at L10.
+L502: writes CSV.
+L504–L512: plots best/avg curves and saves PNG.
+L514–L516: prints saved file paths.
+
+Sample outputs (L518–L527)
+Prints 5 validation prompts and the generated response from best_g.
+
+Multi-run experiment + statistics (L530–L624)
+L533: imports ttest_rel and wilcoxon from SciPy (this requires scipy installed).
+L535–L546: collect_prompt_scores computes per-row fitness-like scores for a given genome.
+L548–L572: multi_run_experiment:
+runs GA multiple times with seeds 1..runs
+collects validation fitness + parameters + genomes
+L575–L583: executes 5 runs; prints mean and std of validation fitness.
+L588–L605: statistical tests comparing optimized vs baseline per-prompt scores:
+paired t-test (parametric)
+Wilcoxon (non-parametric)
+L610–L624: prints parameter trends across runs and their means.
+
+Two “gotchas” worth noting
+OUT_DIR is defined twice (L10 and L498). That’s harmless, but you only need the first one.
+SciPy is required (L533). If you get ModuleNotFoundError: scipy, install it in your venv.
+If you want, tell me which part you want to go deeper on (generator logic, scoring, or GA loop), and I’ll walk through an actual example genome end-to-end with a single prompt.
+

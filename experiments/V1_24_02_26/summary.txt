@@ -1,0 +1,12 @@
+=== VALIDATION RESULTS ===
+Baseline fitness: 0.5750788212594902
+Optimized fitness: 0.7085280850465948
+
+=== PARAMETER TREND ===
+Mean w_s: 0.35764971712473353
+Mean w_e: 0.3058050693693305
+Mean w_c: 0.33654521350593597
+
+=== STATISTICAL TEST ===
+Paired t-test p-value: 0.0
+Wilcoxon p-value: 1.2594065746054547e-103

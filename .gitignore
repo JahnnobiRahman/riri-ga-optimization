@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+__pycache__/
+
+# macOS
+.DS_Store
+.vscode/
+
+# Private data (do not upload)
+data/*
+!data/sample_data.csv
+# data (private)
+*.csv
+
+# Outputs
+outputs/
+*.csv
+
