@@ -247,5 +247,5 @@ Runs: 5
 
 ## Author
 
-Zayma Rahman  
+Jahnnobi Rahman  
 AI & Mental Health Systems Research
