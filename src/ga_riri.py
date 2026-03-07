@@ -652,8 +652,100 @@ def multi_run_experiment(train_df, val_df, runs=5):
     return val_fitness_list, param_list, best_genomes
 
 
+
+import time
+
+def population_size_experiment(train_df, val_df):
+
+    population_sizes = [30, 50, 100, 200, 300, 400]
+
+    results = []
+
+    for pop in population_sizes:
+
+        print("\n==============================")
+        print(f"Testing population size: {pop}")
+        print("==============================")
+
+        fitness_runs = []
+        runtimes = []
+
+        for run in range(1, 6):
+
+            print(f"\nRun {run}/5")
+
+            start = time.time()
+
+            best_g, log = run_ga(
+                train_df,
+                pop_size=pop,
+                generations=20,
+                eval_n=600,
+                seed=run
+            )
+
+            metrics = evaluate_breakdown(best_g, val_df, n=400)
+
+            runtime = time.time() - start
+
+            fitness_runs.append(metrics["fitness"])
+            runtimes.append(runtime)
+
+        mean_fit = np.mean(fitness_runs)
+        std_fit = np.std(fitness_runs)
+        mean_runtime = np.mean(runtimes)
+
+        print("\nSummary:")
+        print("Mean fitness:", mean_fit)
+        print("Std fitness:", std_fit)
+        print("Mean runtime:", mean_runtime)
+
+        results.append({
+            "population": pop,
+            "mean_fitness": mean_fit,
+            "std_fitness": std_fit,
+            "mean_runtime_sec": mean_runtime
+        })
+
+    return pd.DataFrame(results)
+
+
 # Run 5 independent GA runs
 multi_fitness, param_list, best_genomes = multi_run_experiment(train_df, val_df, runs=5)
+
+
+pop_results = population_size_experiment(train_df, val_df)
+
+POP_RESULT_PATH = os.path.join(OUT_DIR, "population_experiment.csv")
+pop_results.to_csv(POP_RESULT_PATH, index=False)
+
+print("\nSaved population experiment results to:")
+print(POP_RESULT_PATH)
+
+
+
+plt.figure()
+
+plt.errorbar(
+    pop_results["population"],
+    pop_results["mean_fitness"],
+    yerr=pop_results["std_fitness"],
+    marker="o"
+)
+
+plt.xlabel("Population Size")
+plt.ylabel("Validation Fitness")
+plt.title("Effect of Population Size on GA Optimization")
+
+plt.tight_layout()
+
+POP_PLOT = os.path.join(OUT_DIR, "population_experiment_plot.png")
+plt.savefig(POP_PLOT, dpi=300)
+
+print("Saved population plot:", POP_PLOT)
+
+
+
 
 print("\n==============================")
 print("MULTI-RUN SUMMARY")
@@ -661,6 +753,9 @@ print("==============================")
 print("Validation fitness per run:", multi_fitness)
 print("Mean fitness:", round(np.mean(multi_fitness), 4))
 print("Std fitness:", round(np.std(multi_fitness), 4))
+
+
+
 
 
 # ======================
