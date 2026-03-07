@@ -14,6 +14,7 @@ from ga.runner import run_ga
 from experiments.population_experiment import population_size_experiment
 from evaluation.scoring import evaluate_breakdown
 from ga.genome import Genome
+from experiments.dataset_size_experiment import dataset_size_experiment
 
 
 # ======================
@@ -176,6 +177,7 @@ pop_results.to_csv(pop_csv, index=False)
 print("Saved:", pop_csv)
 
 
+
 # ======================
 # 11) Plot population experiment
 # ======================
@@ -203,3 +205,56 @@ print("Saved:", plot_path)
 
 
 print("\nExperiment completed.")
+
+
+print("\n==============================")
+print("DATASET SIZE EXPERIMENT")
+print("==============================")
+
+dataset_results, dataset_raw = dataset_size_experiment(train_df, val_df)
+
+DATASET_RESULT_PATH = os.path.join(
+    OUT_DIR,
+    "dataset_size_experiment.csv"
+)
+
+dataset_results.to_csv(DATASET_RESULT_PATH, index=False)
+
+print("Saved dataset size experiment to:")
+print(DATASET_RESULT_PATH)
+
+
+DATASET_RAW_PATH = os.path.join(
+    OUT_DIR,
+    "dataset_size_raw_runs.csv"
+)
+
+dataset_raw.to_csv(DATASET_RAW_PATH, index=False)
+
+print("Saved dataset size raw runs to:")
+print(DATASET_RAW_PATH)
+
+
+plt.figure()
+
+plt.errorbar(
+    dataset_results["dataset_size"],
+    dataset_results["mean_fitness"],
+    yerr=dataset_results["std_fitness"],
+    marker="o"
+)
+
+plt.xlabel("Dataset Size")
+plt.ylabel("Validation Fitness")
+plt.title("Effect of Dataset Size on GA Optimization")
+
+plt.tight_layout()
+
+DATASET_PLOT = os.path.join(
+    OUT_DIR,
+    "dataset_size_experiment_plot.png"
+)
+
+plt.savefig(DATASET_PLOT, dpi=300)
+
+print("Saved dataset size plot:", DATASET_PLOT)
