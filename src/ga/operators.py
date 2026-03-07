@@ -1,0 +1,53 @@
+import re
+import random
+import pandas as pd
+import numpy as np
+from dataclasses import asdict
+from typing import List
+
+from ga.genome import Genome, BASE_TEMPLATES
+
+# ======================
+# 8) GA operators
+# ======================
+def tournament_select(pop: List[Genome], fits: List[float], k: int = 3) -> Genome:
+    ids = random.sample(range(len(pop)), k)
+    best = max(ids, key=lambda i: fits[i])
+    return pop[best]
+
+def crossover(a: Genome, b: Genome) -> Genome:
+    child = Genome(
+        p_id=random.choice([a.p_id, b.p_id]),
+        w_s=random.choice([a.w_s, b.w_s]),
+        w_e=random.choice([a.w_e, b.w_e]),
+        w_c=random.choice([a.w_c, b.w_c]),
+        memory_window=random.choice([a.memory_window, b.memory_window]),
+        theta_mid=random.choice([a.theta_mid, b.theta_mid]),
+        theta_high=random.choice([a.theta_high, b.theta_high])
+    )
+    child.normalize()
+    return child
+
+def mutate(g: Genome, pm: float = 0.30) -> Genome:
+    m = Genome(**asdict(g))
+
+    if random.random() < pm:
+        m.p_id = random.choice(list(BASE_TEMPLATES.keys()))
+
+    if random.random() < pm:
+        m.w_s = float(np.clip(m.w_s + random.uniform(-0.25, 0.25), 0, 1))
+    if random.random() < pm:
+        m.w_e = float(np.clip(m.w_e + random.uniform(-0.25, 0.25), 0, 1))
+    if random.random() < pm:
+        m.w_c = float(np.clip(m.w_c + random.uniform(-0.25, 0.25), 0, 1))
+
+    if random.random() < pm:
+        m.memory_window = random.choice([256, 512, 768, 1024])
+
+    if random.random() < pm:
+        m.theta_mid = float(np.clip(m.theta_mid + random.uniform(-0.06, 0.06), 0.40, 0.70))
+    if random.random() < pm:
+        m.theta_high = float(np.clip(m.theta_high + random.uniform(-0.06, 0.06), 0.70, 0.95))
+
+    m.normalize()
+    return m

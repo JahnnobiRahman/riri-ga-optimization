@@ -23,3 +23,6 @@ data/*
 outputs/
 *.csv
 
+__pycache__/
+*.pyc
+.venv/
