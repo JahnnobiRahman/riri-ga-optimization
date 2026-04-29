@@ -15,10 +15,32 @@ GROUNDING_MARKERS = ["slow breath", "grounding", "5-4-3-2-1", "গভীর শ�
 # 7) Scoring functions (MORE GRANULAR)
 # ======================
 def score_empathy(resp: str) -> float:
-    # count marker hits
-    hits = sum(1 for m in EMPATHY_MARKERS if m.lower() in resp.lower())
-    # soft scaling
-    return float(np.tanh(hits / 3.0))  # 0..~1 smoothly
+    text = resp.lower()
+    words = resp.split()
+    length = len(words)
+
+    # Marker-based empathy signal
+    marker_hits = sum(1 for m in EMPATHY_MARKERS if m.lower() in text)
+
+    # Simple lexical diversity signal
+    unique_words = len(set(w.lower() for w in words))
+    diversity = unique_words / max(1, length)
+
+    score = 0.0
+
+    # Main empathy marker component
+    score += 0.65 * np.tanh(marker_hits / 2.0)
+
+    # Reward moderately developed supportive responses
+    if length >= 25:
+        score += 0.10
+    if length >= 50:
+        score += 0.10
+
+    # Reward lexical variety slightly
+    score += 0.15 * diversity
+
+    return float(max(0.0, min(1.0, score)))
 
 def score_structure(resp: str) -> float:
     text = resp.lower()
