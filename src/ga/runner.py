@@ -9,6 +9,33 @@ from evaluation.scoring import fitness
 
 SEED = 7
 
+def get_seed_genomes():
+    seeds = []
+
+    # Balanced seed
+    seeds.append(Genome(p_id=1, w_s=0.33, w_e=0.33, w_c=0.34,
+                        memory_window=512, theta_mid=0.55, theta_high=0.80))
+
+    # Safety-heavy
+    seeds.append(Genome(p_id=1, w_s=0.70, w_e=0.15, w_c=0.15,
+                        memory_window=512, theta_mid=0.50, theta_high=0.75))
+
+    # Empathy-heavy
+    seeds.append(Genome(p_id=1, w_s=0.20, w_e=0.60, w_c=0.20,
+                        memory_window=512, theta_mid=0.60, theta_high=0.85))
+
+    # Structure-heavy
+    seeds.append(Genome(p_id=1, w_s=0.20, w_e=0.20, w_c=0.60,
+                        memory_window=512, theta_mid=0.55, theta_high=0.80))
+
+    # Normalize all
+    for s in seeds:
+        s.normalize()
+
+    return seeds
+
+
+
 # ======================
 # 9) Run GA (with logging)
 # ======================
@@ -16,7 +43,8 @@ def run_ga(train_data: pd.DataFrame,
            pop_size: int = 30,
            generations: int = 40,
            eval_n: int = 500,
-           seed: int = SEED) -> Tuple[Genome, Dict[str, List[float]]]:
+           seed: int = SEED,
+           use_seed_genomes: bool = True) -> Tuple[Genome, Dict[str, List[float]]]:
 
     random.seed(seed)
     np.random.seed(seed)
@@ -24,7 +52,17 @@ def run_ga(train_data: pd.DataFrame,
     # Evaluate on a subset each run for speed (keep stable with seed)
     eval_data = train_data.sample(n=min(eval_n, len(train_data)), random_state=seed).reset_index(drop=True)
 
-    pop = [random_genome() for _ in range(pop_size)]
+    if use_seed_genomes:  
+        seed_genomes = get_seed_genomes()
+        if pop_size <= len(seed_genomes):
+            pop = seed_genomes[:pop_size]
+        else:
+            pop = seed_genomes + [random_genome() for _ in range(pop_size - len(seed_genomes))]
+    else:
+        pop = [random_genome() for _ in range(pop_size)]
+
+
+    
     fits = [fitness(g, eval_data) for g in pop]
 
     log = {"best": [], "avg": [], "var": []}

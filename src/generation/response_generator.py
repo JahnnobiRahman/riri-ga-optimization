@@ -1,6 +1,5 @@
-import re
 import random
-import pandas as pd
+from typing import Any, Dict, List, Optional
 
 from ga.genome import Genome
 
@@ -84,6 +83,13 @@ ESCALATION_LINES = [
 #    THIS is what fixes your flat plot.
 # ======================
 def generate_response(user_text: str, risk_label: str, g: Genome) -> str:
+    trace = assemble_prompt_trace(user_text, risk_label, g)
+    return trace["final_response"]
+
+
+def assemble_prompt_trace(user_text: str, risk_label: str, g: Genome, rng: Optional[random.Random] = None) -> Dict[str, Any]:
+    rand = rng if rng is not None else random
+
     safety_level = weight_to_level(g.w_s)
     empathy_level = weight_to_level(g.w_e)
     structure_level = weight_to_level(g.w_c)
@@ -106,46 +112,84 @@ def generate_response(user_text: str, risk_label: str, g: Genome) -> str:
 
     # Higher structure -> more structured steps
     use_grounding = (g.w_c >= 0.40)
-    use_action = (g.w_c >= 0.55)
+    use_action = (g.w_c >= 0.40)
     use_question = (g.w_c >= 0.25)
 
     # Higher safety -> stronger escalation phrasing + higher chance of adding extra safety reminder
     add_extra_safety = (g.w_s >= 0.75)
 
-    parts = []
-    parts.append(f"[TEMPLATE] {BASE_TEMPLATES[g.p_id]}")
-    parts.append(f"[SAFETY] {random.choice(SAFETY_LINES[safety_level])}")
+    chosen_template = BASE_TEMPLATES[g.p_id]
+    chosen_safety_line = rand.choice(SAFETY_LINES[safety_level])
+
+    parts: List[str] = []
+    parts.append(f"[TEMPLATE] {chosen_template}")
+    parts.append(f"[SAFETY] {chosen_safety_line}")
 
     # Empathy lines
     emp_bank = EMPATHY_LINES[empathy_level]
+    chosen_empathy_lines: List[str] = []
     for _ in range(empathy_lines_count):
-        parts.append(random.choice(emp_bank))
+        line = rand.choice(emp_bank)
+        chosen_empathy_lines.append(line)
+        parts.append(line)
 
     # Escalation
+    chosen_escalation_lines: List[str] = []
     if escalate and safety_level in ("mid", "high"):
-        parts.append(random.choice(ESCALATION_LINES))
+        esc_line = rand.choice(ESCALATION_LINES)
+        chosen_escalation_lines.append(esc_line)
+        parts.append(esc_line)
         if add_extra_safety:
-            parts.append("If you are in immediate danger, seek urgent local help right now.")
+            extra = "If you are in immediate danger, seek urgent local help right now."
+            chosen_escalation_lines.append(extra)
+            parts.append(extra)
 
     # Structured components
     pack = STRUCTURE_PACK[structure_level]
+    chosen_grounding = None
+    chosen_action = None
+    chosen_question = None
     if use_grounding and pack["grounding"]:
-        parts.append(random.choice(pack["grounding"]))
+        chosen_grounding = rand.choice(pack["grounding"])
+        parts.append(chosen_grounding)
     if use_action and pack["action"]:
-        parts.append(random.choice(pack["action"]))
+        chosen_action = rand.choice(pack["action"])
+        parts.append(chosen_action)
     if use_question and pack["question"]:
-        parts.append(random.choice(pack["question"]))
+        chosen_question = rand.choice(pack["question"])
+        parts.append(chosen_question)
 
-    # Memory window proxy: smaller memory => shorter response (cuts tail)
-    if g.memory_window <= 256 and len(parts) > 4:
+    # Keep full generated parts, then apply visibility truncation.
+    generated_parts = list(parts)
+    truncated = g.memory_window <= 256 and len(parts) > 4
+    if truncated:
         parts = parts[:4]
 
-    return "\n".join(parts)
+    visible_response = list(parts)
+    final_text = "\n".join(visible_response)
+    return {
+        "user_text": user_text,
+        "risk_label": risk_label,
+        "template": chosen_template,
+        "safety_level": safety_level,
+        "empathy_level": empathy_level,
+        "structure_level": structure_level,
+        "escalate": escalate,
+        "safety": chosen_safety_line,
+        "empathy": chosen_empathy_lines,
+        "escalation": chosen_escalation_lines,
+        "grounding": chosen_grounding,
+        "action": chosen_action,
+        "question": chosen_question,
+        "num_empathy_lines": len(chosen_empathy_lines),
+        "generated_parts": generated_parts,
+        "visible_response": visible_response,
+        "truncated": truncated,
+        "final_response": final_text,
+    }
 
 
 def weight_to_level(w: float) -> str:
     if w < 0.33: return "low"
     if w < 0.66: return "mid"
     return "high"
-
-

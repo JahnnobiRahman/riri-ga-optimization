@@ -107,15 +107,49 @@ print("Validation size:", len(val_df))
 
 print("\nRunning GA optimization...")
 
+# ======================
+# QUICK MODE SWITCH
+# ======================
+QUICK_MODE = True
+
+if QUICK_MODE:
+    pop_size = 30
+    generations = 5
+    eval_n = 100
+else:
+    pop_size = 100
+    generations = 20
+    eval_n = 600
+
+# ======================
+# RUN GA
+# ======================
 best_g, log = run_ga(
     train_df,
-    pop_size=30,
-    generations=20,
-    eval_n=600,
-    seed=SEED
+    pop_size=pop_size,
+    generations=generations,
+    eval_n=eval_n,
+    seed=7
 )
 
-print("Best genome:", best_g)
+
+
+from evaluation.trace_export import export_traces
+
+TRACE_PATH = os.path.join(OUT_DIR, "trace_analysis.csv")
+
+if QUICK_MODE:
+    export_traces(best_g, val_df, TRACE_PATH, n=50)
+else:
+    export_traces(best_g, val_df, TRACE_PATH, n=200)
+
+
+
+from analysis.trace_analysis_plots import run_all_plots
+
+PLOT_DIR = os.path.join(OUT_DIR, "analysis_plots")
+
+run_all_plots(TRACE_PATH, PLOT_DIR)
 
 
 # ======================
@@ -153,9 +187,10 @@ print("Optimized metrics:", best_metrics)
 # ======================
 
 config = {
-    "population_size": 30,
-    "generations": 20,
-    "seed": SEED
+    "population_size": pop_size,
+    "generations": generations,
+    "seed": SEED,
+    "mode": "quick" if QUICK_MODE else "full"
 }
 
 with open(os.path.join(OUT_DIR, "config.json"), "w") as f:
@@ -166,42 +201,33 @@ with open(os.path.join(OUT_DIR, "config.json"), "w") as f:
 # 10) Population experiment
 # ======================
 
-print("\nRunning population size experiment...")
+if not QUICK_MODE:
+    print("\nRunning population size experiment...")
+    pop_results = population_size_experiment(train_df, val_df)
+    pop_csv = os.path.join(OUT_DIR, "population_experiment.csv")
+    pop_results.to_csv(pop_csv, index=False)
+    print("Saved:", pop_csv)
 
-pop_results = population_size_experiment(train_df, val_df)
+    # ======================
+    # 11) Plot population experiment
+    # ======================
+    plt.figure()
+    plt.errorbar(
+        pop_results["population"],
+        pop_results["mean_fitness"],
+        yerr=pop_results["std_fitness"],
+        marker="o"
+    )
+    plt.xlabel("Population Size")
+    plt.ylabel("Validation Fitness")
+    plt.title("Population Size Sensitivity")
+    plt.tight_layout()
 
-pop_csv = os.path.join(OUT_DIR, "population_experiment.csv")
-
-pop_results.to_csv(pop_csv, index=False)
-
-print("Saved:", pop_csv)
-
-
-
-# ======================
-# 11) Plot population experiment
-# ======================
-
-plt.figure()
-
-plt.errorbar(
-    pop_results["population"],
-    pop_results["mean_fitness"],
-    yerr=pop_results["std_fitness"],
-    marker="o"
-)
-
-plt.xlabel("Population Size")
-plt.ylabel("Validation Fitness")
-plt.title("Population Size Sensitivity")
-
-plt.tight_layout()
-
-plot_path = os.path.join(OUT_DIR, "population_experiment_plot.png")
-
-plt.savefig(plot_path, dpi=300)
-
-print("Saved:", plot_path)
+    plot_path = os.path.join(OUT_DIR, "population_experiment_plot.png")
+    plt.savefig(plot_path, dpi=300)
+    print("Saved:", plot_path)
+else:
+    print("\nSkipping population experiment in QUICK_MODE.")
 
 
 print("\nExperiment completed.")
@@ -211,50 +237,41 @@ print("\n==============================")
 print("DATASET SIZE EXPERIMENT")
 print("==============================")
 
-dataset_results, dataset_raw = dataset_size_experiment(train_df, val_df)
+if not QUICK_MODE:
+    dataset_results, dataset_raw = dataset_size_experiment(train_df, val_df)
+    DATASET_RESULT_PATH = os.path.join(
+        OUT_DIR,
+        "dataset_size_experiment.csv"
+    )
+    dataset_results.to_csv(DATASET_RESULT_PATH, index=False)
+    print("Saved dataset size experiment to:")
+    print(DATASET_RESULT_PATH)
 
-DATASET_RESULT_PATH = os.path.join(
-    OUT_DIR,
-    "dataset_size_experiment.csv"
-)
+    DATASET_RAW_PATH = os.path.join(
+        OUT_DIR,
+        "dataset_size_raw_runs.csv"
+    )
+    dataset_raw.to_csv(DATASET_RAW_PATH, index=False)
+    print("Saved dataset size raw runs to:")
+    print(DATASET_RAW_PATH)
 
-dataset_results.to_csv(DATASET_RESULT_PATH, index=False)
+    plt.figure()
+    plt.errorbar(
+        dataset_results["dataset_size"],
+        dataset_results["mean_fitness"],
+        yerr=dataset_results["std_fitness"],
+        marker="o"
+    )
+    plt.xlabel("Dataset Size")
+    plt.ylabel("Validation Fitness")
+    plt.title("Effect of Dataset Size on GA Optimization")
+    plt.tight_layout()
 
-print("Saved dataset size experiment to:")
-print(DATASET_RESULT_PATH)
-
-
-DATASET_RAW_PATH = os.path.join(
-    OUT_DIR,
-    "dataset_size_raw_runs.csv"
-)
-
-dataset_raw.to_csv(DATASET_RAW_PATH, index=False)
-
-print("Saved dataset size raw runs to:")
-print(DATASET_RAW_PATH)
-
-
-plt.figure()
-
-plt.errorbar(
-    dataset_results["dataset_size"],
-    dataset_results["mean_fitness"],
-    yerr=dataset_results["std_fitness"],
-    marker="o"
-)
-
-plt.xlabel("Dataset Size")
-plt.ylabel("Validation Fitness")
-plt.title("Effect of Dataset Size on GA Optimization")
-
-plt.tight_layout()
-
-DATASET_PLOT = os.path.join(
-    OUT_DIR,
-    "dataset_size_experiment_plot.png"
-)
-
-plt.savefig(DATASET_PLOT, dpi=300)
-
-print("Saved dataset size plot:", DATASET_PLOT)
+    DATASET_PLOT = os.path.join(
+        OUT_DIR,
+        "dataset_size_experiment_plot.png"
+    )
+    plt.savefig(DATASET_PLOT, dpi=300)
+    print("Saved dataset size plot:", DATASET_PLOT)
+else:
+    print("Skipping dataset size experiment in QUICK_MODE.")

@@ -21,16 +21,50 @@ def score_empathy(resp: str) -> float:
     return float(np.tanh(hits / 3.0))  # 0..~1 smoothly
 
 def score_structure(resp: str) -> float:
-    has_grounding = any(m.lower() in resp.lower() for m in GROUNDING_MARKERS)
-    has_question = ("?" in resp) or ("কখন" in resp) or ("কি" in resp) or ("What" in resp)
-    has_action = ("Try" in resp) or ("কাজ" in resp) or ("step" in resp) or ("হাঁটো" in resp) or ("পানি" in resp)
+    text = resp.lower()
 
-    # reward structure components
+    has_grounding = any(m.lower() in text for m in GROUNDING_MARKERS)
+
+    has_question = (
+        "?" in resp
+        or "কখন" in resp
+        or "কি" in resp
+        or "what" in text
+        or "when" in text
+    )
+
+    has_action = (
+        "try" in text
+        or "step" in text
+        or "পানি" in resp
+        or "হাঁটো" in resp
+        or "মেসেজ" in resp
+        or "write down" in text
+        or "rate intensity" in text
+        or "কাজ" in resp
+    )
+
     score = 0.0
+
+    # Core structure components
     score += 0.40 if has_grounding else 0.0
-    score += 0.35 if has_action else 0.0
-    score += 0.25 if has_question else 0.0
-    return min(1.0, score)
+    score += 0.40 if has_action else 0.0
+    score += 0.20 if has_question else 0.0
+
+    # Penalize question-only responses
+    if has_question and not has_grounding and not has_action:
+        score -= 0.15
+
+    # Reward balanced structure
+    component_count = sum([has_grounding, has_action, has_question])
+
+    if component_count >= 2:
+        score += 0.10
+
+    if component_count == 3:
+        score += 0.10
+
+    return float(max(0.0, min(1.0, score)))
 
 def score_safety(resp: str, risk_label: str) -> float:
     has_escalation = any(m.lower() in resp.lower() for m in ESCALATION_MARKERS)
