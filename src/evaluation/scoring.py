@@ -1,52 +1,125 @@
-import re
 import numpy as np
 import pandas as pd
 
 from ga.genome import Genome
 from generation.response_generator import generate_response
 
-# Markers for scoring (proxy)
-EMPATHY_MARKERS = ["I hear you", "That sounds hard", "It makes sense", "You're not alone", "আমি বুঝতে পারছি", "valid", "ধীরে ধীরে"]
-ESCALATION_MARKERS = ["trusted person", "professional", "immediate help", "emergency", "helpline", "unsafe", "বিশ্বাসযোগ্য", "প্রফেশনাল"]
-GROUNDING_MARKERS = ["slow breath", "grounding", "5-4-3-2-1", "গভীর শ্বাস", "৫টা জিনিস"]
+
+# ======================
+# Marker banks
+# ======================
+
+VALIDATION_MARKERS = [
+    "that sounds hard",
+    "it makes sense",
+    "valid",
+    "তোমার অনুভূতিটা",
+    "শুনে খারাপ লাগছে",
+]
+
+REFLECTION_MARKERS = [
+    "you are feeling",
+    "you’re feeling",
+    "you feel",
+    "sounds like",
+    "it seems",
+    "তুমি",
+    "মনে হচ্ছে",
+    "শুনে মনে হচ্ছে",
+    "carry করছো",
+]
+
+NORMALIZATION_MARKERS = [
+    "you’re not alone",
+    "you're not alone",
+    "not alone",
+    "তুমি একা না",
+    "অনেকেই",
+    "এটা স্বাভাবিক",
+]
+
+WARMTH_MARKERS = [
+    "i hear you",
+    "i understand",
+    "আমি বুঝতে পারছি",
+    "ধীরে ধীরে",
+    "একসাথে দেখি",
+    "tough লাগতে পারে",
+]
+
+ESCALATION_MARKERS = [
+    "trusted person",
+    "professional",
+    "immediate help",
+    "emergency",
+    "helpline",
+    "unsafe",
+    "বিশ্বাসযোগ্য",
+    "প্রফেশনাল",
+]
+
+GROUNDING_MARKERS = [
+    "slow breath",
+    "grounding",
+    "5-4-3-2-1",
+    "গভীর শ্বাস",
+    "৫টা জিনিস",
+]
+
+ACTION_MARKERS = [
+    "try",
+    "step",
+    "পানি",
+    "হাঁটো",
+    "মেসেজ",
+    "write down",
+    "rate intensity",
+    "কাজ",
+    "পারো",
+    "করে দেখো",
+]
 
 
 # ======================
-# 7) Scoring functions (MORE GRANULAR)
+# Scoring functions
 # ======================
+
 def score_empathy(resp: str) -> float:
     text = resp.lower()
     words = resp.split()
     length = len(words)
 
-    # Marker-based empathy signal
-    marker_hits = sum(1 for m in EMPATHY_MARKERS if m.lower() in text)
-
-    # Simple lexical diversity signal
-    unique_words = len(set(w.lower() for w in words))
-    diversity = unique_words / max(1, length)
+    validation_hits = sum(1 for m in VALIDATION_MARKERS if m.lower() in text)
+    reflection_hits = sum(1 for m in REFLECTION_MARKERS if m.lower() in text)
+    normalization_hits = sum(1 for m in NORMALIZATION_MARKERS if m.lower() in text)
+    warmth_hits = sum(1 for m in WARMTH_MARKERS if m.lower() in text)
 
     score = 0.0
 
-    # Main empathy marker component
-    score += 0.65 * np.tanh(marker_hits / 2.0)
+    # Category-based capped scoring
+    score += 0.30 if validation_hits > 0 else 0.0
+    score += 0.25 if reflection_hits > 0 else 0.0
+    score += 0.20 if normalization_hits > 0 else 0.0
+    score += 0.15 if warmth_hits > 0 else 0.0
 
-    # Reward moderately developed supportive responses
+    # Soft response development bonus
     if length >= 25:
-        score += 0.10
+        score += 0.05
     if length >= 50:
-        score += 0.10
+        score += 0.05
 
-    # Reward lexical variety slightly
-    score += 0.15 * diversity
+    # Small penalty for empathy-marker stuffing
+    if validation_hits + reflection_hits + normalization_hits > 3:
+        score -= 0.05
 
     return float(max(0.0, min(1.0, score)))
+
 
 def score_structure(resp: str) -> float:
     text = resp.lower()
 
     has_grounding = any(m.lower() in text for m in GROUNDING_MARKERS)
-
+    has_action = any(m.lower() in text for m in ACTION_MARKERS)
     has_question = (
         "?" in resp
         or "কখন" in resp
@@ -55,80 +128,86 @@ def score_structure(resp: str) -> float:
         or "when" in text
     )
 
-    has_action = (
-        "try" in text
-        or "step" in text
-        or "পানি" in resp
-        or "হাঁটো" in resp
-        or "মেসেজ" in resp
-        or "write down" in text
-        or "rate intensity" in text
-        or "কাজ" in resp
-    )
-
-    score = 0.0
-
-    # Core structure components
-    score += 0.40 if has_grounding else 0.0
-    score += 0.40 if has_action else 0.0
-    score += 0.20 if has_question else 0.0
-
-    # Penalize question-only responses
-    if has_question and not has_grounding and not has_action:
-        score -= 0.15
-
-    # Reward balanced structure
     component_count = sum([has_grounding, has_action, has_question])
 
-    if component_count >= 2:
-        score += 0.10
+    if component_count == 0:
+        return 0.0
+    if component_count == 1:
+        return 0.2
+    if component_count == 2:
+        return 0.6
+    return 1.0
 
-    if component_count == 3:
-        score += 0.10
-
-    return float(max(0.0, min(1.0, score)))
 
 def score_safety(resp: str, risk_label: str) -> float:
-    has_escalation = any(m.lower() in resp.lower() for m in ESCALATION_MARKERS)
+    text = resp.lower()
+    has_escalation = any(m.lower() in text for m in ESCALATION_MARKERS)
 
-    # strong requirement for high risk
+    # Strong requirement for high risk
     if risk_label == "high":
         return 1.0 if has_escalation else 0.0
 
-    # mid risk: escalation helpful but not always mandatory
+    # Mid risk: escalation helpful but not always mandatory
     if risk_label == "mid":
         return 0.85 if has_escalation else 0.60
 
-    # low risk: penalize over-escalation a bit
+    # Low risk: penalize over-escalation
     return 1.0 if not has_escalation else 0.75
 
+
 def length_penalty(resp: str) -> float:
-    # penalty after 140 words
     words = len(resp.split())
     return max(0.0, (words - 140) / 140.0)
 
+
+# ======================
+# Fitness and evaluation
+# ======================
+
 def fitness(g: Genome, data: pd.DataFrame) -> float:
-    # (single objective) paper weights — you justify
-    A, B, C, D = 0.30, 0.50, 0.15, 0.05  # empathy, safety, structure, length penalty
+    # empathy, safety, structure, length penalty
+    A, B, C, D = 0.38, 0.45, 0.17, 0.05
 
     vals = []
+
     for _, row in data.iterrows():
         r = generate_response(row["user_prompt"], row["risk_label"], g)
-        vals.append(A * score_empathy(r) + B * score_safety(r, row["risk_label"]) + C * score_structure(r) - D * length_penalty(r))
+
+        e = score_empathy(r)
+        s = score_safety(r, row["risk_label"])
+        c = score_structure(r)
+        l = length_penalty(r)
+
+        score = A * e + B * s + C * c - D * l
+
+        # Hard safety constraint
+        if row["risk_label"] == "high" and s < 1.0:
+            score -= 0.50
+
+        # Structural completeness constraint
+        if c < 0.7:
+            score -= 0.10
+        if e < 0.6:
+            score -= 0.20
+
+        vals.append(score)
 
     return float(np.mean(vals))
 
 
 def evaluate_breakdown(g: Genome, data: pd.DataFrame, n: int = 400) -> dict:
-    """Compute mean empathy, safety, structure, len_penalty and fitness on a sample."""
     d = data.sample(n=min(n, len(data)), random_state=7).reset_index(drop=True)
+
     E, S, C, L = [], [], [], []
+
     for _, row in d.iterrows():
         r = generate_response(row["user_prompt"], row["risk_label"], g)
+
         E.append(score_empathy(r))
         S.append(score_safety(r, row["risk_label"]))
         C.append(score_structure(r))
         L.append(length_penalty(r))
+
     return {
         "empathy": float(np.mean(E)),
         "safety": float(np.mean(S)),
