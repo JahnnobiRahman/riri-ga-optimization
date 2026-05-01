@@ -260,8 +260,14 @@ def assemble_prompt_trace(
     elif "failure" in text or "loser" in text or "worthless" in text or "ব্যর্থ" in text:
         opening_line = "Feeling like a failure can be really heavy to carry. But this feeling does not define you."
 
-    elif "anxiety" in text or "stress" in text or "pressure" in text or "চাপ" in text:
-        opening_line = "Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।"
+    elif "anxiety" in text or "stress" in text or "pressure" in text:
+        opening_line = rnd.choice([
+        "Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।",
+        "It sounds like things have been really heavy for you lately.",
+        "That kind of pressure can really build up over time.",
+        "মনে হচ্ছে অনেকদিন ধরে চাপটা জমে আছে।",
+        "I hear how much pressure you’re carrying right now.",
+    ])
 
     elif "nothing feels good" in text or "ভালো লাগছে না" in text:
         opening_line = "When nothing feels good, it can feel really heavy. আমি বুঝতে পারছি।"
@@ -269,7 +275,17 @@ def assemble_prompt_trace(
     else:
         opening_line = safe_choice(OPENING_LINES[empathy_level], rnd)
 
-    reflection_line = safe_choice(REFLECTION_LINES[empathy_level], rnd)
+    # Add more natural variation for reflection
+    if empathy_level == "mid" or empathy_level == "high":
+        reflection_line = rnd.choice([
+            "It sounds like this has been weighing on you for a while.",
+            "তোমার জায়গায় থাকলে এমন লাগা খুব স্বাভাবিক।",
+            "This kind of situation can feel really confusing.",
+            "It makes sense that you’re feeling this way.",
+            "You might be carrying a lot emotionally right now.",
+        ])
+    else:
+        reflection_line = safe_choice(REFLECTION_LINES[empathy_level], rnd)
 
     if opening_line:
         chosen_empathy_lines.append(opening_line)
