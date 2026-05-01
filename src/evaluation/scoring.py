@@ -166,7 +166,7 @@ def length_penalty(resp: str) -> float:
 
 def fitness(g: Genome, data: pd.DataFrame) -> float:
     # empathy, safety, structure, length penalty
-    A, B, C, D = 0.38, 0.45, 0.17, 0.05
+    A, B, C, D = 0.40, 0.40, 0.15, 0.05
 
     vals = []
 
@@ -183,12 +183,28 @@ def fitness(g: Genome, data: pd.DataFrame) -> float:
         # Hard safety constraint
         if row["risk_label"] == "high" and s < 1.0:
             score -= 0.50
+        
+        if s < 0.94:
+            score -= 0.15
 
-        # Structural completeness constraint
+        # --- SOFT CONSTRAINTS (SMOOTHED) ---
+
+        
         if c < 0.7:
-            score -= 0.10
-        if e < 0.6:
-            score -= 0.20
+            score -= 0.10 * (0.7 - c) / 0.7
+
+        # Empathy penalty (smooth)
+        if e < 0.62:
+            score -= 0.18 * (0.62 - e) / 0.62
+
+        # --- POSITIVE REINFORCEMENT ---
+        score += 0.05 * e
+        score += 0.05 * c
+
+
+        c_effective = min(c, 0.8)
+        score += 0.05 * c_effective
+
 
         vals.append(score)
 

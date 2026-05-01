@@ -273,22 +273,48 @@ def assemble_prompt_trace(
 
     # Genome still influences whether structure is likely
     if g.w_c < 0.25:
-        grounding_prob *= 0.50
-        action_prob *= 0.50
-        question_prob *= 0.70
+        grounding_prob *= 0.30
+        action_prob *= 0.30
+        question_prob *= 0.50
 
     elif g.w_c >= 0.45:
         grounding_prob = min(1.0, grounding_prob + 0.15)
         action_prob = min(1.0, action_prob + 0.15)
 
-    if maybe_add(parts, grounding_line, grounding_prob, rnd):
+    elif g.w_c >= 0.40:
+        grounding_prob = max(grounding_prob, 0.65)
+        action_prob = max(action_prob, 0.65)
+
+    
+
+    # Strong structure enforcement when genome supports it
+    
+    if g.w_c >= 0.5:
+        # strong structure
+
+        for block in [grounding_line, action_line, question_line]:
+            if block:
+                parts.append(block)
+
         chosen_grounding = grounding_line
-
-    if maybe_add(parts, action_line, action_prob, rnd):
         chosen_action = action_line
-
-    if maybe_add(parts, question_line, question_prob, rnd):
         chosen_question = question_line
+
+    elif g.w_c >= 0.3:
+        # medium structure
+        structure_blocks = [grounding_line, action_line, question_line]
+        rnd.shuffle(structure_blocks)
+
+    else:
+        # Original probabilistic behavior
+        if maybe_add(parts, grounding_line, grounding_prob, rnd):
+            chosen_grounding = grounding_line
+
+        if maybe_add(parts, action_line, action_prob, rnd):
+            chosen_action = action_line
+
+        if maybe_add(parts, question_line, question_prob, rnd):
+            chosen_question = question_line
 
     # ======================
     # Controlled fallback
