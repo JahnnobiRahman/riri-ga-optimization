@@ -10,6 +10,8 @@ def export_traces(genome, data, output_path, n=100):
     sample = data.sample(n=min(n, len(data)), random_state=42).reset_index(drop=True)
 
     for _, row in sample.iterrows():
+        # Some datasets don't have `user_text`; use `user_prompt` as canonical fallback.
+        user_text_value = row["user_text"] if "user_text" in row.index else row.get("user_prompt", "")
 
         trace = assemble_prompt_trace(
             row["user_prompt"],
@@ -20,7 +22,9 @@ def export_traces(genome, data, output_path, n=100):
         resp = trace["final_response"]
 
         rows.append({
-            "user_prompt": row["user_prompt"],
+            "user_text": user_text_value,
+            "natural_user_message": trace.get("natural_user_message"),
+            "user_prompt_full": trace.get("user_prompt_full"),
             "risk_label": row["risk_label"],
 
             "template": trace["template"],
@@ -39,8 +43,8 @@ def export_traces(genome, data, output_path, n=100):
             "structure_score": score_structure(resp),
             "length_penalty": length_penalty(resp),
 
-            "final_response": resp
-        })
+            "final_response": resp,
+})
 
     df = pd.DataFrame(rows)
     df.to_csv(output_path, index=False)

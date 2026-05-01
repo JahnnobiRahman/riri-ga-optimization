@@ -1,0 +1,136 @@
+User Prompt vs Response
+============================================================
+
+USER:
+User: Sometimes I feel like I don’t want to live anymore. মনে হচ্ছে মাথা কাজ করছে না। I feel like I’m failing in life. I took a mental health test and it made me worried. I feel like I need help immediately.
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+You do not have to handle this alone.
+তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।
+একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।
+Is there someone nearby you feel comfortable talking to?
+
+------------------------------------------------------------
+
+USER:
+User: Nothing really feels good anymore. Ami onek pressure feel kortesi. একটা টেস্ট দেওয়ার পর বুঝলাম অবস্থা ভালো না। Can you help me understand this?
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+চলো ধীরে ধীরে দেখি।
+Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
+If possible, stay near someone who helps you feel calm.
+What would help you feel a little steadier in this moment?
+
+------------------------------------------------------------
+
+USER:
+User: কিছুতেই ভালো লাগছে না। Ami onek pressure feel kortesi. Porashona niye ami khub pressure e achi. What should I do now?
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+Someone can support you through this.
+First, try to sit somewhere comfortable and take one slow breath.
+Try not to stay completely isolated with these thoughts.
+Is there someone nearby you feel comfortable talking to?
+
+------------------------------------------------------------
+
+USER:
+User: মনে হচ্ছে মাথা কাজ করছে না। My relationship situation is really confusing and painful. Family situation is really affecting me. একটা টেস্ট দেওয়ার পর বুঝলাম অবস্থা ভালো না। I just needed to tell someone.
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+তোমার জায়গায় থাকলে এমন লাগা understandable.
+বিশ্বাসযোগ্য কারও সাথে কথা বলা helpful হতে পারে।
+চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।
+Try not to stay completely isolated with these thoughts.
+What would help you feel a little steadier in this moment?
+
+------------------------------------------------------------
+
+USER:
+User: কিছুতেই ভালো লাগছে না। I feel really anxious and overwhelmed. My relationship situation is really confusing and painful. Family niye onek stress e achi. What should I do now?
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+First, try to sit somewhere comfortable and take one slow breath.
+If possible, stay near someone who helps you feel calm.
+Is there someone nearby you feel comfortable talking to?
+
+------------------------------------------------------------
+
+USER:
+User: Ami kono kichu te interest pachchi na. Ami onek pressure feel kortesi. Amar relationship niye onek confusion. Family niye onek stress e achi. What should I do now?
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+Maybe we can understand this one small step at a time.
+Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
+একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।
+এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?
+
+------------------------------------------------------------
+
+USER:
+User: Sometimes I feel like I don’t want to live anymore. I feel really anxious and overwhelmed. সম্পর্কটা এখন অনেক কষ্ট দিচ্ছে। Divorce er por amar life ta ulta hoye geche. Family niye onek stress e achi.
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+If there’s any risk of harm, immediate help matters—talk to someone you trust or contact local emergency or helpline support.
+Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
+একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।
+এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?
+
+------------------------------------------------------------
+
+USER:
+User: মনে হচ্ছে মাথা কাজ করছে না। সম্পর্কটা এখন অনেক কষ্ট দিচ্ছে। I just needed to tell someone.
+Assistant:
+
+RESPONSE:
+Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+তোমার জায়গায় থাকলে এমন লাগা understandable.
+You don’t have to go through this alone.
+Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
+Try not to stay completely isolated with these thoughts.
+Is there someone nearby you feel comfortable talking to?
+
+------------------------------------------------------------
+
+USER:
+User: মনে হচ্ছে আমি একা হয়ে গেছি। Ami kono kichu te interest pachchi na. Ami onek pressure feel kortesi.
+Assistant:
+
+RESPONSE:
+Feeling this alone can be really painful. তুমি একা না।
+You don’t have to go through this alone.
+Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
+একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।
+এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?
+
+------------------------------------------------------------
+
+USER:
+User: Majhe majhe mone hoy bachte ichcha kore na. মনে হচ্ছে আমি একা হয়ে গেছি। I feel really anxious and overwhelmed. My relationship situation is really confusing and painful. I took a mental health test and it made me worried. I don’t know what to do and I feel scared.
+Assistant:
+
+RESPONSE:
+Feeling this alone can be really painful. তুমি একা না।
+You do not have to handle this alone.
+If there’s any risk of harm, immediate help matters—talk to someone you trust or contact local emergency or helpline support.
+চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।
+একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।
+এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?
+
+------------------------------------------------------------
+
