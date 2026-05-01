@@ -15,77 +15,95 @@ EMPATHY_LINES = {
     "low": [
         "বুঝলাম।",
         "I understand.",
+        "আমি শুনছি।",
     ],
     "mid": [
-        "শুনে খারাপ লাগছে। I hear you.",
         "That sounds hard. আমি বুঝতে পারছি।",
-        "It makes sense you’re feeling this way.",
-        "It sounds like this has been weighing on you for a while.",
-        "তোমার অনুভূতিটা valid, এবং এমন অনুভব করা অস্বাভাবিক না।",
+        "It makes sense — এমন লাগা স্বাভাবিক।",
+        "শুনে মনে হচ্ছে এটা তোমার জন্য heavy লাগছে।",
+        "I hear you — এটা সহজ না।",
+        "তোমার অনুভূতিটা valid.",
     ],
     "high": [
-        "আমি বুঝতে পারছি—এটা সত্যিই কষ্টের। You’re not alone in this.",
+        "আমি বুঝতে পারছি—এটা সত্যিই কষ্টের। তুমি একা না।",
+        "It sounds like this has been emotionally heavy — তুমি একা না।",
         "তোমার অনুভূতিটা valid. It makes sense, and you deserve support.",
-        "This sounds overwhelming—আমি সত্যিই তোমার কষ্টটা বুঝতে পারছি।",
-        "তুমি অনেক কিছু carry করছো মনে হচ্ছে—ধীরে ধীরে একসাথে দেখি।",
-        "It makes sense that you feel exhausted after carrying this for so long.",
-        "তুমি একা না—এমন অবস্থায় support চাওয়া একদম okay.",
+        "I hear you — এটা সত্যিই tough লাগতে পারে।",
+        "মনে হচ্ছে অনেকদিন ধরে এটা তোমার উপর চাপ হয়ে আছে।",
     ],
 }
 
 
-REFLECTION_TEMPLATES = [
-    "It makes sense that you feel this way.",
-    "I can see why this would feel overwhelming.",
-    "That sounds really difficult to go through.",
-    "I hear you — this isn’t easy.",
-    "শুনে মনে হচ্ছে এটা তোমার জন্য অনেক heavy লাগছে।",
-    "তোমার অনুভূতিটা একদম valid — এমন লাগা স্বাভাবিক।",
-    "মনে হচ্ছে অনেকদিন ধরে এটা তোমার উপর চাপ হয়ে আছে।",
-    "তুমি একা না — এই feeling টা অনেকেই experience করে।",
-    "It makes sense — তোমার জায়গায় থাকলে এমন লাগাই স্বাভাবিক।",
-    "I hear you — এটা সত্যিই tough লাগতে পারে।",
-    "It sounds like this has been emotionally heavy — তুমি একা না।",
-]
+REFLECTION_LINES = {
+    "low": [
+        "Maybe we can look at it one small step at a time.",
+        "চলো ধীরে ধীরে দেখি।",
+    ],
+    "mid": [
+        "It sounds like this has been weighing on you.",
+        "মনে হচ্ছে বিষয়টা তোমার মাথায় বারবার ঘুরছে।",
+        "You may be carrying a lot emotionally right now.",
+        "তোমার জায়গায় থাকলে এমন লাগা খুবই understandable.",
+    ],
+    "high": [
+        "Right now, your safety and support matter most.",
+        "এই মুহূর্তে তোমার নিরাপত্তা সবচেয়ে গুরুত্বপূর্ণ।",
+        "You do not have to handle this alone right now.",
+        "এখন একা না থেকে কারও সাথে থাকা ভালো হতে পারে।",
+    ],
+}
 
 
-STRUCTURE_PACK = {
-    "low": {
-        "grounding": [],
-        "action": [],
-        "question": [
-            "আর একটু বিস্তারিত বলবে?",
-            "What’s been going on lately?",
-        ],
-    },
-    "mid": {
-        "grounding": [
-            "একটু গভীর শ্বাস নাও—slow breath, in…out…",
-            "Let’s take one slow breath together.",
-        ],
-        "action": [
-            "আজকে ছোট করে ১টা কাজ: পানি খাও বা ৫ মিনিট হাঁটো।",
-            "Try one small step: drink water / short walk / message someone.",
-        ],
-        "question": [
-            "এই অনুভূতিটা কখন বেশি বাড়ে?",
-            "When does it feel worst?",
-        ],
-    },
-    "high": {
-        "grounding": [
-            "চলো ৩০ সেকেন্ড grounding করি—একটু গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।",
-            "Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…",
-        ],
-        "action": [
-            "আজকে একটা tiny step: কাউকে মেসেজ দাও (trusted friend/family).",
-            "Write down the strongest thought in one line, then rate intensity 0–10.",
-        ],
-        "question": [
-            "তুমি এখন সবচেয়ে বেশি কোন চিন্তাটায় আটকে আছো?",
-            "What thought is looping the most right now?",
-        ],
-    },
+GROUNDING_LINES = {
+    "low": [
+        "একটু pause নাও, তারপর ধীরে ধীরে ভাবি।",
+    ],
+    "mid": [
+        "একটু গভীর শ্বাস নাও—slow breath, in…out…",
+        "Let’s take one slow breath together.",
+        "Try noticing 3 things around you right now.",
+    ],
+    "high": [
+        "চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।",
+        "Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…",
+        "First, try to sit somewhere safe and take one slow breath.",
+    ],
+}
+
+
+ACTION_LINES = {
+    "low": [
+        "তুমি চাইলে ছোট করে লিখে রাখতে পারো কী চিন্তাটা বারবার আসছে।",
+        "Maybe write one sentence about what is bothering you.",
+    ],
+    "mid": [
+        "আজকে ছোট করে ১টা কাজ: পানি খাও বা ৫ মিনিট হাঁটো।",
+        "Try one small step: drink water, take a short walk, or message someone.",
+        "Write down the strongest thought in one line, then rate intensity 0–10.",
+    ],
+    "high": [
+        "এখনই একজন trusted friend/family member-কে মেসেজ দাও।",
+        "If possible, move closer to someone you trust right now.",
+        "Please avoid staying alone if you feel unsafe.",
+    ],
+}
+
+
+QUESTION_LINES = {
+    "low": [
+        "What’s been going on lately?",
+        "আর একটু বিস্তারিত বলবে?",
+    ],
+    "mid": [
+        "এই অনুভূতিটা কখন বেশি বাড়ে?",
+        "When does it feel worst?",
+        "What thought is looping the most right now?",
+    ],
+    "high": [
+        "তুমি কি এখন safe জায়গায় আছো?",
+        "Is there someone nearby you can reach out to right now?",
+        "Right now, are you feeling at risk of harming yourself?",
+    ],
 }
 
 
@@ -94,7 +112,7 @@ SAFETY_LINES = {
         "Be careful and avoid harmful advice.",
     ],
     "mid": [
-        "Avoid validating harmful actions. Encourage seeking support if risk signs appear.",
+        "Avoid validating harmful actions. Encourage support if risk signs appear.",
     ],
     "high": [
         "If self-harm/suicide risk is suspected: do NOT validate intent. Encourage immediate help and escalation to a human professional.",
@@ -117,6 +135,38 @@ def weight_to_level(w: float) -> str:
     return "high"
 
 
+def risk_to_level(risk_label: str) -> str:
+    if risk_label not in {"low", "mid", "high"}:
+        return "low"
+    return risk_label
+
+
+def choose_level(genome_level: str, risk_label: str) -> str:
+    """
+    Keeps generation risk-aware.
+    High risk should never use low-level support blocks.
+    """
+    if risk_label == "high":
+        return "high"
+
+    if risk_label == "mid" and genome_level == "low":
+        return "mid"
+
+    return genome_level
+
+
+def maybe_add(
+    parts: List[str],
+    line: Optional[str],
+    probability: float,
+    rnd: random.Random,
+) -> bool:
+    if line and rnd.random() < probability:
+        parts.append(line)
+        return True
+    return False
+
+
 def generate_response(user_text: str, risk_label: str, g: Genome) -> str:
     trace = assemble_prompt_trace(user_text, risk_label, g)
     return trace["final_response"]
@@ -131,9 +181,11 @@ def assemble_prompt_trace(
 
     rnd = rng if rng is not None else random
 
-    safety_level = weight_to_level(g.w_s)
-    empathy_level = weight_to_level(g.w_e)
-    structure_level = weight_to_level(g.w_c)
+    risk_label = risk_to_level(risk_label)
+
+    safety_level = choose_level(weight_to_level(g.w_s), risk_label)
+    empathy_level = choose_level(weight_to_level(g.w_e), risk_label)
+    structure_level = choose_level(weight_to_level(g.w_c), risk_label)
 
     risk_score = {"low": 0.2, "mid": 0.6, "high": 0.9}[risk_label]
 
@@ -143,18 +195,6 @@ def assemble_prompt_trace(
     elif risk_score >= g.theta_mid and safety_level in ("mid", "high"):
         escalate = True
 
-    empathy_lines_count = 1
-    if g.w_e >= 0.20:
-        empathy_lines_count = 2
-    if g.w_e >= 0.35:
-        empathy_lines_count = 3
-
-    use_grounding = g.w_c >= 0.40
-    use_action = g.w_c >= 0.40
-    use_question = g.w_c >= 0.25
-
-    add_extra_safety = g.w_s >= 0.75
-
     chosen_template = BASE_TEMPLATES[g.p_id]
     chosen_safety_line = rnd.choice(SAFETY_LINES[safety_level])
 
@@ -162,62 +202,112 @@ def assemble_prompt_trace(
     parts.append(f"[TEMPLATE] {chosen_template}")
     parts.append(f"[SAFETY] {chosen_safety_line}")
 
-    emp_bank = EMPATHY_LINES[empathy_level]
     chosen_empathy_lines: List[str] = []
-
-    for _ in range(empathy_lines_count):
-        line = rnd.choice(emp_bank)
-        chosen_empathy_lines.append(line)
-        parts.append(line)
-
-    if g.w_e >= 0.08:
-        reflection_line = rnd.choice(REFLECTION_TEMPLATES)
-        chosen_empathy_lines.append(reflection_line)
-        parts.append(reflection_line)
-
     chosen_escalation_lines: List[str] = []
+
+    chosen_grounding = None
+    chosen_action = None
+    chosen_question = None
+
+    # ======================
+    # Empathy + reflection
+    # ======================
+
+    empathy_line = rnd.choice(EMPATHY_LINES[empathy_level])
+    reflection_line = rnd.choice(REFLECTION_LINES[empathy_level])
+
+    chosen_empathy_lines.append(empathy_line)
+    parts.append(empathy_line)
+
+    # Reflection is common but not guaranteed, to reduce repetition
+    reflection_prob = {
+        "low": 0.45,
+        "mid": 0.70,
+        "high": 0.85,
+    }[risk_label]
+
+    if maybe_add(parts, reflection_line, reflection_prob, rnd):
+        chosen_empathy_lines.append(reflection_line)
+
+    # Add extra empathy only when genome really wants empathy
+    if g.w_e >= 0.45:
+        extra_empathy = rnd.choice(EMPATHY_LINES[empathy_level])
+        if extra_empathy not in chosen_empathy_lines:
+            chosen_empathy_lines.append(extra_empathy)
+            parts.append(extra_empathy)
+
+    # ======================
+    # Escalation
+    # ======================
 
     if escalate and safety_level in ("mid", "high"):
         esc_line = rnd.choice(ESCALATION_LINES)
         chosen_escalation_lines.append(esc_line)
         parts.append(esc_line)
 
-        if add_extra_safety:
+        if g.w_s >= 0.75:
             extra = "If you are in immediate danger, seek urgent local help right now."
             chosen_escalation_lines.append(extra)
             parts.append(extra)
 
-    pack = STRUCTURE_PACK[structure_level]
-    chosen_grounding = None
-    chosen_action = None
-    chosen_question = None
+    # ======================
+    # Risk-aware structure
+    # ======================
+
+    grounding_line = rnd.choice(GROUNDING_LINES[structure_level]) if GROUNDING_LINES[structure_level] else None
+    action_line = rnd.choice(ACTION_LINES[structure_level]) if ACTION_LINES[structure_level] else None
+    question_line = rnd.choice(QUESTION_LINES[structure_level]) if QUESTION_LINES[structure_level] else None
 
     if risk_label == "high":
         grounding_prob = 0.85
-        action_prob = 0.60
-        question_prob = 0.40
-
+        action_prob = 0.75
+        question_prob = 0.45
     elif risk_label == "mid":
-        grounding_prob = 0.75
-        action_prob = 0.65
-        question_prob = 0.55
-
+        grounding_prob = 0.70
+        action_prob = 0.70
+        question_prob = 0.60
     else:
-        grounding_prob = 0.50
-        action_prob = 0.65
+        grounding_prob = 0.40
+        action_prob = 0.55
         question_prob = 0.75
 
-    if use_grounding and pack["grounding"] and rnd.random() < grounding_prob:
-        chosen_grounding = rnd.choice(pack["grounding"])
-        parts.append(chosen_grounding)
+    # Genome still influences whether structure is likely
+    if g.w_c < 0.25:
+        grounding_prob *= 0.50
+        action_prob *= 0.50
+        question_prob *= 0.70
 
-    if use_action and pack["action"] and rnd.random() < action_prob:
-        chosen_action = rnd.choice(pack["action"])
-        parts.append(chosen_action)
+    elif g.w_c >= 0.45:
+        grounding_prob = min(1.0, grounding_prob + 0.15)
+        action_prob = min(1.0, action_prob + 0.15)
 
-    if use_question and pack["question"] and rnd.random() < question_prob:
-        chosen_question = rnd.choice(pack["question"])
-        parts.append(chosen_question)
+    if maybe_add(parts, grounding_line, grounding_prob, rnd):
+        chosen_grounding = grounding_line
+
+    if maybe_add(parts, action_line, action_prob, rnd):
+        chosen_action = action_line
+
+    if maybe_add(parts, question_line, question_prob, rnd):
+        chosen_question = question_line
+
+    # ======================
+    # Controlled fallback
+    # ======================
+    # Avoid structure becoming zero when genome is moderately structural.
+    if g.w_c >= 0.40 and not any([chosen_grounding, chosen_action, chosen_question]):
+        fallback = rnd.choice([grounding_line, action_line, question_line])
+        if fallback:
+            parts.append(fallback)
+            if fallback == grounding_line:
+                chosen_grounding = fallback
+            elif fallback == action_line:
+                chosen_action = fallback
+            else:
+                chosen_question = fallback
+
+    # ======================
+    # Truncation
+    # ======================
 
     generated_parts = list(parts)
 
