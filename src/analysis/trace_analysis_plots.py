@@ -11,20 +11,29 @@ def plot_empathy_vs_fitness(df, out_dir):
     plt.title("Empathy vs Structure")
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "empathy_vs_structure.png"), dpi=300)
+    plt.close()
 
 
 def plot_safety_by_risk(df, out_dir):
-    plt.figure()
+    # Force clinical order: low → mid → high
+    risk_order = ["low", "mid", "high"]
 
-    df.boxplot(column="safety_score", by="risk_label")
+    fig, ax = plt.subplots()
 
-    plt.title("Safety Score by Risk Level")
-    plt.suptitle("")  # remove default title
-    plt.xlabel("Risk Label")
-    plt.ylabel("Safety Score")
-    plt.tight_layout()
+    groups = [
+        df.loc[df["risk_label"] == r, "safety_score"].dropna().values
+        for r in risk_order
+    ]
 
-    plt.savefig(os.path.join(out_dir, "safety_by_risk.png"), dpi=300)
+    ax.boxplot(groups, labels=risk_order)
+
+    ax.set_title("Safety Score by Risk Level")
+    ax.set_xlabel("Risk Label")
+    ax.set_ylabel("Safety Score")
+    fig.tight_layout()
+
+    fig.savefig(os.path.join(out_dir, "safety_by_risk.png"), dpi=300)
+    plt.close(fig)
 
 
 def plot_structure_usage(df, out_dir):
@@ -44,6 +53,7 @@ def plot_structure_usage(df, out_dir):
     plt.tight_layout()
 
     plt.savefig(os.path.join(out_dir, "structure_usage.png"), dpi=300)
+    plt.close()
 
 
 def run_all_plots(csv_path, out_dir):
@@ -56,3 +66,11 @@ def run_all_plots(csv_path, out_dir):
     plot_structure_usage(df, out_dir)
 
     print("Saved all analysis plots to:", out_dir)
+
+
+if __name__ == "__main__":
+    # Defaults: same experiment bundle as main_ga_riri.py
+    _root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    _csv = os.path.join(_root, "experiments", "v2_population_experiment", "trace_analysis.csv")
+    _out = os.path.join(_root, "experiments", "v2_population_experiment", "analysis_plots")
+    run_all_plots(_csv, _out)

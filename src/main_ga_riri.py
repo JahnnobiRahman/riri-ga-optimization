@@ -110,7 +110,7 @@ print("\nRunning GA optimization...")
 # ======================
 # QUICK MODE SWITCH
 # ======================
-QUICK_MODE = True
+QUICK_MODE = False
 
 if QUICK_MODE:
     pop_size = 30
@@ -131,6 +131,13 @@ best_g, log = run_ga(
     eval_n=eval_n,
     seed=7
 )
+
+import json
+log_path = os.path.join(OUT_DIR, "ga_log.json")
+with open(log_path, "w") as f:
+    json.dump(log, f, indent=2)
+print("Saved GA log to:", log_path)
+
 
 
 
