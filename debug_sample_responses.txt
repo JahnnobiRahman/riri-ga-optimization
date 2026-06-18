@@ -2,9 +2,9 @@ Sample Responses Log
 ==================================================
 
 ---
-Feeling this alone can be really painful. তুমি একা না।
+Feeling this alone can be really painful. {\bengalifont তুমি একা না।}
 You do not have to handle this alone right now.
-তুমি একা না — এখন support নেওয়া খুব গুরুত্বপূর্ণ।
+{\bengalifont তুমি একা না — এখন support নেওয়া খুব গুরুত্বপূর্ণ।}
 If there’s any risk of harm, immediate help matters—talk to someone you trust or contact local emergency or helpline support.
 Please avoid staying alone if you feel unsafe.
 Is there someone nearby you can reach out to right now?
@@ -12,46 +12,46 @@ Is there someone nearby you can reach out to right now?
 ---
 Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
 It sounds like this has been weighing on you for a while.
-That sounds really difficult. আমি বুঝতে পারছি।
-তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+That sounds really difficult.{\bengalifont আমি বুঝতে পারছি।
+তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।}
 Try one small step: drink water, take a short walk, or message someone.
 Try noticing 3 things around you right now.
 
 ---
-Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+Feeling overwhelmed for so long can be exhausting. {\bengalifontএকটু ধীরে নিই।
 I hear you — এটা সহজ না।
-আজকে ছোট করে ১টা কাজ: পানি খাও বা ৫ মিনিট হাঁটো।
+আজকে ছোট করে ১টা কাজ: পানি খাও বা ৫ মিনিট হাঁটো।}
 What thought is looping the most right now?
 
 ---
-Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
-এই মুহূর্তে তোমার নিরাপত্তা সবচেয়ে গুরুত্বপূর্ণ।
+Feeling overwhelmed for so long can be exhausting. {\bengalifont একটু ধীরে নিই।
+এই মুহূর্তে তোমার নিরাপত্তা সবচেয়ে গুরুত্বপূর্ণ।}
 It sounds like this feels really overwhelming right now.
-তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+{\bengalifont তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
 Is there someone nearby you can reach out to right now?
-First, try to sit somewhere safe and take one slow breath.
+First, try to sit somewhere safe and take one slow breath.}
 
 ---
 Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
 You do not have to handle this alone right now.
 I hear you — right now your safety and support matter most.
-তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+{\bengalifont তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।}
 Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
 Right now, are you feeling at risk of harming yourself?
 
 ---
-Feeling this alone can be really painful. তুমি একা না।
+Feeling this alone can be really painful. {\bengalifont তুমি একা না।}
 It makes sense that you’re feeling this way.
 If you feel unsafe right now, please reach out to a trusted person immediately and consider contacting a mental health professional.
-এই অনুভূতিটা কখন বেশি বাড়ে?
-একটু গভীর শ্বাস নাও—slow breath, in…out…
+{\bengalifont এই অনুভূতিটা কখন বেশি বাড়ে?
+একটু গভীর শ্বাস নাও—slow breath, in…out…}
 
 ---
-Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+Feeling overwhelmed for so long can be exhausting. {\bengalifont একটু ধীরে নিই।}
 It sounds like this has been weighing on you for a while.
-That sounds really difficult. আমি বুঝতে পারছি।
+That sounds really difficult.{\bengalifont আমি বুঝতে পারছি।}
 If there’s any risk of harm, immediate help matters—talk to someone you trust or contact local emergency or helpline support.
-এই অনুভূতিটা কখন বেশি বাড়ে?
+{\bengalifont এই অনুভূতিটা কখন বেশি বাড়ে?}
 Let’s take one slow breath together.
 
 ---
@@ -59,22 +59,22 @@ Feeling like a failure can be really heavy to carry. But this feeling does not d
 You do not have to handle this alone right now.
 It sounds like this feels really overwhelming right now.
 If you feel unsafe right now, please reach out to a trusted person immediately and consider contacting a mental health professional.
-তুমি কি এখন safe জায়গায় আছো?
-এখনই একজন trusted friend/family member-কে মেসেজ দাও।
+{\bengalifont তুমি কি এখন safe জায়গায় আছো?
+এখনই একজন trusted friend/family member-কে মেসেজ দাও।}
 
 ---
-Feeling overwhelmed for so long can be exhausting. একটু ধীরে নিই।
+Feeling overwhelmed for so long can be exhausting. {\bengalifont একটু ধীরে নিই।}
 You do not have to handle this alone right now.
 It sounds like this feels really overwhelming right now.
-তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+{\bengalifont তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।}
 Please avoid staying alone if you feel unsafe.
 Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…
 
 ---
-Feeling this alone can be really painful. তুমি একা না।
+Feeling this alone can be really painful. {\bengalifont তুমি একা না।}
 It sounds like this has been weighing on you for a while.
 It makes sense that you’re feeling this way.
-তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
+{\bengalifont তুমি যদি এখন unsafe feel করো, দয়া করে এখনই বিশ্বাসযোগ্য কাউকে জানাও এবং প্রফেশনাল সাহায্য নাও।
 When does it feel worst?
-Let’s take one slow breath together.
+Let’s take one slow breath together.}
 

@@ -28,3 +28,27 @@ __pycache__/
 .venv/
 
 .mplconfig/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+missfont.log
+stdin.aux
+stdin.log
+stdin.pdf
+
+# Debug files
+debug_sample_respo*
+debug_sample_with_input.txt
+debug_sample.csv
+debug.py
+version_01.txt
+
+# Python
+__pycache__/
+.venv/
+*.pyc
