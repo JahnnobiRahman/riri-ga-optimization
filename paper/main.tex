@@ -66,7 +66,6 @@ value-laden conversational AI.
 large language models; empathy; safety; multi-objective optimization;
 conversational agents; Bangla; risk-aware AI}
 
-\bibliographystyle{mdpi}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -759,11 +758,17 @@ randomly sampled genomes, establishing a chance-level reference.
 
 \begin{table}[H]
 \centering
+
 \caption{Baseline versus optimised performance. B1 = zero-shot (no GA);
 B2 = fixed seed genome $g_\mathrm{bal}$ (no GA search);
 B3 = random genome (mean $\pm$ std, $n=5$);
-B4 = GA optimised (proposed). Wilcoxon signed-rank test ($p$-values)
-compare B4 against B1 and B2 across five independent runs.}
+B4 = GA optimised (proposed);
+B5 = GA + MSGA seeds;
+B6--B8 = pre-trained Bangla LLMs in zero-shot mode.
+Wilcoxon signed-rank test ($p$-values) compare B4 against B1 and B2.
+B6--B8 received natural language prompts built from the same theme-text
+inputs used in B1--B5.}
+
 \label{tab:baseline-optimized}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabularx}{\textwidth}{
@@ -796,6 +801,13 @@ B4: GA Optimised (proposed)
   & \textbf{0.426} & \textbf{0.901} & \textbf{0.924} & \textbf{0.678} & --- \\
 B5: GA + MSGA seeds
   & 0.443 & 0.902 & 0.913 & 0.681 & --- \\
+\hline
+B6: mT5-small (zero-shot)
+  & 0.000 & 0.426 & 0.000 & 0.170 & --- \\
+B7: BanglaT5 (zero-shot)
+  & 0.064 & 0.426 & 0.094 & 0.210 & --- \\
+B8: BanglaGPT (zero-shot)
+  & 0.003 & 0.426 & 0.000 & 0.171 & --- \\
 \hline
 \end{tabularx}
 \end{table}
@@ -851,6 +863,35 @@ alternative to manual seed design, removing the need for domain expertise in
 constructing the initial seed set. The slight empathy advantage of B5
 ($+0.017$) over B4 is within expected variance and should not be interpreted
 as a systematic difference.
+
+\subsubsection{Pre-trained LLM Baselines (B6--B8)}
+\label{sec:llm-baselines}
+
+Table~\ref{tab:baseline-optimized} also includes three pre-trained Bangla
+language models evaluated in zero-shot mode on the same 400 validation
+prompts: mT5-small~\cite{mt5_2021} (B6), BanglaT5~\cite{banglat5_2022} (B7),
+and BanglaGPT~\cite{banglagpt_2023} (B8). These models received natural
+language prompts constructed by the same \texttt{build\_realistic\_user\_prompt()}
+function used in B1--B5, providing a fair input format comparison.
+
+All three models fail substantially on this task. B6 (mT5-small) produces
+only sentinel tokens (\texttt{<extra\_id\_0>}) because mT5-small is a
+masked span-filling model not designed for open-ended generation; it
+scores zero on empathy and structure. B8 (BanglaGPT) generates repetitive
+garbage characters, yielding near-zero empathy (0.003) and zero structure,
+indicating that this small causal model has not acquired conversational
+competence on the mental-health domain. B7 (BanglaT5) produces the highest
+scores among the three (empathy 0.064, structure 0.094, fitness 0.210), yet
+still falls far below all EvoRiri conditions: its responses exhibit
+repetitive echolalia and incomplete sentence structure rather than
+empathetic, structured support.
+
+The fitness gap between B4 (0.678) and the best pre-trained LLM (B7: 0.210)
+is 0.468 points, confirming that zero-shot generative pre-training on Bangla
+corpora does not transfer to structured, safety-aware mental-health
+dialogue without task-specific design. EvoRiri's advantage stems not from
+model scale but from the combination of an interpretable risk-aware
+generator and genetic optimization of its response policy.
 
 \subsection{Statistical Significance of Baseline Comparisons}
 \label{sec:significance}
