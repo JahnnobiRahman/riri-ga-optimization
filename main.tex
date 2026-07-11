@@ -390,8 +390,12 @@ where:
         action, and questions.
   \item \(w_{sa} \in [0,1]\): safety weight governing conservative phrasing
         and crisis emphasis.
-  \item \(\theta_{\mathrm{mid}}, \theta_{\mathrm{high}} \in [0,1]\): risk
-        thresholds for triggering crisis-style responses.
+        \item $\theta_{\text{mid}}, \theta_{\text{high}} \in [0, 1]$, reserved escalation thresholds. 
+        \textbf{Note:} In the current single-turn implementation, these parameters do not 
+        influence response generation and do not contribute to fitness evaluation 
+        (Equation~\ref{eq:fitness}). They are retained in the genome as placeholders 
+        for future multi-turn extensions (Section~\ref{sec:limitations}).
+        
   \item \(\lambda \in [0,1]\): length penalty coefficient.
   \item \(d\): discrete template selector, indexing a small set of response
         templates.
@@ -1452,6 +1456,30 @@ interpretability with learned scoring accuracy.
         with this extension in mind and provides a natural starting point
         for future work.
 
+        \item \textbf{Dataset scope and generalizability.} The dataset composition 
+        (Table~\ref{tab:dataset_composition}, Appendix~\ref{sec:appendix_dataset}) 
+        reflects the population served by the mental-health screening application 
+        in Bangladesh and limits generalizability in three dimensions:
+        \begin{enumerate}
+            \item[(a)] \textit{Age:} 70\% of users are aged 18--24 years. 
+            Optimised response patterns may not apply to older adults (25+), 
+            who may have different support preferences and risk profiles.
+            
+            \item[(b)] \textit{Language:} 98.5\% of prompts are Bengali, with 
+            minimal English or Banglish content. The framework is language-agnostic, 
+            but the template bank and proxy metrics (empathy markers, grounding phrases) 
+            are Bengali-specific. Adaptation to other South Asian languages is 
+            future work.
+            
+            \item[(c)] \textit{Risk distribution:} 34\% of prompts are high-risk 
+            (PHQ-9 $\geq 9$). The optimisation may over-emphasise escalation for 
+            this subset relative to lower-risk populations. Stratified tuning per 
+            risk cohort is recommended for deployment outside the current setting.
+        \end{enumerate}
+        Future work should evaluate the framework on demographically broader 
+        cohorts and validate generalisation via cross-cultural and cross-age 
+        cohort analysis.
+
   \item \textbf{Limited cultural validation.} Bangla emotional expression
         norms are only partially captured by the current marker sets. Future
         work should involve community mental health workers in Bangladesh to
@@ -1468,6 +1496,33 @@ interpretability with learned scoring accuracy.
         in preference for directive versus reflective responses, or in
         comfort with Bangla versus English, are not modelled.
 \end{itemize}
+
+\subsubsection{Single-Turn Evaluation and Clinical Deployment}
+\label{sec:single_turn_limitation}
+
+The current framework optimises single-turn responses to isolated prompts. 
+In real mental-health conversations, however, risk and emotional context 
+evolve over multiple turns:
+
+\begin{itemize}
+    \item Risk may escalate unexpectedly (e.g., suicidal ideation disclosed 
+    on turn 3 after mild distress on turn 1).
+    
+    \item Context accumulation enables proactive interventions (e.g., the 
+    system recalls that a user mentioned isolation and offers community 
+    resources in a later turn).
+    
+    \item Therapeutic alliance improves with history (e.g., the system learns 
+    the user's preferred communication style and emotional vocabulary).
+\end{itemize}
+
+The current single-turn setup is appropriate for \textit{prompt-level} 
+optimisation and for conversational systems where turns are isolated 
+(e.g., brief text-based crisis screening in an emergency context). 
+For clinical deployment as a sustained mental-health coach or ongoing 
+support system, multi-turn sequential decision-making with context 
+accumulation is essential. This extension is a high-priority research 
+direction and is deferred to future work (Section~\ref{sec:future}).
 
 Future extensions include: (1)~multi-turn sequential genome policies,
 where the GA optimises escalation and structure decisions conditioned on
