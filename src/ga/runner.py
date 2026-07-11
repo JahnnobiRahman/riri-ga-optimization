@@ -10,30 +10,58 @@ from evaluation.scoring import fitness
 SEED = 7
 
 def get_seed_genomes():
+    """
+    Initialize GA with 4 seed genomes representing different strategy balances.
+    Updated to include gamma (distress-gating parameter).
+    
+    Returns
+    -------
+    list[Genome]
+        Four seed genomes with different w_s/w_e/w_c balances
+    """
     seeds = []
 
     # Balanced seed
-    seeds.append(Genome(p_id=1, w_s=0.33, w_e=0.33, w_c=0.34,
-                        memory_window=512, theta_mid=0.55, theta_high=0.80))
+    seeds.append(Genome(
+        p_id=1, 
+        w_s=0.33, w_e=0.33, w_c=0.34,
+        memory_window=512, 
+        theta_mid=0.55, theta_high=0.80,
+        gamma=0.10  # NEW: moderate distress gating
+    ))
 
     # Safety-heavy
-    seeds.append(Genome(p_id=1, w_s=0.70, w_e=0.15, w_c=0.15,
-                        memory_window=512, theta_mid=0.50, theta_high=0.75))
+    seeds.append(Genome(
+        p_id=1, 
+        w_s=0.70, w_e=0.15, w_c=0.15,
+        memory_window=512, 
+        theta_mid=0.50, theta_high=0.75,
+        gamma=0.15  # NEW: more aggressive distress gating
+    ))
 
     # Empathy-heavy
-    seeds.append(Genome(p_id=1, w_s=0.20, w_e=0.60, w_c=0.20,
-                        memory_window=512, theta_mid=0.60, theta_high=0.85))
+    seeds.append(Genome(
+        p_id=1, 
+        w_s=0.20, w_e=0.60, w_c=0.20,
+        memory_window=512, 
+        theta_mid=0.60, theta_high=0.85,
+        gamma=0.05  # NEW: conservative distress gating
+    ))
 
     # Structure-heavy
-    seeds.append(Genome(p_id=1, w_s=0.20, w_e=0.20, w_c=0.60,
-                        memory_window=512, theta_mid=0.55, theta_high=0.80))
+    seeds.append(Genome(
+        p_id=1, 
+        w_s=0.20, w_e=0.20, w_c=0.60,
+        memory_window=512, 
+        theta_mid=0.55, theta_high=0.80,
+        gamma=0.12  # NEW: moderate distress gating
+    ))
 
     # Normalize all
     for s in seeds:
         s.normalize()
 
     return seeds
-
 
 
 # ======================

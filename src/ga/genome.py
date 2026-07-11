@@ -1,13 +1,14 @@
 import re
 import random
 import pandas as pd
+import numpy as np
 from dataclasses import dataclass
 
 # Template IDs used by random_genome (must match keys in generation.response_generator.BASE_TEMPLATES)
 BASE_TEMPLATES = {0: "", 1: "", 2: ""}
 
 # ======================
-# 5) Genome (configuration)
+# Genome (configuration) - UPDATED WITH GAMMA
 # ======================
 @dataclass
 class Genome:
@@ -18,8 +19,13 @@ class Genome:
     memory_window: int
     theta_mid: float
     theta_high: float
+    gamma: float  # NEW: distress-gating parameter [0, 0.2]
 
     def normalize(self):
+        """
+        Enforce minimum floor on weights and renormalize to sum = 1.
+        Clamp gamma to valid range.
+        """
         # Enforce minimum floor
         MIN_W = 0.10
         self.w_s = max(self.w_s, MIN_W)
@@ -30,8 +36,15 @@ class Genome:
         self.w_s /= total
         self.w_e /= total
         self.w_c /= total
+        
+        # NEW: Clamp gamma to valid range [0, 0.2]
+        self.gamma = float(np.clip(self.gamma, 0.0, 0.2))
 
 def random_genome() -> Genome:
+    """
+    Generate a random genome with all genes initialized uniformly.
+    Gamma is initialized in [0, 0.2] for distress gating.
+    """
     g = Genome(
         p_id=random.choice(list(BASE_TEMPLATES.keys())),
         w_s=random.random(),
@@ -39,7 +52,9 @@ def random_genome() -> Genome:
         w_c=random.random(),
         memory_window=random.choice([256, 512, 768, 1024]),
         theta_mid=random.uniform(0.40, 0.70),
-        theta_high=random.uniform(0.70, 0.95)
+        theta_high=random.uniform(0.70, 0.95),
+        gamma=random.uniform(0.0, 0.2)  # NEW
     )
     g.normalize()
     return g
+    

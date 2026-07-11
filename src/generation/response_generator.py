@@ -199,8 +199,8 @@ def maybe_add(
 # Public generator
 # ======================
 
-def generate_response(user_text: str, risk_label: str, g: Genome) -> str:
-    trace = assemble_prompt_trace(user_text, risk_label, g)
+def generate_response(user_text: str, risk_label: str, g: Genome ,  escalate_override: bool = False) -> str:
+    trace = assemble_prompt_trace(user_text, risk_label, g, escalate_override=escalate_override)
     return trace["final_response"]
 
 
@@ -209,6 +209,8 @@ def assemble_prompt_trace(
     risk_label: str,
     g: Genome,
     rng: Optional[random.Random] = None,
+    escalate_override: bool = False,
+
 ) -> Dict[str, Any]:
 
     rnd = rng if rng is not None else random
@@ -311,17 +313,16 @@ def assemble_prompt_trace(
     # 2) Escalation / support layer
     # ======================
 
-    escalate = risk_label == "high"
+    escalate = risk_label == "high" or escalate_override 
 
-    # Hard escalation ONLY for high-risk labels.
-    if risk_label == "high":
+    if risk_label == "high" or escalate_override:
         esc_line = safe_choice(ESCALATION_LINES, rnd)
         if esc_line:
             chosen_escalation_lines.append(esc_line)
             parts.append(esc_line)
 
-    # Mid-risk gets soft support only. No crisis language.
-    elif risk_label == "mid":
+    # Mid-risk gets soft support only (unless escalate_override)
+    elif risk_label == "mid" and not escalate_override:
         soft_line = safe_choice(SOFT_SUPPORT_LINES, rnd)
         if soft_line:
             parts.append(soft_line)
