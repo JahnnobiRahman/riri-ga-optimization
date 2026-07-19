@@ -44,13 +44,11 @@ Empathetic Bangla Mental-Health Assistant}
 
 %% ORCID: only M.M.J. Kabir's is currently on file; add Rahman's here
 %% (\newcommand{\orcidauthorA}{...}) once available.
+\newcommand{\orcidauthorA}{0009-0002-7744-9853}
 \newcommand{\orcidauthorB}{0000-0003-4963-8905}
 
-\Author{Jahnnobi Rahman $^{1}$ and Mir Md.\ Jahangir Kabir $^{2,}$*\orcidB{}}
-\AuthorNames{Jahnnobi Rahman and Mir Md. Jahangir Kabir}
-\AuthorCitation{Author, F.; Author, S.; Author, T.}
-
-\address[1]{Relaxy PTE. LTD., Singapore , Bangladesh; jahnnobirahman230@gmail.com}
+\Author{Jahnnobi Rahman $^{1}$\orcidA{} and Mir Md.\ Jahangir Kabir $^{2,}$*\orcidB{}}\AuthorCitation{Rahman, J.; Kabir, M.M.J.}
+\address[1]{Relaxy PTE. LTD., Singapore and Bangladesh; jahnnobirahman230@gmail.com}
 \address[2]{University of Technology Sydney, 15 Broadway, Ultimo NSW 2007, Australia; mirmdjahangir.kabir@uts.edu.au}
 
 \corres{Correspondence: jahnnobirahman230@gmail.com}
@@ -589,8 +587,9 @@ Crisis-style escalation content is included if the prompt's risk label is high,
 \textit{or} if a continuous distress score $h(x_i)$ exceeds a learned threshold 
 and the risk label is mid:
 \begin{equation}
-  \text{escalate}(x_i, r_i, h_i) = \mathbb{I}\{ r_i = \mathrm{high} \} \vee 
-  \mathbb{I}\{ r_i = \mathrm{mid} \land h_i > \tau_h - \gamma \cdot h_i \},
+  \label{eq:risk-escalation}
+    \text{escalate}(x_i, r_i, h_i) = \mathbb{I}\{ r_i = \mathrm{high} \} \vee 
+    \mathbb{I}\{ r_i = \mathrm{mid} \land h_i > \tau_h - \gamma \cdot h_i \},
 \end{equation}
 where $h(x_i) \in [0,1]$ is a distress score computed from prompt keywords 
 (suicide ideation, self-harm, hopelessness, isolation, severe overwhelm), 
@@ -692,14 +691,16 @@ below the 140-word threshold and grows linearly above it; short responses
 incur no length penalty at all. The per-example fitness combines the base
 weighted score with five further adjustment terms:
 \begin{align}
-\label{eq:per-example-fitness}
-  f_i(g) = {}& A\,E_i + B\,S_i + C\,C_i - D\,L_i \notag\\
-    & - 0.50\,\mathbb{I}\{r_i=\mathrm{high} \wedge S_i<1.0\}
-      - 0.15\,\mathbb{I}\{S_i<0.94\} \notag\\
-    & - 0.10\,\frac{\max(0,\,0.70-C_i)}{0.70}
-      - 0.18\,\frac{\max(0,\,0.62-E_i)}{0.62} \notag\\
-    & + 0.05\,E_i + 0.05\,C_i + 0.05\,\min(C_i,\,0.8),
-\end{align}
+  \label{eq:per-example-fitness}
+    f_i(g) = {}& A\,E_i + B\,S_i + C\,C_i - D\,L_i \notag\\
+      & - 0.50\,\mathbb{I}\{r_i=\mathrm{high} \wedge S_i<1.0\}
+        - 0.15\,\mathbb{I}\{S_i<0.94\} \notag\\
+      & - 0.10\,\frac{\max(0,\,0.70-C_i)}{0.70}
+        - 0.18\,\frac{\max(0,\,0.62-E_i)}{0.62} \notag\\
+      & + 0.05\,E_i + 0.05\,C_i + 0.05\,\min(C_i,\,0.8) \notag\\
+      & - 0.10\,\mathbb{I}\{h_i > \tau_h \wedge r_i=\mathrm{mid} \wedge \mathrm{esc}_i=0\},
+  \end{align}
+
 where $A$, $B$, $C$, $D$ are the fixed fitness-weight coefficients reported in
 Table~\ref{tab:hyperparams-scoring} ($A=0.40$, $B=0.40$, $C=0.15$, $D=0.05$).
 The second line applies flat penalties for unsafe high-risk responses and
@@ -713,6 +714,17 @@ reinforced once ($+0.05\,E_i$) and safety receives no reinforcement beyond
 its base term. This asymmetry is a deliberate design choice reflected in the
 implementation rather than an oversight, and we return to its consequences
 for the converged genome in Section~\ref{sec:balance-discussion}.
+
+A sixth term applies a direct fitness penalty of $-0.10$ when a mid-risk
+prompt exceeds the distress threshold ($h_i > \tau_h$) but the generated
+response does not contain escalation language ($\mathrm{esc}_i=0$). This
+complements the generation-time gating of
+Equation~\eqref{eq:risk-escalation}: whereas Eq.~\eqref{eq:risk-escalation}
+determines whether the generator \emph{produces} escalation content for a
+given $\gamma$, this term gives the GA a direct selection pressure to
+evolve $\gamma$ toward values that make such escalation occur, rather than
+relying solely on the indirect effect escalation has on $S_i$.
+
 
 \subsubsection{Fitness Weight Rationale}
 \label{sec:fitness-rationale}
