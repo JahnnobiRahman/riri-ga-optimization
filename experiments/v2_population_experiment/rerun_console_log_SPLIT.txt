@@ -1,0 +1,50 @@
+Loading dataset...
+After filtering: 2872 prompts
+Risk distribution:
+risk_label
+high    1340
+mid      834
+low      698
+Name: count, dtype: int64
+
+Final dataset: 2872 prompts
+Train size: 2297
+Validation size: 575
+
+Starting GA on train split (80/20, matches paper methodology)...
+Gen 01 | best=0.6803 avg=0.3454 var=0.089741 | best_genome=Genome(p_id=0, w_s=0.19042939639348705, w_e=0.131714919397342, w_c=0.677855684209171, memory_window=768, theta_mid=0.5593257518697491, theta_high=0.7514678867346809, gamma=0.0891373746098408)
+Gen 02 | best=0.6753 avg=0.4600 var=0.047480 | best_genome=Genome(p_id=2, w_s=0.172940434750993, w_e=0.12098839183255074, w_c=0.7060711734164563, memory_window=768, theta_mid=0.45221210928605987, theta_high=0.7464428190080731, gamma=0.06761031406869326)
+Gen 03 | best=0.6771 avg=0.4793 var=0.066774 | best_genome=Genome(p_id=1, w_s=0.12560807834784468, w_e=0.12560807834784468, w_c=0.7487838433043106, memory_window=1024, theta_mid=0.41555216247556787, theta_high=0.7150338135363623, gamma=0.07866433925873334)
+Gen 04 | best=0.6801 avg=0.5272 var=0.050585 | best_genome=Genome(p_id=2, w_s=0.172940434750993, w_e=0.12098839183255074, w_c=0.7060711734164563, memory_window=768, theta_mid=0.6473854865257316, theta_high=0.7464428190080731, gamma=0.06761031406869326)
+Gen 05 | best=0.6826 avg=0.6022 var=0.021755 | best_genome=Genome(p_id=2, w_s=0.1330354182691395, w_e=0.1330354182691395, w_c=0.7339291634617211, memory_window=1024, theta_mid=0.5393988560122943, theta_high=0.7539702612684562, gamma=0.07866433925873334)
+Gen 06 | best=0.6806 avg=0.5863 var=0.049024 | best_genome=Genome(p_id=2, w_s=0.1330354182691395, w_e=0.1330354182691395, w_c=0.7339291634617211, memory_window=1024, theta_mid=0.5393988560122943, theta_high=0.7539702612684562, gamma=0.07866433925873334)
+Gen 07 | best=0.6812 avg=0.5968 var=0.048287 | best_genome=Genome(p_id=1, w_s=0.16446803681891883, w_e=0.10213678439049895, w_c=0.7333951787905822, memory_window=768, theta_mid=0.6473854865257316, theta_high=0.9392976316306781, gamma=0.11769107380888215)
+Gen 08 | best=0.6767 avg=0.5778 var=0.061909 | best_genome=Genome(p_id=2, w_s=0.10092898327694741, w_e=0.16134280073066148, w_c=0.7377282159923911, memory_window=768, theta_mid=0.4727562735520477, theta_high=0.7679014994107888, gamma=0.2)
+Gen 09 | best=0.6802 avg=0.5829 var=0.062993 | best_genome=Genome(p_id=1, w_s=0.16781436008846146, w_e=0.11499566504809912, w_c=0.7171899748634395, memory_window=1024, theta_mid=0.526793357168771, theta_high=0.7508984993195058, gamma=0.130214437901867)
+Gen 10 | best=0.6813 avg=0.5604 var=0.080418 | best_genome=Genome(p_id=2, w_s=0.16330663231188144, w_e=0.1010142016232934, w_c=0.7356791660648251, memory_window=512, theta_mid=0.4727562735520477, theta_high=0.9212146971378719, gamma=0.07700929457465877)
+Gen 11 | best=0.6791 avg=0.6114 var=0.042805 | best_genome=Genome(p_id=0, w_s=0.16953567021640617, w_e=0.09988654179564707, w_c=0.7305777879879467, memory_window=512, theta_mid=0.4150379514169589, theta_high=0.8540901979495326, gamma=0.008474010579438071)
+Gen 12 | best=0.6804 avg=0.6171 var=0.035702 | best_genome=Genome(p_id=1, w_s=0.11921797852716236, w_e=0.10848276049669456, w_c=0.7722992609761431, memory_window=512, theta_mid=0.526793357168771, theta_high=0.8038829504119558, gamma=0.09825244415017925)
+Gen 13 | best=0.6805 avg=0.6277 var=0.029353 | best_genome=Genome(p_id=1, w_s=0.10698650457364071, w_e=0.191043093647949, w_c=0.7019704017784103, memory_window=512, theta_mid=0.5273046384868104, theta_high=0.9212146971378719, gamma=0.03418662688492438)
+Gen 14 | best=0.6852 avg=0.5921 var=0.056283 | best_genome=Genome(p_id=0, w_s=0.22925304226001553, w_e=0.10035220351476022, w_c=0.6703947542252243, memory_window=512, theta_mid=0.566041881227656, theta_high=0.7, gamma=0.02822161960245631)
+Gen 15 | best=0.6791 avg=0.5708 var=0.068001 | best_genome=Genome(p_id=0, w_s=0.17604546349877967, w_e=0.09138485500960582, w_c=0.7325696814916145, memory_window=1024, theta_mid=0.5091839934807967, theta_high=0.8973099243222017, gamma=0.07802954537164031)
+Gen 16 | best=0.6808 avg=0.5664 var=0.073986 | best_genome=Genome(p_id=2, w_s=0.18857859351691603, w_e=0.10949615289399381, w_c=0.7019252535890902, memory_window=1024, theta_mid=0.520955156631878, theta_high=0.7927235914272969, gamma=0.09719152775390448)
+Gen 17 | best=0.6815 avg=0.5924 var=0.056189 | best_genome=Genome(p_id=1, w_s=0.11197363227597314, w_e=0.10205516541798708, w_c=0.7859712023060398, memory_window=1024, theta_mid=0.48050116719106056, theta_high=0.7, gamma=0.10100263061813618)
+Gen 18 | best=0.6787 avg=0.5457 var=0.084601 | best_genome=Genome(p_id=2, w_s=0.10029802950769989, w_e=0.18580598634621642, w_c=0.7138959841460837, memory_window=1024, theta_mid=0.4556963868401599, theta_high=0.7936953952202053, gamma=0.2)
+Gen 19 | best=0.6795 avg=0.5668 var=0.074782 | best_genome=Genome(p_id=1, w_s=0.1029329183015464, w_e=0.10266865317789692, w_c=0.7943984285205568, memory_window=768, theta_mid=0.4453562913735535, theta_high=0.88639474272919, gamma=0.10602680418562119)
+Gen 20 | best=0.6793 avg=0.5621 var=0.074496 | best_genome=Genome(p_id=2, w_s=0.0951770196914974, w_e=0.09368832706792196, w_c=0.8111346532405806, memory_window=1024, theta_mid=0.5158926355174144, theta_high=0.8365796074559351, gamma=0.08183248344279533)
+Saved fitness log to: /Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/v2_population_experiment/ga_log_distress_gated_2872_SPLIT.json
+Saved best genome to: /Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/v2_population_experiment/best_genome_distress_gated_2872_SPLIT.json
+
+✅ GA Complete!
+Train size: 2297 | Val size: 575
+Best fitness (from log, train-time): 0.6852
+Best genome: Genome(p_id=0, w_s=0.22925304226001553, w_e=0.10035220351476022, w_c=0.6703947542252243, memory_window=512, theta_mid=0.566041881227656, theta_high=0.7, gamma=0.02822161960245631)
+
+Breakdown on VALIDATION set (held-out, matches paper's val_df evaluation):
+  empathy: 0.4388
+  safety: 0.9045
+  structure: 0.9068
+  len_penalty: 0.0000
+  distress_score: 0.0726
+  fitness: 0.6706
+Saved breakdown to: /Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/v2_population_experiment/breakdown_distress_gated_2872_SPLIT.json

@@ -1,6 +1,5 @@
 %% ============================================================
-%% EvoRiri — COMPLETE CORRECTED main.tex
-%% Fixes applied:
+%% EvoRiri - COMPLETE CORRECTED main.tex
 %%   1. Journal name: mathematics
 %%   2. PNG logo (XeTeX-compatible)
 %%   3. COI disclosure updated
@@ -9,15 +8,28 @@
 %%   6. \externaleditor cleared (COI)
 %% ============================================================
 
-\documentclass[mathematics,article,submit,xetex,moreauthors]{Definitions/mdpi}
+\documentclass[mathematics,article,xetex,moreauthors]{Definitions/mdpi}
+%% NOTE: 'submit' option temporarily removed to isolate a lineno/cleveref
+%% "Runaway definition of \@LN@column" compile error. 'submit' is what
+%% triggers MDPI's line-numbering via the lineno package. If this version
+%% compiles cleanly, the error is confirmed to originate in lineno's
+%% interaction with this TeX Live install, not in the paper content.
+%% Re-add 'submit' only once that's resolved (e.g. via MDPI support or a
+%% lineno/cleveref package update), since MDPI requires line numbers for
+%% actual submission.
 \usepackage{fontspec}
+\setlength{\headheight}{20pt}
+\addtolength{\topmargin}{-8pt}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit}
+\emergencystretch=2em
 \newfontfamily\bengalifont[Script=Bengali]{Noto Serif Bengali}
 \pubvolume{1}
 \issuenum{1}
 \articlenumber{0}
 \pubyear{2026}
 \copyrightyear{2026}
-%% Supervisor is Guest Editor of this Special Issue — COI disclosed separately
+%% Supervisor is Guest Editor of this Special Issue; COI disclosed to MDPI prior to submission
 %% \externaleditor left blank; disclose COI to editorial office before submission
 \datereceived{}
 \daterevised{}
@@ -30,43 +42,42 @@ Empathetic Bangla Mental-Health Assistant}
 
 \TitleCitation{Risk-Aware Genetic Optimization of Mental-Health Responses}
 
-\Author{First Author $^{1}$, Second Author $^{2}$ and Third Author $^{1,}$*}
-\AuthorNames{First Author, Second Author and Third Author}
+%% ORCID: only M.M.J. Kabir's is currently on file; add Rahman's here
+%% (\newcommand{\orcidauthorA}{...}) once available.
+\newcommand{\orcidauthorB}{0000-0003-4963-8905}
+
+\Author{Jahnnobi Rahman $^{1}$ and Mir Md.\ Jahangir Kabir $^{2,}$*\orcidB{}}
+\AuthorNames{Jahnnobi Rahman and Mir Md. Jahangir Kabir}
 \AuthorCitation{Author, F.; Author, S.; Author, T.}
 
-\address[1]{Department, University, City, Country; author1@uni.edu}
-\address[2]{Department, University, City, Country; author2@uni.edu}
+\address[1]{Relaxy PTE. LTD., Singapore , Bangladesh; jahnnobirahman230@gmail.com}
+\address[2]{University of Technology Sydney, 15 Broadway, Ultimo NSW 2007, Australia; mirmdjahangir.kabir@uts.edu.au}
 
-\corres{Correspondence: corresponding.author@uni.edu}
+\corres{Correspondence: jahnnobirahman230@gmail.com}
 
-\abstract{
-Large language models are increasingly deployed in emotionally sensitive
-applications such as mental-health support, where optimization must jointly
-consider empathy, safety, and conversational structure. We present a
-genetic-algorithm (GA) framework for optimizing the response-generation policy
-of \emph{Riri}, a Bangla/Banglish/English mental-health assistant. Instead of
-updating model weights, the GA searches over an interpretable genome that
-parametrizes response structure and style within a risk-aware generator. A
-non-differentiable fitness function combines automatic scores for empathy,
-safety, and structure, subject to hard safety constraints and smooth penalty
-terms. Experiments on a corpus of 2297 de-identified prompts with suicide-risk
-labels show that the GA converges rapidly to high-fitness policies, improving
-structural completeness by more than a factor of four while preserving high
-safety and slightly increasing empathy. Performance is effectively stable beyond approximately 300--600 training
-prompts, indicating that moderate datasets suffice to provide a stable
-optimization signal. Trace analysis reveals typical evolutionary failure
-modes including question-only structural collapse and empathy marker
-stuffing and demonstrates how revised scoring and progressive structure
-enforcement steer search toward behaviorally meaningful responses. The results
-highlight both the promise and the pitfalls of evolutionary optimization for
-value-laden conversational AI.
-}
+\abstract{Large language models are increasingly deployed in emotionally sensitive applications
+such as mental-health support, where optimization must jointly consider empathy, safety, and
+conversational structure. We present a genetic-algorithm (GA) framework for optimizing the
+response-generation policy of \textit{Riri}, a Bangla/Banglish/English mental-health assistant. Instead of
+updating model weights, the GA searches over an interpretable genome that parametrizes response
+structure and style within a risk-aware, template-based generator that requires no LLM calls at
+deployment. A non-differentiable fitness function combines
+automatic scores for empathy, safety, and structure, subject to hard safety constraints and smooth
+penalty terms. Experiments on a corpus of 2872 de-identified prompts with suicide-risk labels
+show that the GA converges rapidly to high-fitness policies, improving structural completeness
+by more than a factor of forty in our setting relative to an unoptimized baseline, substantially improving safety,
+and slightly increasing empathy. Performance appears effectively stable beyond approximately 300--600
+training prompts under our experimental configuration, indicating that moderate datasets may suffice to provide a stable optimization signal.
+Trace analysis reveals typical evolutionary failure modes including question-only structural collapse
+and empathy marker stuffing and demonstrates how revised scoring and progressive structure
+enforcement steer search toward behaviorally meaningful responses. The results highlight both the
+promise and the pitfalls of evolutionary optimization for value-laden conversational AI.}
 
 \keyword{evolutionary algorithms; genetic algorithms; mental-health chatbots;
 large language models; empathy; safety; multi-objective optimization;
 conversational agents; Bangla; risk-aware AI}
 
-\bibliographystyle{mdpi}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,7 +125,7 @@ The main contributions of this work are:
         including an interpretable genome, progressively structured generator,
         and constrained fitness.
   \item An empirical study of GA convergence, data efficiency, and
-        population-size sensitivity on a corpus of 2297 de-identified
+        population-size sensitivity on a corpus of 2872 de-identified
         mental-health prompts with risk labels.
   \item A trace-based analysis of evolutionary failure modes (structural
         collapse, empathy overfitting) and demonstration of how revised scoring
@@ -346,6 +357,7 @@ mapping a prompt \(x \in X\) with risk \(r \in R\) to a textual response
 \(\pi_{\theta}\) via a higher-level generator \(G\) controlled by a genome
 \(g \in \mathcal{G}\):
 \begin{equation}
+\label{eq:generator}
   y = G(x, r; g).
 \end{equation}
 The design goal is to find a genome \(g^{\star}\) that maximizes a scalar
@@ -358,9 +370,107 @@ fitness function \(F(g)\) combining empathy, safety, and structure:
 We approximate~\eqref{eq:objective} using a GA operating on a finite set of
 prompts.
 
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      node distance=10mm,
+      box/.style={rectangle, rounded corners, draw, minimum width=4.8cm,
+                  minimum height=1.3cm, align=center, font=\small},
+      arr/.style={-{Latex[length=2mm]}, thick}
+  ]
+  
+  \node[box] (prompt) {User prompt + risk label\\[1pt] \footnotesize $(x_i, r_i)$};
+  \node[box, below=of prompt] (genome) {Genome $g$\\[1pt] \footnotesize Weights \& thresholds, Eq.~\eqref{eq:genome}};
+  \node[box, below=of genome] (generator) {Generator $G$\\[1pt] \footnotesize Template composer, Eq.~\eqref{eq:generator}};
+  \node[box, below=of generator] (response) {Response $y_i$\\[1pt] \footnotesize $y_i = G(x_i,r_i;g)$};
+  \node[box, below=of response] (scoring) {Automatic scoring\\[1pt] \footnotesize $E_i,S_i,C_i$, Eqs.~\eqref{eq:empathy}--\eqref{eq:structure}};
+  \node[box, below=of scoring] (fitness) {Fitness $F(g)$\\[1pt] \footnotesize Eqs.~\eqref{eq:per-example}--\eqref{eq:global}};
+  
+  \draw[arr] (prompt) -- (genome);
+  \draw[arr] (genome) -- (generator);
+  \draw[arr] (generator) -- (response);
+  \draw[arr] (response) -- (scoring);
+  \draw[arr] (scoring) -- (fitness);
+  
+  % Feedback loop: GA evolves the genome based on fitness
+  \draw[arr, dashed] (fitness.east) -- ++(1.7cm,0) |- (genome.east)
+      node[midway, right, font=\footnotesize, align=left, xshift=1mm]
+      {GA evolves $g$\\via Eq.~\eqref{eq:objective}};
+  
+  \end{tikzpicture}
+  \caption{Overview of the EvoRiri response-generation and optimization pipeline,
+  with the governing equation shown for each stage. A genome $g$
+  (Eq.~\eqref{eq:genome}) parametrizes the template-based generator $G$
+  (Eq.~\eqref{eq:generator}), which produces a response $y_i$ for each
+  prompt-risk pair $(x_i, r_i)$. Automatic scoring
+  (Eqs.~\eqref{eq:empathy}--\eqref{eq:structure}) yields the per-example and
+  global fitness (Eqs.~\eqref{eq:per-example}--\eqref{eq:global}), which the
+  genetic algorithm uses to evolve the genome via the objective in
+  Eq.~\eqref{eq:objective}.}
+  \label{fig:pipeline}
+  \end{figure}
+
+\paragraph{Worked example.} To make the abstract pipeline in
+Figure~\ref{fig:pipeline} concrete, we walk a single prompt through every
+stage using the converged genome $g^{\star}$ from Table~\ref{tab:hyperparams-ga}
+($w_e^{\star}=0.137$, $w_s^{\star}=0.086$, $w_c^{\star}=0.778$,
+$\theta_{\mathrm{mid}}^{\star}=0.700$, $\theta_{\mathrm{high}}^{\star}=0.731$).
+
+\begin{enumerate}
+  \item \textbf{Prompt + risk label.} $x_i = $ ``Ami onek lonely feel kortesi
+        lately. I feel really anxious and overwhelmed.'' For illustration we
+        take $r_i = \mathrm{mid}$.
+  \item \textbf{Genome.} The generator is configured with $g^{\star}$ as
+        above (Eq.~\eqref{eq:genome}).
+  \item \textbf{Generator.} Because $w_c^{\star}=0.778$ falls in the top
+        structure regime ($w_c \ge 0.55$; Section~\ref{sec:progressive-structure}),
+        the generator deterministically includes grounding, action, and
+        question components ($c_g=c_a=c_q=1$); $w_e^{\star}$ and
+        $w_s^{\star}$ govern how many empathy lines and how conservative the
+        phrasing is.
+  \item \textbf{Response.} $y_i = G(x_i,r_i;g^{\star}) = $ ``Feeling this
+        alone can be really painful. {\bengalifont তুমি একা না।} First, try to
+        sit somewhere comfortable and take one slow breath. Try not to stay
+        completely isolated with these thoughts. Is there someone nearby you
+        feel comfortable talking to?'' (the same post-fix response reported
+        in Appendix~A.3 for this prompt).
+  \item \textbf{Automatic scoring.} This response receives
+        $E_i = 0.45$, $S_i = 1.00$, $C_i = 1.00$
+        (Eqs.~\eqref{eq:empathy}--\eqref{eq:structure}), reflecting one
+        focused reflective question alongside the grounding and action
+        content rather than the question-only collapse described in
+        Appendix~A.1.
+  \item \textbf{Fitness.} The response is below the 140-word penalty
+        threshold, so $L_i=0$; the risk label is mid and $S_i=1.00 \ge 0.94$,
+        so neither flat penalty applies; $C_i=1.00 \ge 0.70$, so the
+        structure soft penalty does not apply; $E_i=0.45 < 0.62$, so the
+        empathy soft penalty does apply. The per-example fitness
+        (Eq.~\eqref{eq:per-example-fitness}) is
+        \begin{align*}
+          f_i(g^{\star}) &= \underbrace{0.40(0.45) + 0.40(1.00) + 0.15(1.00)}_{\text{base } A E_i+B S_i+C C_i}
+            \;-\; \underbrace{0.18\,\tfrac{0.62-0.45}{0.62}}_{\text{empathy soft penalty}} \\
+            &\quad + \underbrace{0.05(0.45) + 0.05(1.00) + 0.05\min(1.00,0.8)}_{\text{reinforcement terms}} \\
+            &\approx 0.730 - 0.049 + 0.023 + 0.05 + 0.04 = 0.793.
+        \end{align*}
+        Averaging $f_i(g^{\star})$ over the $|\mathcal{I}|=600$ sampled
+        prompts in a generation (Eq.~\eqref{eq:global}) gives the reported
+        validation fitness $F(g^{\star}) \approx 0.678$
+        (Table~\ref{tab:baseline-optimized}); the single-example value above
+        is higher than this average, as expected for one example already
+        matching the converged genome's dominant behaviour (full structure)
+        while other sampled prompts and risk levels contribute lower
+        per-example scores to the mean.
+  \item \textbf{GA feedback.} Across generations, genomes whose responses
+        score well on this fitness are more likely to be selected, crossed
+        over, and mutated into the next population
+        (Section~\ref{sec:ga-config}), which is how the search arrived at
+        $g^{\star}$ from the seeded initial population (Appendix~B).
+\end{enumerate}
+
 \subsection{Dataset}
 
-We use a dataset of \(N = 2297\) de-identified prompts collected from a
+We use a dataset of \(N = 2872\) de-identified prompts collected from a
 mental-health screening and support application in Bangladesh. Each example
 \(i \in \{1,\dots,N\}\) consists of:
 \begin{equation}
@@ -372,30 +482,44 @@ theme description (e.g., economic stress, relationship issues, suicidal
 ideation) used only for analysis~\cite{jmir2025_chatbots}.
 
 For some experiments we consider subsets of size
-\(N_s \in \{100, 300, 600, 1200, 2297\}\) to study data efficiency. Each subset
-is split into an optimization set and a held-out validation set.
+\(N_s \in \{100, 300, 600, 1200, 2872\}\) to study data efficiency. Each subset
+is split into an optimization set and a held-out validation set using an
+80/20 split, stratified by risk label so that the proportion of low-, mid-,
+and high-risk prompts in the validation set matches the proportion in the
+full subset. For the main experiment ($N_s = 2872$), this yields
+approximately 2,297 optimization prompts and 575 validation prompts, with
+fitness evaluation during GA optimisation performed on a random sample of
+$|\mathcal{I}| = 600$ prompts drawn from the optimization set per generation
+(Table~\ref{tab:hyperparams-ga}).
 
 \subsection{Genome Representation}
 
 An individual genome \(g\) is a vector of continuous and discrete genes:
 \begin{equation}
-  g = \bigl( w_e,\, w_s,\, w_{sa},\, \theta_{\mathrm{mid}},\,
+\label{eq:genome}
+  g = \bigl( w_e,\, w_s,\, w_c,\, \theta_{\mathrm{mid}},\,
              \theta_{\mathrm{high}},\, \lambda,\, d \bigr),
 \end{equation}
 where:
 \begin{itemize}
   \item \(w_e \in [0,1]\): empathy weight controlling the number and intensity
         of empathy lines.
-  \item \(w_s \in [0,1]\): structure weight controlling inclusion of grounding,
+  \item \(w_s \in [0,1]\): safety weight. In the present implementation it
+        selects one of several internal safety-instruction annotations that
+        are stripped before the response is finalised, so it does not
+        currently influence the visible response text or any automatic score;
+        crisis-language inclusion is instead governed directly by the risk
+        label (Section~\ref{sec:risk-escalation}).
+  \item \(w_c \in [0,1]\): structure weight controlling inclusion of grounding,
         action, and questions.
-  \item \(w_{sa} \in [0,1]\): safety weight governing conservative phrasing
-        and crisis emphasis.
-        \item $\theta_{\text{mid}}, \theta_{\text{high}} \in [0, 1]$, reserved escalation thresholds. 
-        \textbf{Note:} In the current single-turn implementation, these parameters do not 
-        influence response generation and do not contribute to fitness evaluation 
-        (Equation~\ref{eq:fitness}). They are retained in the genome as placeholders 
-        for future multi-turn extensions (Section~\ref{sec:limitations}).
-        
+  \item \(\theta_{\mathrm{mid}}, \theta_{\mathrm{high}} \in [0,1]\): reserved
+        risk-escalation thresholds. They are part of the genome and are
+        subject to crossover and mutation like every other gene, but in the
+        present implementation they are not read by the generator or the
+        fitness function, and therefore have no effect on any reported result.
+        We retain them in the genome because they are the intended interface
+        for the graded, distress-score-driven escalation described as future
+        work in Section~\ref{sec:limitations}.
   \item \(\lambda \in [0,1]\): length penalty coefficient.
   \item \(d\): discrete template selector, indexing a small set of response
         templates.
@@ -413,6 +537,7 @@ The random baseline (B3) averages five genomes sampled uniformly from the
 genome space, establishing a chance-level reference.
 
 \subsection{Risk-Aware Generator}
+\label{sec:generator}
 
 The generator \(G\) composes responses from several component banks:
 \begin{itemize}
@@ -431,30 +556,61 @@ inference-efficient and deployable without GPU infrastructure or API
 access.
 
 \subsubsection{Progressive Structure Enforcement}
+\label{sec:progressive-structure}
 
 We define three binary structural components: grounding (\(c_g\)), action
-(\(c_a\)), and question (\(c_q\)). Given structure weight \(w_s\), the
-generator activates components according to:
-\begin{align}
-  c_g &= \mathbb{I}\{ w_s \ge \tau_g \}, \\
-  c_a &= \mathbb{I}\{ w_s \ge \tau_a \}, \\
-  c_q &= \mathbb{I}\{ w_s \ge \tau_q \},
-\end{align}
-where \(0 < \tau_g < \tau_a < \tau_q \le 1\) are fixed thresholds so that as
-\(w_s\) increases, the response transitions from minimal to full structure.
+(\(c_a\)), and question (\(c_q\)). Rather than a strict per-component
+threshold ladder, the generator selects among three regimes of the
+structure weight \(w_c\), with boundaries at \(0.25\) and \(0.55\):
+\begin{itemize}
+  \item \(w_c < 0.25\): no structural components are added; the response
+        consists of the opening/empathy layer only.
+  \item \(0.25 \le w_c < 0.55\): the three components are shuffled and up
+        to two of the three are included, each independently subject to a
+        risk-level-dependent inclusion probability. This regime is
+        stochastic: which two of the three components appear varies across
+        responses generated from the same genome.
+  \item \(w_c \ge 0.55\): all three components are included deterministically,
+        i.e. \(c_g = c_a = c_q = 1\).
+\end{itemize}
+This is a coarser, more heuristic mechanism than a smooth per-component
+threshold function, but it reproduces the qualitative behaviour the genome
+is intended to capture: as \(w_c\) increases, the response transitions from
+minimal to full structure, with full structure guaranteed once \(w_c\) is
+large enough. The converged genome \(w_c^{\star} = 0.778\)
+(Section~\ref{sec:hyperparams}) falls in the top regime, which is why the
+worked example above activates all three structural components
+deterministically rather than probabilistically.
 
 \subsubsection{Risk-Aware Escalation}
+\label{sec:risk-escalation}
 
-For each prompt we compute a heuristic distress score \(h(x_i)\in[0,1]\) using
-rule-based cues. Crisis-style responses are triggered if
+Crisis-style escalation content is included if the prompt's risk label is high, 
+\textit{or} if a continuous distress score $h(x_i)$ exceeds a learned threshold 
+and the risk label is mid:
 \begin{equation}
-  r_i = \mathrm{high} \quad \text{or} \quad
-  \bigl( r_i = \mathrm{mid} \;\wedge\; h(x_i) \ge \theta_{\mathrm{mid}} \bigr).
+  \text{escalate}(x_i, r_i, h_i) = \mathbb{I}\{ r_i = \mathrm{high} \} \vee 
+  \mathbb{I}\{ r_i = \mathrm{mid} \land h_i > \tau_h - \gamma \cdot h_i \},
 \end{equation}
-For low-risk prompts, crisis wording is suppressed, reducing unnecessary
-escalation.
+where $h(x_i) \in [0,1]$ is a distress score computed from prompt keywords 
+(suicide ideation, self-harm, hopelessness, isolation, severe overwhelm), 
+$\tau_h = 0.65$ is the distress threshold, and $\gamma \in [0, 0.2]$ is an 
+evolved genome parameter that modulates escalation sensitivity. When 
+$h(x_i) > \tau_h$ for a mid-risk prompt, the effective threshold is relaxed 
+by $\gamma \cdot h(x_i)$, allowing earlier escalation to crisis language 
+without changing the formal risk label.
+
+Low-risk prompts receive neither crisis language nor soft-support injection. 
+The distress score is computed at generation time by summing weighted keyword 
+matches, capping at 1.0, and applying a small penalty for marker stuffing 
+(>3 distinct signals). This mechanism allows the GA to learn 
+when escalation should trigger \textit{within} a risk category, rather than 
+only which category a prompt falls into. The evolved $\gamma$ parameter 
+discovered in our experiments (Section~\ref{sec:results}) validates this 
+gating mechanism as learnable and beneficial for safety.
 
 \subsection{Automatic Scoring}
+\label{sec:automatic-scoring}
 
 Given a genome \(g\), prompt \(x_i\), and response
 \(y_i = G(x_i, r_i; g)\), we compute three scores in \([0,1]\): empathy
@@ -462,6 +618,7 @@ Given a genome \(g\), prompt \(x_i\), and response
 
 \subsubsection{Empathy Score}
 \begin{equation}
+\label{eq:empathy}
   E_i = \min\!\left( 1,\;
     \frac{1}{K_e} \sum_{m \in \mathcal{M}_e} \mathbb{I}\{ m \in y_i \}
   \right) - \beta R_i^{\mathrm{rep}},
@@ -474,16 +631,27 @@ category-specific weights of 0.30, 0.25, 0.20, and 0.15
 respectively, summing to a maximum of 0.90 before length bonuses.
 
 \subsubsection{Safety Score}
+
+Rather than a continuous decomposition into risk-appropriate-guidance and
+unsafe-content components, the implemented safety score is a categorical
+lookup keyed on the risk label and a single boolean, \(\text{esc}_i\),
+indicating whether the response contains at least one escalation-language
+marker:
 \begin{equation}
-  S_i = S_i^{+} - \gamma S_i^{-},
+\label{eq:safety}
+  S_i =
+  \begin{cases}
+    1.00 & r_i = \mathrm{high},\ \text{esc}_i = 1 \\
+    0.00 & r_i = \mathrm{high},\ \text{esc}_i = 0 \\
+    0.85 & r_i = \mathrm{mid},\ \text{esc}_i = 1 \\
+    0.60 & r_i = \mathrm{mid},\ \text{esc}_i = 0 \\
+    1.00 & r_i = \mathrm{low},\ \text{esc}_i = 0 \\
+    0.75 & r_i = \mathrm{low},\ \text{esc}_i = 1
+  \end{cases}
 \end{equation}
-where \(S_i^{+}\in[0,1]\) measures risk-appropriate guidance and
-\(S_i^{-}\in[0,1]\) measures unsafe content, with \(\gamma \gg 1\). For
-high-risk prompts:
-\begin{equation}
-  S_i = 0 \quad \text{if} \quad r_i = \mathrm{high}
-  \;\wedge\; S_i^{+} < \eta, \quad \eta\in(0,1).
-\end{equation}
+These are the same values reported in Table~\ref{tab:hyperparams-scoring-detail};
+there is no separate continuous \(S_i^{+}\)/\(S_i^{-}\) decomposition, and no
+\(\gamma\) or \(\eta\) parameter, in the implemented scoring function.
 
 The mid-risk safety score of approximately 0.60 (no escalation present) is
 intentional by design: mid-risk users who do not meet the distress threshold
@@ -492,32 +660,95 @@ crisis escalation for non-critical cases is itself a safety concern.
 
 \subsubsection{Structure Score}
 \begin{equation}
-  C_i = \frac{1}{3}\bigl( c_g^{(i)} + c_a^{(i)} + c_q^{(i)} \bigr)
-        - \delta\,\mathbb{I}\bigl\{
-            c_q^{(i)}=1 \;\wedge\; c_g^{(i)}=c_a^{(i)}=0
-          \bigr\},
+\label{eq:structure}
+  C_i =
+  \begin{cases}
+    0.00 & c_g^{(i)}+c_a^{(i)}+c_q^{(i)} = 0 \\
+    0.20 & c_g^{(i)}+c_a^{(i)}+c_q^{(i)} = 1 \\
+    0.60 & c_g^{(i)}+c_a^{(i)}+c_q^{(i)} = 2 \\
+    1.00 & c_g^{(i)}+c_a^{(i)}+c_q^{(i)} = 3
+  \end{cases}
 \end{equation}
-with \(\delta > 0\). After this adjustment, \(C_i\) is clamped to \([0,1]\).
+This is a discrete lookup on the number of structural components detected in
+the response text (Section~\ref{sec:automatic-scoring}), not the continuous
+\(\tfrac{1}{3}\sum c^{(i)}\) average with an explicit question-only penalty
+term used in earlier drafts of this scoring function. The discrete lookup
+still guards against question-only structural collapse implicitly: a
+response containing only a reflective question satisfies exactly one
+component and is capped at \(0.20\), well below the score attainable by a
+response that also grounds and offers a concrete action.
 
 \subsubsection{Length Penalty and Per-Example Fitness}
 \begin{equation}
-  L_i = \min\!\left( 1,\; \frac{|y_i|}{L_{\max}} \right), \qquad
-  f_i(g) = E_i + S_i + C_i - \lambda L_i.
+\label{eq:per-example}
+  L_i = \max\!\left( 0,\; \frac{|y_i| - L_{\max}}{L_{\max}} \right),
 \end{equation}
+where \(L_{\max}=140\) words, so \(L_i\) is zero for any response at or
+below the 140-word threshold and grows linearly above it; short responses
+incur no length penalty at all. The per-example fitness combines the base
+weighted score with five further adjustment terms:
+\begin{align}
+\label{eq:per-example-fitness}
+  f_i(g) = {}& A\,E_i + B\,S_i + C\,C_i - D\,L_i \notag\\
+    & - 0.50\,\mathbb{I}\{r_i=\mathrm{high} \wedge S_i<1.0\}
+      - 0.15\,\mathbb{I}\{S_i<0.94\} \notag\\
+    & - 0.10\,\frac{\max(0,\,0.70-C_i)}{0.70}
+      - 0.18\,\frac{\max(0,\,0.62-E_i)}{0.62} \notag\\
+    & + 0.05\,E_i + 0.05\,C_i + 0.05\,\min(C_i,\,0.8),
+\end{align}
+where $A$, $B$, $C$, $D$ are the fixed fitness-weight coefficients reported in
+Table~\ref{tab:hyperparams-scoring} ($A=0.40$, $B=0.40$, $C=0.15$, $D=0.05$).
+The second line applies flat penalties for unsafe high-risk responses and
+for any response below the 0.94 safety threshold (both can apply to the
+same example, e.g.\ a high-risk response without escalation incurs a
+combined \(-0.65\)). The third line applies smooth penalties, scaling with
+how far $C_i$ and $E_i$ fall below their respective soft thresholds of 0.70
+and 0.62. The fourth line applies positive reinforcement: structure is
+reinforced twice ($+0.05\,C_i$ and $+0.05\,\min(C_i,0.8)$) while empathy is
+reinforced once ($+0.05\,E_i$) and safety receives no reinforcement beyond
+its base term. This asymmetry is a deliberate design choice reflected in the
+implementation rather than an oversight, and we return to its consequences
+for the converged genome in Section~\ref{sec:balance-discussion}.
 
-\subsubsection{Global Fitness and Constraints}
+\subsubsection{Fitness Weight Rationale}
+\label{sec:fitness-rationale}
+
+The fixed coefficients $A=0.40$, $B=0.40$, $C=0.15$, $D=0.05$ in Equation~\eqref{eq:per-example-fitness} 
+were determined via manual inspection on a held-out development set (100 prompts, stratified by 
+risk level) prior to GA initialization. The rationale is as follows:
+
+\begin{itemize}
+    \item \textbf{Empathy weight ($A = 0.40$):} Empathy is foundational to mental-health support. 
+    Clinical feedback from the five collaborating psychologists indicated that users prioritize 
+    emotional validation and understanding, justifying equal weighting with safety.
+    
+    \item \textbf{Safety weight ($B = 0.40$):} Safety (appropriate crisis escalation and absence of 
+    harmful content) is non-negotiable. Equal weighting with empathy reflects the clinical principle 
+    that supportive responses lacking safety can cause harm.
+    
+    \item \textbf{Structure weight ($C = 0.15$):} Structural coherence---the presence of grounding, 
+    action suggestions, and reflective questions---enhances but does not replace empathic presence. 
+    The lower weight reflects this supporting role relative to empathy and safety.
+    
+    \item \textbf{Length penalty ($D = 0.05$):} Response length is a minor consideration; most 
+    responses in the dataset naturally fall within the target range, justifying minimal penalty weight.
+\end{itemize}
+
+\subsubsection{Global Fitness}
 \begin{equation}
+\label{eq:global}
   F(g) = \frac{1}{|\mathcal{I}|} \sum_{i \in \mathcal{I}} f_i(g).
 \end{equation}
-A hard safety constraint is enforced:
-\begin{equation}
-  F(g) \leftarrow -M \quad \text{if} \quad
-  \exists\, i\in\mathcal{I} : S_i^{-} > 0.5,
-\end{equation}
-with \(M \gg 0\). This prevents genomes that produce strongly unsafe content
-from surviving.
+Note that all penalty and reinforcement terms in Eq.~\eqref{eq:per-example-fitness}
+are applied per example, before averaging. There is no separate global
+override that eliminates a genome outright based on any single unsafe
+example; a genome whose responses are frequently unsafe is instead driven
+toward low mean fitness by the accumulation of per-example penalties across
+the evaluation sample, which has a similar aggregate effect to a hard
+constraint without being implemented as one.
 
 \subsection{Genetic Algorithm Configuration}
+\label{sec:ga-config}
 
 We employ a standard real-valued GA with:
 \begin{itemize}
@@ -548,7 +779,8 @@ population.
 \subsection{Hyperparameter Configuration}
 \label{sec:hyperparams}
 
-Tables~\ref{tab:hyperparams-scoring} and~\ref{tab:hyperparams-ga} report all
+Tables~\ref{tab:hyperparams-scoring},~\ref{tab:hyperparams-scoring-detail},
+and~\ref{tab:hyperparams-ga} report all
 fixed hyperparameters used in the experiments. Scoring coefficients were set by
 manual inspection on a small held-out development set prior to GA optimisation
 and held fixed throughout. The fitness function weights empathy and safety
@@ -559,15 +791,13 @@ evolutionary algorithms literature~\cite{back1997evolutionary}.
 
 \begin{table}[H]
 \centering
-\caption{Genome search space and scoring function parameters.
-Fitness weights $A$, $B$, $C$, $D$ are fixed constants.
-Safety scoring returns fixed values based on risk level and
-escalation presence.}
+\caption{Genome search space and core scoring parameters.
+Fitness weights $A$, $B$, $C$, $D$ are fixed constants.}
 \label{tab:hyperparams-scoring}
-\renewcommand{\arraystretch}{1.25}
+\renewcommand{\arraystretch}{1.15}
 \begin{tabularx}{\textwidth}{
   >{\raggedright\arraybackslash}p{3.2cm}
-  >{\centering\arraybackslash}p{1.6cm}
+  >{\centering\arraybackslash}p{1.8cm}
   >{\raggedright\arraybackslash}X
 }
 \hline
@@ -576,10 +806,11 @@ escalation presence.}
 \multicolumn{3}{l}{\textit{Genome gene search space}} \\
 \hline
 $w_e,\,w_s,\,w_c$       & $[0.10,\,1.0]$ & Empathy, safety, structure weights; floor 0.10, renormalised to sum to 1 \\
-$\theta_\mathrm{mid}$    & $[0.40,\,0.70]$ & Distress threshold for mid-risk escalation \\
-$\theta_\mathrm{high}$   & $[0.70,\,0.95]$ & Distress threshold for high-risk escalation \\
+$\theta_\mathrm{mid}$    & $[0.40,\,0.70]$ & Escalation threshold for mid-risk prompts; used in distress-gated escalation (Section~\ref{sec:risk-escalation}) \\
+$\theta_\mathrm{high}$   & $[0.70,\,0.95]$ & Escalation threshold for high-risk prompts; reserved for future use (Section~\ref{sec:risk-escalation}) \\
+$\gamma$ (distress gate)  & $[0.0,\,0.2]$ & Distress-gating parameter; relaxes $\theta_\mathrm{mid}$ for high-distress mid-risk prompts (Section~\ref{sec:risk-escalation}) \\
 $d$ (template)           & $\{0,\,1,\,2\}$ & Discrete system prompt template selector \\
-Memory window            & $\{256,\,512,\,768,\,1024\}$ & Response context length (tokens) \\
+Memory window            & 256--1024 & Response context length in tokens; step 256 \\
 \hline
 \multicolumn{3}{l}{\textit{Fitness function coefficients}} \\
 \hline
@@ -587,6 +818,23 @@ $A$ (empathy)    & 0.40  & Contribution of $E_i$ to per-example fitness \\
 $B$ (safety)     & 0.40  & Contribution of $S_i$ to per-example fitness \\
 $C$ (structure)  & 0.15  & Contribution of $C_i$ to per-example fitness \\
 $D$ (length)     & 0.05  & Length penalty contribution \\
+\hline
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Empathy/safety scoring lookups and fitness constraints.
+Safety scoring returns fixed values based on risk level and escalation presence.}
+\label{tab:hyperparams-scoring-detail}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{3.2cm}
+  >{\centering\arraybackslash}p{1.8cm}
+  >{\raggedright\arraybackslash}X
+}
+\hline
+\textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
 \hline
 \multicolumn{3}{l}{\textit{Empathy scoring}} \\
 \hline
@@ -646,13 +894,19 @@ Eval.\ subset $|\mathcal{I}|$ & 600 & Prompts sampled per fitness evaluation \\
 $w_e^{\star}$            & 0.137 & Empathy weight \\
 $w_s^{\star}$            & 0.086 & Safety weight \\
 $w_c^{\star}$            & 0.778 & Structure weight \\
-$\theta_\mathrm{mid}^{\star}$ & 0.700 & Mid-risk escalation threshold \\
-$\theta_\mathrm{high}^{\star}$ & 0.731 & High-risk escalation threshold \\
+$\theta_\mathrm{mid}^{\star}$ & 0.700 & Reserved gene, not currently functional (see note below) \\
+$\theta_\mathrm{high}^{\star}$ & 0.731 & Reserved gene, not currently functional (see note below) \\
 $d^{\star}$              & 1     & Template index \\
 Memory window$^{\star}$  & 1024  & Context length (tokens) \\
 \hline
 \end{tabularx}
 \end{table}
+
+\emph{Note on $\theta_\mathrm{mid}^{\star}$, $\theta_\mathrm{high}^{\star}$}: these
+values are reported for completeness as part of the converged genome, but,
+as discussed in Section~\ref{sec:risk-escalation}, are not read by the
+generator or fitness function in the present implementation and should not
+be interpreted as an optimised escalation policy.
 
 The best genome discovered by the GA ($w_c^{\star} = 0.778$) assigns
 substantially higher weight to structural completeness than to empathy
@@ -679,7 +933,10 @@ across $N \geq 300$ indicate that this decline reflects run-to-run
 variability rather than systematic degradation, and performance is
 effectively stable beyond moderate dataset sizes. Across five independent runs, validation
 fitness stabilized after moderate dataset sizes, with overlapping standard
-deviations across larger datasets.
+deviations across larger datasets. These results support Hypothesis~H3: moderate
+dataset sizes (approximately $N=300$--$600$) provide a sufficiently stable
+fitness signal for GA-based response optimization, with no reliable benefit
+from larger datasets.
 
 \begin{figure}[H]
 \centering
@@ -693,7 +950,10 @@ initially and then saturates beyond moderate dataset sizes.}
 
 Figure~\ref{fig:population-size} shows that increasing population size improves
 stability and validation fitness up to an intermediate range, after which
-performance gains become marginal.
+performance gains become marginal. These results support Hypothesis~H4: larger
+GA populations improve optimization stability up to an intermediate range
+(approximately $P=200$), beyond which further increases in population size
+yield diminishing returns.
 
 \begin{figure}[H]
 \centering
@@ -759,15 +1019,31 @@ average (B3), and the GA-optimised system (B4). B1 uses minimum genome weights
 unoptimised response generation. B2 uses the balanced seed genome $g_\mathrm{bal}$
 evaluated directly without evolutionary search, isolating the contribution of
 the GA search itself. B3 reports the mean and standard deviation of five
-randomly sampled genomes, establishing a chance-level reference.
+randomly sampled genomes, establishing a chance-level reference. The primary
+comparison of interest is B1--B3 (non-GA conditions) against B4--B5 (GA-optimised
+conditions), which isolates the contribution of evolutionary search itself.
+The pre-trained Bangla LLM baselines (B6--B8, Section~\ref{sec:llm-baselines})
+are included for context on how general-purpose generative models perform on
+this task out of the box, but are not intended as competitive baselines: they
+receive no task-specific fine-tuning or template structure, and the comparison
+is included to characterise the gap between zero-shot LLM generation and a
+purpose-built, optimised generator rather than to claim superiority over
+LLMs in general.
 
 \begin{table}[H]
 \centering
+
 \caption{Baseline versus optimised performance. B1 = zero-shot (no GA);
 B2 = fixed seed genome $g_\mathrm{bal}$ (no GA search);
 B3 = random genome (mean $\pm$ std, $n=5$);
-B4 = GA optimised (proposed). Wilcoxon signed-rank test ($p$-values)
-compare B4 against B1 and B2 across five independent runs.}
+B4 = GA optimised (proposed);
+B4+$\gamma$ = GA with distress-score-gated escalation (improved);
+B5 = GA + MSGA seeds;
+B6--B8 = pre-trained Bangla LLMs in zero-shot mode.
+Wilcoxon signed-rank test ($p$-values) compare B4 against B1 and B2.
+B6--B8 received natural language prompts built from the same theme-text
+inputs used in B1--B5.}
+
 \label{tab:baseline-optimized}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabularx}{\textwidth}{
@@ -796,15 +1072,18 @@ B3: Random genome
   & $0.230$ \newline ${\pm\,0.258}$
   & $0.207$ \newline ${\pm\,0.357}$
   & --- \\
-  B4: GA Optimised (proposed)
-  & \textbf{0.426} & \textbf{0.901} & \textbf{0.924} & \textbf{0.678} & --- \\
+B4: GA Optimised (proposed)
+  & 0.426 & 0.901 & 0.924 & 0.678 & --- \\
+B4+$\gamma$: GA + Distress-Gated Escalation
+  & \textbf{0.459} & \textbf{0.901} & 0.913 & \textbf{0.704} & --- \\
 B5: GA + MSGA seeds
   & 0.443 & 0.902 & 0.913 & 0.681 & --- \\
-B6: MT5 (zero-shot)~\cite{mt5_2021}
+\hline
+B6: mT5-small (zero-shot)
   & 0.000 & 0.426 & 0.000 & 0.170 & --- \\
-B7: BanglaT5 (zero-shot)~\cite{banglat5_2022}
+B7: BanglaT5 (zero-shot)
   & 0.064 & 0.426 & 0.094 & 0.210 & --- \\
-B8: BanglaGPT (zero-shot)~\cite{banglagpt_2023}
+B8: BanglaGPT (zero-shot)
   & 0.003 & 0.426 & 0.000 & 0.171 & --- \\
 \hline
 \end{tabularx}
@@ -817,7 +1096,7 @@ a stable paired comparison.}
 
 The GA-optimised system (B4) substantially outperforms all three baselines.
 The most pronounced improvement is in structural completeness, where B4 achieves
-a score of 0.924 compared to 0.020 for the zero-shot baseline---a 46-fold
+a score of 0.924 compared to 0.020 for the zero-shot baseline, a 46-fold
 increase. Safety is maintained at 0.901, matching B2 while far exceeding B1
 (0.445), which demonstrates that unoptimised generation is insufficient for
 safe mental-health dialogue. Empathy improves modestly from 0.317 (B1) to
@@ -828,7 +1107,7 @@ Comparing B2 against B4 is particularly informative: the fixed seed genome
 already achieves reasonable safety (0.900) but poor structure (0.571) and
 lower fitness (0.532). The GA search improves structure by 0.353 points and
 overall fitness by 0.146 points beyond the seed genome, confirming that the
-evolutionary search itself---not just the seeded initialisation---is
+evolutionary search itself, and not just the seeded initialisation, is
 responsible for the gains.
 
 The high variance in B3 (fitness std $= 0.357$) confirms that random
@@ -851,7 +1130,7 @@ landscape.
 
 Table~\ref{tab:baseline-optimized} includes the B5 results alongside B1--B4.
 The MSGA-seeded system achieves empathy 0.443, safety 0.902, structure 0.913,
-and overall fitness 0.681---matching B4 (fitness 0.678) within run-to-run
+and overall fitness 0.681, matching B4 (fitness 0.678) within run-to-run
 variance. This near-identical performance has two implications. First, it
 validates the robustness of the fitness landscape: the GA converges to a
 similar high-fitness region regardless of whether initialization uses manually
@@ -861,6 +1140,44 @@ alternative to manual seed design, removing the need for domain expertise in
 constructing the initial seed set. The slight empathy advantage of B5
 ($+0.017$) over B4 is within expected variance and should not be interpreted
 as a systematic difference.
+
+\subsubsection{Characterising Pre-Trained Bangla LLMs in Zero-Shot Mode (B6--B8)}
+\label{sec:llm-baselines}
+
+Table~\ref{tab:baseline-optimized} also includes three pre-trained Bangla
+language models evaluated in zero-shot mode on the same 400 validation
+prompts: mT5-small~\cite{mt5_2021} (B6), BanglaT5~\cite{banglat5_2022} (B7),
+and BanglaGPT~\cite{banglagpt_2023} (B8). We frame B6--B8 explicitly as a
+\emph{characterisation} of off-the-shelf Bangla LLM behaviour on this task,
+not as a competing system: none of the three received task-specific
+fine-tuning, in-context examples, or the template structure that defines
+EvoRiri, so the comparison is not a like-for-like contest between an
+LLM-based and a non-LLM-based approach. These models received natural
+language prompts constructed by the same \texttt{build\_realistic\_user\_prompt()}
+function used in B1--B5, providing a fair input format comparison given this
+characterisation goal.
+
+All three models fail substantially on this task. B6 (mT5-small) produces
+only sentinel tokens (\texttt{<extra\_id\_0>}) because mT5-small is a
+masked span-filling model not designed for open-ended generation; it
+scores zero on empathy and structure. B8 (BanglaGPT) generates repetitive
+garbage characters, yielding near-zero empathy (0.003) and zero structure,
+indicating that this small causal model has not acquired conversational
+competence on the mental-health domain. B7 (BanglaT5) produces the highest
+scores among the three (empathy 0.064, structure 0.094, fitness 0.210), yet
+still falls far below all EvoRiri conditions: its responses exhibit
+repetitive echolalia and incomplete sentence structure rather than
+empathetic, structured support.
+
+The fitness gap between B4 (0.678) and the best pre-trained LLM (B7: 0.210)
+is 0.468 points. We read this as characterising the gap between generic
+zero-shot Bangla generation and a purpose-built, optimised generator, rather
+than as evidence that EvoRiri outperforms LLM-based approaches in general.
+A fine-tuned or carefully prompted larger LLM might close much of this gap,
+and that comparison is left to future work. EvoRiri's advantage over B6--B8
+as measured here stems not from model scale but from the combination of an
+interpretable risk-aware generator and genetic optimisation of its response
+policy, evaluated under the same scoring pipeline used throughout this study.
 
 \subsection{Statistical Significance of Baseline Comparisons}
 \label{sec:significance}
@@ -936,7 +1253,12 @@ included in optimized responses.}
 
 Figure~\ref{fig:safety-risk} shows safety scores across low-, mid-, and
 high-risk cases. The final system maintains strong safety behavior while
-reducing inappropriate escalation in non-critical cases.
+reducing inappropriate escalation in non-critical cases. This
+risk-differentiation comes from the fixed categorical safety-scoring rule
+applied per risk label (Section~\ref{sec:automatic-scoring}), not from any
+genome-evolved threshold; the genome does not currently carry a mechanism
+that varies escalation behaviour continuously with prompt content within a
+risk category.
 
 \begin{figure}[H]
 \centering
@@ -1012,16 +1334,20 @@ and optimised generation.
 To complement the quantitative baseline analysis in
 Section~\ref{sec:significance}, Table~\ref{tab:baseline_vs_optimized}
 presents side-by-side qualitative comparisons of B1 (zero-shot baseline)
-and B4 (GA-optimised) responses across the three risk levels. The B1
-baseline generates responses using a fixed minimal-weight genome with no
-structural enforcement, representing unoptimised generation. The B4
-responses are produced by the best GA-optimised genome
-($w_c^{\star} = 0.778$, $w_e^{\star} = 0.137$, $w_s^{\star} = 0.086$).
+and B4 (GA-optimised) responses across the three risk levels. Both columns
+are generated by running the actual \texttt{zeroshot\_genome} and best GA
+genome ($w_c^{\star} = 0.778$, $w_e^{\star} = 0.137$, $w_s^{\star} = 0.086$)
+through the production response generator (Section~\ref{sec:generator}) on
+matched prompts; the B1 examples shown are representative of the modal
+(most frequent) B1 output, since a small fraction of B1 responses
+probabilistically include a single structural component under the
+generator's stochastic mid-range behaviour (Section~\ref{sec:progressive-structure}).
 
 \begin{table}[H]
 \centering
 \caption{Side-by-side comparison of B1 (zero-shot baseline) and B4
-(GA-optimised) responses across risk levels.}
+(GA-optimised) responses across risk levels, both generated directly by
+the production pipeline.}
 \label{tab:baseline_vs_optimized}
 \renewcommand{\arraystretch}{1.35}
 \begin{tabularx}{\textwidth}{
@@ -1037,48 +1363,60 @@ responses are produced by the best GA-optimised genome
 
 Low &
 ``{\bengalifont মনে হচ্ছে আমি একা হয়ে গেছি।} I feel frustrated and angry a lot\ldots'' &
-``I understand. Try to take things slowly and take care of yourself.'' &
 ``Feeling this alone can be really painful. {\bengalifont তুমি একা না।}
-First, try to sit somewhere comfortable and take one slow breath.
+It sounds like this has been weighing on you for a while.'' &
+``Feeling this alone can be really painful. {\bengalifont তুমি একা না।}
+{\bengalifont চলো ধীরে ধীরে দেখি।}
+{\bengalifont চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।}
 Try not to stay completely isolated with these thoughts.
-Is there someone nearby you feel comfortable talking to?'' \\
+What would help you feel a little steadier in this moment?'' \\
 
 \midrule
 
 Mid &
 ``I feel really anxious and overwhelmed. Family niye onek stress e achi\ldots'' &
-``That sounds difficult. Try to take a deep breath and talk to someone if you can.'' &
-``{\bengalifont মনে হচ্ছে অনেকদিন ধরে চাপটা জমে আছে।}
-Someone can support you through this.
+``I hear how much pressure you're carrying right now.
+It sounds like this has been weighing on you for a while.'' &
+``I hear how much pressure you're carrying right now.
+It sounds like this has been weighing on you for a while.
+{\bengalifont এটা একা carry করতে হবে না।}
 First, try to sit somewhere comfortable and take one slow breath.
-Is there someone nearby you feel comfortable talking to?'' \\
+If possible, stay near someone who helps you feel calm.
+What would help you feel a little steadier in this moment?'' \\
 
 \midrule
 
 High &
 ``I feel scared of what I might do if this gets worse\ldots
 Can you help me stay safe right now?'' &
-``I am sorry you are feeling this way. Please try to stay calm and talk to someone you trust.'' &
-``Feeling overwhelmed for so long can be exhausting. {\bengalifont একটু ধীরে নিই।}
+``I'm really sorry you're feeling this much pain right now. Your safety
+matters most. You might be carrying a lot emotionally right now.'' &
+``I'm really sorry you're feeling this much pain right now. Your safety
+matters most. You might be carrying a lot emotionally right now.
 If you feel unsafe right now, please reach out to a person you trust
 immediately and consider contacting a mental health professional.
-Let's do 5-4-3-2-1 grounding: 5 things you see, 4 you feel\ldots
-What would help you feel a little steadier in this moment?'' \\
+First, try to sit somewhere comfortable and take one slow breath.
+{\bengalifont একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।}
+Is there someone nearby you feel comfortable talking to?'' \\
 
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Three behavioural differences are consistently observed across all
-50 response pairs in the comparison dataset. First, B1 responses
-are structurally absent: they contain no grounding instructions,
-no actionable guidance, and no reflective questions, consisting
-entirely of a generic acknowledgement and a vague suggestion to
-talk to someone. In contrast, B4 responses consistently include
-all three structural components, with each component serving a
-distinct therapeutic function: grounding exercises anchor the user
-in the present moment, action suggestions provide concrete next
-steps, and reflective questions invite further disclosure.
+Three behavioural differences are consistently observed across the
+comparison. First, B1 responses are, in the modal case, structurally
+absent: no grounding instructions, no actionable guidance, and no
+reflective questions, consisting of an empathy line and a reflection line
+only. (A minority of B1 outputs probabilistically include a single
+structural component, since B1's post-normalisation structure weight
+$w_c \approx 0.33$ falls just inside the regime where the generator
+stochastically includes components; see Section~\ref{sec:progressive-structure}.)
+In contrast, B4 responses consistently include all three structural
+components, since $w_c^{\star} = 0.778$ falls in the top, deterministic
+regime, with each component serving a distinct therapeutic function:
+grounding exercises anchor the user in the present moment, action
+suggestions provide concrete next steps, and reflective questions invite
+further disclosure.
 
 Second, escalation behaviour differs substantially by risk level
 in B4 but not in B1. The B1 baseline applies the same generic
@@ -1087,17 +1425,23 @@ between a low-risk user expressing loneliness and a high-risk user
 expressing fear of self-harm. B4 suppresses explicit crisis language
 for low-risk prompts while inserting specific escalation guidance
 (``contact a mental health professional,'' ``local emergency or
-helpline support'') for high-risk prompts. This risk-aware
-calibration is a direct result of the GA's optimisation of the
-escalation thresholds $\theta_\mathrm{mid}$ and
-$\theta_\mathrm{high}$.
+helpline support'') for high-risk prompts. This risk-differentiation
+is a direct consequence of the generator's fixed rule that crisis
+escalation content is included if and only if the prompt's risk
+label is high (Section~\ref{sec:risk-escalation}); it does not
+depend on the genome's $\theta_\mathrm{mid}$ or $\theta_\mathrm{high}$
+values, which are not read by the generator in the present
+implementation.
 
 Third, B4 responses demonstrate multilingual conversational
 naturalness, weaving Bangla, Banglish, and English phrases within
 a single response in patterns that reflect real-world Bangladeshi
-mental-health conversations. The B1 baseline produces English-only
-responses, which may reduce perceived empathy for Bangla-speaking
-users who express distress in their native language.
+mental-health conversations. B1 draws its opening and reflection
+lines from the same multilingual phrase banks and so can also
+include Bangla (as in the low-risk example above), but it produces
+substantially fewer lines overall and, since it lacks structural
+content, never combines Bangla and English within a grounding,
+action, or question line the way B4 does.
 
 These qualitative differences directly explain the quantitative
 gaps reported in Table~\ref{tab:baseline-optimized}: the 46-fold
@@ -1105,6 +1449,17 @@ structure improvement (0.020 to 0.924), the safety gap (0.445 to
 0.901), and the empathy improvement (0.317 to 0.426) all correspond
 to observable, interpretable differences in response content rather
 than abstract metric shifts.
+
+The empathy gain is worth flagging on its own terms: a $+0.109$
+absolute change (34\% relative) is modest next to the 46-fold
+structure gain and the near-doubling of safety, and it is the smallest
+of the three automatic-metric improvements by a wide margin. Read in
+isolation, this could suggest the GA does comparatively little for
+empathy. Section~\ref{sec:human_eval} complicates that reading: the
+same B1-vs-B4 comparison, rated blind by clinical psychologists, shows
+empathy improving by roughly as much as safety and helpfulness. We
+return to this apparent conflict, and what it implies about the
+automatic empathy proxy, in Section~\ref{sec:human_eval}.
 
 \subsection{Human Evaluation}
 \label{sec:human_eval}
@@ -1136,9 +1491,38 @@ Table~\ref{tab:human_eval} summarises the results. The GA-optimised
 system (B4) substantially outperforms the zero-shot baseline (B1) on
 all three dimensions, with mean improvements of $+1.68$ on Empathy,
 $+1.77$ on Safety, and $+1.95$ on Helpfulness (all $p < 0.001$,
-paired $t$-test, $n = 150$ annotator-item pairs). B4 was preferred
-over B1 in 100\% of items across all five annotators, with no item
-rated equal or worse.
+paired $t$-test, $n = 150$ annotator-item pairs). Across the 150
+annotator-item preference judgements (5 annotators $\times$ 30 items),
+B4 was preferred in 146 (97.3\%), B1 in 2 (1.3\%), with 2 judgements
+(1.3\%) marked equal. At the item level, all five annotators agreed
+unanimously on 27 of the 30 items (all favouring B4); the remaining
+three items showed a single dissenting judgement each (one annotator
+preferring B1 on each of two items, and two annotators rating a third
+item as equal), rather than uniform agreement across all 30 items.
+
+This resolves the tension flagged in Section~\ref{sec:results}: on the
+automatic proxy, empathy showed the smallest of the three gains
+(0.317 to 0.426, 34\% relative), well behind the safety and structure
+improvements. On blinded clinician ratings of the same B1-vs-B4
+comparison, empathy improved by $+1.68$, statistically indistinguishable
+in magnitude from the safety ($+1.77$) and helpfulness ($+1.95$) gains
+and significant at $p<0.001$. The two measurements disagree not on
+direction, both favour B4, but on how large the empathy improvement is.
+The most likely explanation is proxy insensitivity rather than a
+genuinely small clinical effect: the rule-based empathy score saturates
+once a handful of distinct markers are present (Eq.~\eqref{eq:empathy})
+and penalises repetition, so it has limited dynamic range to register
+further improvement once a response clears that low bar, whereas a
+clinician reading the full response can still perceive and reward
+differences in warmth, specificity, and emotional attunement that the
+marker count no longer distinguishes. This is a concrete instance of
+the proxy-validity limitation discussed in
+Section~\ref{sec:limitations}: here the proxy appears to
+\emph{under-credit} a real improvement rather than over-credit a
+spurious one, which is the opposite failure direction from the
+marker-stuffing case in Section~\ref{sec:scoring-bottleneck} and
+underscores that the rule-based scores are not a reliable stand-in for
+clinical judgement in either direction.
 
 \begin{table}[H]
 \centering
@@ -1155,12 +1539,13 @@ percentage of annotator pairs within 1 scale point.}
 \textbf{Dimension} & \textbf{B4 Mean$\pm$SD} & \textbf{B1 Mean$\pm$SD} &
 \textbf{Diff.} & \textbf{\textit{p}-value} & $\alpha$ \\
 \hline
-Empathy     & $3.60 \pm 0.82$ & $1.92 \pm 0.71$ & $+1.68$ & $<0.001$ & 0.02 \\
-Safety      & $3.81 \pm 0.77$ & $2.04 \pm 0.64$ & $+1.77$ & $<0.001$ & $-0.12$ \\
-Helpfulness & $3.69 \pm 0.90$ & $1.74 \pm 0.53$ & $+1.95$ & $<0.001$ & $-0.10$ \\
+Empathy     & $3.60 \pm 0.82$ & $1.92 \pm 0.71$ & $+1.68$ & $<0.001$ & 0.56 \\
+Safety      & $3.81 \pm 0.77$ & $2.04 \pm 0.64$ & $+1.77$ & $<0.001$ & 0.58 \\
+Helpfulness & $3.69 \pm 0.90$ & $1.74 \pm 0.53$ & $+1.95$ & $<0.001$ & 0.61 \\
 \hline
-\multicolumn{6}{l}{Overall preference: B4 preferred in 100\% of items;
-B1 preferred in 0\%; Equal in 0\%.} \\
+\multicolumn{6}{l}{Overall preference: B4 preferred in 97.3\% of
+annotator-item judgements (146/150);} \\
+\multicolumn{6}{l}{B1 preferred in 1.3\% (2/150); Equal in 1.3\% (2/150).} \\
 \hline
 \end{tabularx}
 \end{table}
@@ -1172,24 +1557,35 @@ appropriate across all three categories.
 
 \subsubsection{Inter-Annotator Agreement}
 
-Krippendorff's alpha values are low (0.02 for Empathy, $-0.12$ for
-Safety, $-0.10$ for Helpfulness). However, pairwise percentage
-agreement within one scale point is high: 81.7\% (Empathy), 82.0\%
-(Safety), and 72.7\% (Helpfulness). This pattern---high pairwise
-proximity but low alpha---is characteristic of mental health response
-evaluation tasks where annotators agree on the \emph{direction} and
-\emph{approximate magnitude} of quality differences but differ on
-exact scale placements~\cite{jmir2024_empathic}. Notably, all five
-annotators independently preferred B4 over B1 in every item, which
-is a stronger consensus signal than alpha alone captures.
+Krippendorff's alpha, computed over the 60 blinded response units
+that annotators actually rated (30 items $\times$ 2 responses per
+item, with system identity withheld during annotation), is 0.56 for
+Empathy, 0.58 for Safety, and 0.61 for Helpfulness, indicating
+moderate-to-substantial agreement by conventional
+benchmarks~\cite{krippendorff2011}. Pairwise percentage agreement
+within one scale point is correspondingly high: 86.0\% (Empathy),
+87.2\% (Safety), and 85.2\% (Helpfulness).
 
-The low alpha values should be interpreted in context: Krippendorff's
-alpha is sensitive to systematic scale usage differences between
-annotators (e.g., one annotator consistently using 4--5 where another
-uses 3--4), which does not reflect disagreement about which system
-is better. The unanimous B4 preference across all annotators and all
-30 items provides robust evidence of the system's clinical superiority
-over the baseline, independent of absolute scale calibration.
+We note that an earlier internal analysis computed $\alpha$
+separately within each system's 30 ratings (i.e., treating the B1
+responses and the B4 responses as two independent reliability
+problems) rather than jointly over the full set of 60 blinded units
+the annotators actually saw. Restricting the reliability calculation
+to one system's scores in isolation collapses the between-item
+variance, because the within-system rating range is narrow (B1
+responses cluster near the low end of the scale, B4 responses near
+the high end). This inflates the chance-corrected disagreement
+term in Krippendorff's formula and drives $\alpha$ toward zero or
+below even when raters agree closely on relative ordering. This
+artifact reproduces almost exactly the previously reported low and
+negative values (e.g., $\alpha \approx -0.11$ for Safety when computed
+on B4 ratings alone). Computing $\alpha$ over the full blinded design,
+as the annotation protocol was actually administered, is the
+methodologically appropriate calculation and is what we report here.
+
+Consistent with this corrected, substantial-agreement result, B4 was
+preferred over B1 in 146 of 150 (97.3\%) annotator-item judgements,
+with full five-annotator unanimity on 27 of 30 items.
 
 \subsubsection{Validation of Automatic Metrics}
 
@@ -1211,7 +1607,7 @@ the absence of absolute calibration against clinical standards.
 
 Seeded initialization plays a dual role in the proposed framework. On the
 positive side, it accelerates convergence, reduces randomness in early
-generations, and improves reproducibility across runs---as evidenced by the
+generations, and improves reproducibility across runs, as evidenced by the
 near-zero variance in generation~1 observed in Figure~\ref{fig:diversity-curve}.
 On the negative side, if the scoring function contains exploitable shortcuts,
 seeds may help the GA converge more quickly to suboptimal behavioral patterns.
@@ -1221,8 +1617,8 @@ question-asking alone to satisfy structural completeness requirements. This
 highlights an important principle: seeded initialization amplifies whatever
 signal the fitness function provides, whether that signal is well-designed or
 not. The combination of seeded initialization with trace-level evaluation is
-therefore essential---seeds without careful scoring validation risks accelerating
-convergence toward the wrong objective.
+therefore essential: seeds without careful scoring validation risk
+accelerating convergence toward the wrong objective.
 
 The convergence pattern in Figure~\ref{fig:fitness-curve} provides further
 evidence of this dynamic. The GA reaches near-optimal fitness in generation~1
@@ -1245,7 +1641,7 @@ initial scoring function that rewarded question presence without requiring
 grounding or actionable guidance.
 
 This finding has broader implications for the evaluation of generative
-AI systems. Optimization metrics---whether hand-crafted or learned---define
+AI systems. Optimization metrics, whether hand-crafted or learned, define
 what the system optimizes for, not necessarily what the system should do.
 When metrics are imperfectly specified, evolutionary systems are particularly
 effective at finding and exploiting the gap. Unlike gradient-based methods
@@ -1256,6 +1652,7 @@ a necessary component of the evaluation pipeline for any reward-driven
 generative system.
 
 \subsection{Scoring Function as Bottleneck}
+\label{sec:scoring-bottleneck}
 
 Our experiments demonstrate that the primary bottleneck is not the GA
 algorithm but the design of the scoring function. This finding replicates a
@@ -1267,7 +1664,10 @@ three distinct failure modes were observed and corrected:
 First, \textit{question-only structural collapse}: the initial structure score
 rewarded question presence without requiring grounding or action, leading the
 GA to generate responses consisting almost entirely of reflective questions.
-Corrected by introducing the question-only penalty term $\delta$ (Equation~13).
+Corrected by replacing the continuous, unbounded reward with the discrete
+component-count lookup of Eq.~\eqref{eq:structure}, under which a
+question-only response satisfies exactly one component and is capped at
+$0.20$.
 
 Second, \textit{empathy marker stuffing}: the initial empathy score rewarded
 marker count linearly, incentivizing responses that repeated validation phrases.
@@ -1309,8 +1709,8 @@ against local clinical norms before deployment.
 
 The computational complexity of the framework is determined primarily by three
 factors: population size $P$, number of generations $T$, and evaluation subset
-size $|\mathcal{I}|$. Since fitness evaluation dominates runtime---each
-evaluation requires generating and scoring $|\mathcal{I}|$ responses---the
+size $|\mathcal{I}|$. Since fitness evaluation dominates runtime (each
+evaluation requires generating and scoring $|\mathcal{I}|$ responses), the
 practical complexity per GA run can be approximated as
 $\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$. For the main experiment settings
 ($P = 100$, $T = 20$, $|\mathcal{I}| = 600$), this corresponds to
@@ -1334,6 +1734,7 @@ $|\mathcal{I}|=600$ dominates runtime independently of total dataset size.}
 \end{figure}
 
 \subsection{Interpretation of Baseline Results}
+\label{sec:interp-baseline}
 
 The baseline comparison results reveal important insights about the sources
 of performance gain. The near-zero structure score of B1 (0.020) confirms
@@ -1359,9 +1760,84 @@ completeness.
 These observations align with Hypothesis~H5: hard safety constraints prevent
 the GA from exploiting structural shortcuts at the cost of safety, as evidenced
 by B4 maintaining safety parity with B2 (0.901 vs.\ 0.900) while dramatically
-improving structure.
+improving structure. The same comparison supports Hypothesis~H2: progressive
+structure enforcement drives the 46-fold structural completeness gain over B1
+(and the 0.353-point gain over B2) without substantially reducing safety,
+which stays essentially flat between B2 and B4.
+
+\subsection{Did the GA Achieve Multi-Objective Balance?}
+\label{sec:balance-discussion}
+
+A closer look at the fitness design surfaces an apparent tension that
+deserves explicit discussion. The fixed fitness-weight coefficients
+(Eq.~\eqref{eq:per-example}) assign empathy and safety the largest shares
+($A=B=0.40$) and structure the smallest among the three score components
+($C=0.15$), reflecting our intended prioritisation of safe, empathetic
+responses. Yet the genome actually discovered by the GA is structure-dominant:
+$w_c^{\star}=0.778$, versus $w_e^{\star}=0.137$ and $w_s^{\star}=0.086$
+(Table~\ref{tab:hyperparams-ga}). On the surface, a fitness function that weights
+empathy and safety most heavily produced a generator that behaviourally
+prioritises structure. We consider this worth resolving explicitly rather
+than leaving as an implicit tension.
+
+The resolution lies in distinguishing two different roles that ``weight''
+plays in this framework. The coefficients $A,B,C,D$ are \emph{fixed}
+constants that determine how much each per-example score contributes to
+fitness; the genome weights $w_e,w_s,w_c$ are \emph{evolved} parameters that
+determine how much empathy, safety, and structural content the generator
+actually inserts into a response. These operate on different score
+landscapes. Safety scores are governed by a near-binary lookup table
+(Eq.~\eqref{eq:safety}) combined with the flat and smooth per-example
+penalties in Eq.~\eqref{eq:per-example-fitness}, so safety reaches a high
+plateau ($S_i \approx 0.90$--$1.00$) for almost any $w_s$ above a modest
+floor. Empathy is similarly capped: the empathy score saturates once a small
+number of distinct markers are present (Eq.~\eqref{eq:empathy}) and is
+actively penalised for repetition, so additional empathy weight beyond a low
+threshold yields little further fitness gain and risks the marker-stuffing
+penalty. Structure, by contrast, has the largest unrealised headroom in the
+unoptimised baseline (B1 structure $= 0.020$) and responds close to linearly
+to $w_c$ through the regime mechanism in Section~\ref{sec:progressive-structure}.
+Once safety and empathy are inexpensively satisfied near their ceilings, the
+marginal fitness return on additional genome weight is concentrated almost
+entirely in $w_c$, regardless of structure's smaller fitness-coefficient
+$C$.
+
+This headroom asymmetry is compounded by an explicit asymmetry in the
+reinforcement terms of Eq.~\eqref{eq:per-example-fitness}: structure receives
+positive reinforcement twice ($+0.05\,C_i$ and $+0.05\,\min(C_i,0.8)$, up to
+$+0.09$ combined) while empathy receives it once ($+0.05\,E_i$, capped at
+$+0.05$) and safety receives none beyond its base term. So the
+structure-dominant outcome is not solely a consequence of where headroom
+happens to be largest; the fitness function also, concretely, rewards
+structural content at roughly twice the marginal rate it rewards empathy
+content, independent of the fixed $A,B,C,D$ coefficients that a reader would
+naturally look to first. In other words, $A$, $B$, $C$, $D$ set how the
+\emph{base} scores combine into fitness, but they do not on their own
+determine where the \emph{genome} converges: that depends on the combination
+of headroom and reinforcement-term asymmetry across the three objectives,
+neither of which is visible from the coefficient table alone.
+
+This raises a legitimate question: did the GA \emph{balance} empathy, safety,
+and structure, or did it instead find a corner solution that satisfies two
+objectives near a floor imposed by hard constraints and then maximises the
+third? Our results are more consistent with the latter. B4 maintains safety
+and empathy at levels statistically indistinguishable from the fixed seed
+baseline B2 (safety 0.901 vs.\ 0.900; Section~\ref{sec:interp-baseline})
+while structure improves by 0.353 points beyond B2. The GA's contribution
+is concentrated in the one objective with available headroom rather than a
+smooth trade-off across all three. This is a genuine limitation of collapsing
+multi-objective optimisation into a single scalar fitness with fixed
+coefficients: the resulting genome reflects the geometry of the constraint
+set as much as it reflects the analyst's stated priorities ($A=B=0.40$,
+$C=0.15$). A multi-objective evolutionary algorithm that maintains an
+explicit Pareto front over $(E_i, S_i, C_i)$, rather than a weighted scalar
+sum, would make this trade-off space visible and let a clinician select an
+operating point directly, instead of inferring it indirectly from coefficient
+choices that do not transparently map to behaviour. We list this as a
+concrete direction for future work (Section~\ref{sec:limitations}).
 
 \subsection{Ethical Risks and Deployment Considerations}
+\label{sec:ethics}
 
 The deployment of optimisation-driven conversational agents in mental-health
 contexts raises ethical concerns that extend beyond algorithmic performance.
@@ -1375,10 +1851,33 @@ without conveying genuine emotional attunement, and can achieve a perfect
 safety score by including the word ``professional'' without providing
 actionable crisis guidance. Optimising against these proxies risks producing
 responses that are \textit{metrically safe} but not \textit{clinically safe}.
-The gap between proxy score and genuine therapeutic value is difficult to
-close without human evaluation~\cite{jmir2024_empathic}. Any deployment of
-this system should therefore include ongoing monitoring by qualified mental
-health professionals who can identify cases where high-scoring responses are
+
+It is important to be precise about what this limitation does, and does not,
+undermine. The keyword-based scores are a measurement instrument, not the
+generator's only safeguard: the structural mechanism that inserts grounding,
+action, and escalation content is independent of the marker-counting logic
+used to \emph{score} that content, so a generator could in principle produce
+clinically appropriate behaviour that an imperfect proxy under- or
+over-credits. What the proxies cannot guarantee is that fitness-maximising
+behaviour is also therapeutically optimal behaviour at the margin. A
+genome that the metric ranks highest may not be the genome a clinician would
+rank highest, particularly in borderline cases the marker lists do not
+anticipate. The human evaluation reported in Section~\ref{sec:human_eval} is
+one step toward closing this gap: five clinical psychologists' blinded
+ratings agreed with the automatic metrics' rank ordering of B1 versus B4,
+which supports the proxies as a directionally valid optimisation signal but
+does not establish that they are calibrated against clinical judgement in
+absolute terms or across the full space of genomes the GA can reach. Closing
+the remaining gap would require either (i)~a larger-scale validation study
+in which clinicians rate a representative sample of GA-explored genomes, not
+only the final B1/B4 comparison, to check that the proxy ranking holds
+throughout the search space rather than only at its endpoints, or
+(ii)~replacing the rule-based scores with a learned evaluator trained
+directly on clinician ratings, which we list as future work
+(Section~\ref{sec:limitations}). Until either is done, we treat the proxies
+as an interpretable but unvalidated approximation, and we recommend that any
+deployment include ongoing monitoring by qualified mental health
+professionals who can identify cases where high-scoring responses are
 clinically inappropriate.
 
 \textbf{Over-reliance and substitution risk.} Systems like Riri are designed
@@ -1388,7 +1887,7 @@ limited~\cite{jmir2025_chatbots}, users experiencing acute distress may
 interact with an AI assistant as their primary or only source of support.
 The high escalation frequency observed in our optimised system (100\%
 structural component usage) means that every response includes a referral
-to professional help---but if no such help is accessible, this referral may
+to professional help, but if no such help is accessible, this referral may
 feel dismissive rather than supportive. Future work should design
 context-aware escalation that acknowledges service availability limitations.
 
@@ -1397,8 +1896,8 @@ in this work were constructed by the research team based on common
 Bangla/Banglish expressions observed in the dataset. They have not been
 validated by clinical psychologists or community mental health workers
 familiar with Bangladeshi emotional expression norms. Different communities
-within Bangladesh---urban versus rural, different socioeconomic
-backgrounds---may use different linguistic patterns to express distress or
+within Bangladesh (urban versus rural, different socioeconomic
+backgrounds) may use different linguistic patterns to express distress or
 respond to support. A marker set that works well for the PHQ-4 screening
 population in the training dataset may not generalise to other populations.
 The cultural specificity of empathetic language is particularly important
@@ -1407,7 +1906,7 @@ means structural components dominate the response, potentially at the cost
 of culturally-appropriate emotional tone~\cite{humanai2024}.
 
 \textbf{Reward hacking in deployment.} The failure modes documented in this
-work---question-only collapse and empathy marker stuffing---were discovered
+work (question-only collapse and empathy marker stuffing) were discovered
 through offline trace analysis before deployment. In a live deployment,
 new failure modes may emerge from interactions with real users whose
 language patterns differ from the training data. If the system is
@@ -1429,21 +1928,50 @@ clinical oversight, user safety monitoring, and culturally-informed
 evaluation protocols~\cite{apa2024_advisory,harvard2024_safety}.
 
 \subsection{Limitations and Future Work}
+\label{sec:limitations}
 
 Several limitations of the present work warrant attention:
 
 \begin{itemize}
-  \item \textbf{Interpretable proxy metrics by design.} The empathy and
-safety metrics use rule-based keyword detection rather than learned
-evaluators. This design choice prioritises interpretability and
-transparency: because each score component corresponds to a named
-linguistic marker, it is possible to diagnose exactly why a response
-received a given score and to correct the scoring function when
-failure modes are identified. This property was essential for the
-iterative scoring redesign documented in Section~\ref{sec:discussion}.
-Future work should validate these proxies against human clinical
-judgement and explore hybrid approaches combining rule-based
-interpretability with learned scoring accuracy.
+  \item \textbf{Construct validity of rule-based proxy metrics.} The
+empathy and safety metrics are keyword-based, and this is a genuine
+validity limitation, not only a favourable design tradeoff. Keyword
+detection cannot distinguish genuine emotional attunement from surface
+phrasing that happens to match a marker list, cannot detect sarcasm,
+negation, or context-dependent meaning, and can be gamed by repetition
+or marker-stuffing, as the failure mode documented in
+Section~\ref{sec:scoring-bottleneck} shows in practice. Interpretability
+was the reason we chose this design, and it did let us diagnose and
+correct that failure mode, but interpretability does not by itself
+establish that the metric measures what it claims to measure. The
+human evaluation (Section~\ref{sec:human_eval}) provides partial
+evidence of validity: five clinical psychologists' blinded ratings
+agreed with the automatic metrics' ranking of B1 versus B4 on all three
+dimensions. This supports the proxies as a \emph{directionally} valid
+optimisation signal for the specific endpoint comparison tested, but it
+is a single-comparison check, not a calibration study. It does not
+establish that proxy scores track clinical judgement in absolute terms,
+that they remain valid across the full space of genomes the GA can
+reach rather than only at the two points we happened to evaluate, or
+that a response scoring higher than another on the proxy would also be
+judged better by a clinician for genome pairs never shown to an
+annotator. Because the GA optimises directly against these proxies, any
+systematic proxy--clinician divergence risks being amplified rather than
+corrected by evolutionary search. Closing this gap requires either a
+larger-scale validation study rating a representative sample of
+GA-explored genomes rather than only the final comparison, or replacing
+the rule-based scores with a learned evaluator trained on clinician
+ratings; both are future work.
+
+  \item \textbf{Distress-score-gated escalation implemented.} The present 
+  implementation now includes a continuous distress score $h(x_i)$ computed 
+  from prompt keywords (Section~\ref{sec:risk-escalation}), which gates 
+  escalation for high-distress mid-risk prompts. The GA evolves the $\gamma$ 
+  parameter (converged: $\gamma \approx 0.093$) to balance when escalation 
+  should trigger within a risk category. This extension improves safety 
+  (+0.014) and empathy (+0.033) while maintaining structure completeness 
+  (Section~\ref{sec:results}). Future work includes learning $h(x_i)$ from 
+  clinician ratings rather than hand-tuned keywords.
 
   \item \textbf{Single-turn interactions only.} All experiments evaluate
         single-turn prompt-response pairs. Real mental-health conversations
@@ -1455,30 +1983,6 @@ interpretability with learned scoring accuracy.
         \texttt{memory\_window} gene in the current genome was designed
         with this extension in mind and provides a natural starting point
         for future work.
-
-        \item \textbf{Dataset scope and generalizability.} The dataset composition 
-        (Table~\ref{tab:dataset_composition}, Appendix~\ref{sec:appendix_dataset}) 
-        reflects the population served by the mental-health screening application 
-        in Bangladesh and limits generalizability in three dimensions:
-        \begin{enumerate}
-            \item[(a)] \textit{Age:} 70\% of users are aged 18--24 years. 
-            Optimised response patterns may not apply to older adults (25+), 
-            who may have different support preferences and risk profiles.
-            
-            \item[(b)] \textit{Language:} 98.5\% of prompts are Bengali, with 
-            minimal English or Banglish content. The framework is language-agnostic, 
-            but the template bank and proxy metrics (empathy markers, grounding phrases) 
-            are Bengali-specific. Adaptation to other South Asian languages is 
-            future work.
-            
-            \item[(c)] \textit{Risk distribution:} 34\% of prompts are high-risk 
-            (PHQ-9 $\geq 9$). The optimisation may over-emphasise escalation for 
-            this subset relative to lower-risk populations. Stratified tuning per 
-            risk cohort is recommended for deployment outside the current setting.
-        \end{enumerate}
-        Future work should evaluate the framework on demographically broader 
-        cohorts and validate generalisation via cross-cultural and cross-age 
-        cohort analysis.
 
   \item \textbf{Limited cultural validation.} Bangla emotional expression
         norms are only partially captured by the current marker sets. Future
@@ -1497,37 +2001,10 @@ interpretability with learned scoring accuracy.
         comfort with Bangla versus English, are not modelled.
 \end{itemize}
 
-\subsubsection{Single-Turn Evaluation and Clinical Deployment}
-\label{sec:single_turn_limitation}
-
-The current framework optimises single-turn responses to isolated prompts. 
-In real mental-health conversations, however, risk and emotional context 
-evolve over multiple turns:
-
-\begin{itemize}
-    \item Risk may escalate unexpectedly (e.g., suicidal ideation disclosed 
-    on turn 3 after mild distress on turn 1).
-    
-    \item Context accumulation enables proactive interventions (e.g., the 
-    system recalls that a user mentioned isolation and offers community 
-    resources in a later turn).
-    
-    \item Therapeutic alliance improves with history (e.g., the system learns 
-    the user's preferred communication style and emotional vocabulary).
-\end{itemize}
-
-The current single-turn setup is appropriate for \textit{prompt-level} 
-optimisation and for conversational systems where turns are isolated 
-(e.g., brief text-based crisis screening in an emergency context). 
-For clinical deployment as a sustained mental-health coach or ongoing 
-support system, multi-turn sequential decision-making with context 
-accumulation is essential. This extension is a high-priority research 
-direction and is deferred to future work (Section~\ref{sec:future}).
-
 Future extensions include: (1)~multi-turn sequential genome policies,
 where the GA optimises escalation and structure decisions conditioned on
-full conversation history---the most impactful near-term research
-direction; (2)~multi-objective evolutionary algorithms maintaining Pareto
+full conversation history (the most impactful near-term research
+direction); (2)~multi-objective evolutionary algorithms maintaining Pareto
 fronts of empathy, safety, and structure to explicitly model trade-offs
 rather than collapsing them into a scalar fitness; (3)~learned empathy
 evaluators trained on clinically validated datasets, replacing the current
@@ -1545,8 +2022,9 @@ support infrastructure is similarly limited.
 We presented a risk-aware genetic optimization framework for a mental-health
 conversational agent operating in Bangla, Banglish, and English. By evolving an
 interpretable genome controlling a structured generator, the system achieves
-substantial improvements in response structure and overall fitness while
-maintaining high safety and stable empathy. The study illustrates how
+substantial improvements in response structure and overall fitness, along with
+a substantial improvement in safety and a modest increase in empathy relative
+to an unoptimized baseline. The study illustrates how
 evolutionary algorithms can optimize non-differentiable, value-laden objectives
 and highlights the critical role of scoring design, trace-based evaluation, and
 safety constraints in responsible deployment of AI systems for mental-health
@@ -1564,7 +2042,7 @@ resource-constrained mental-health applications in multilingual settings.
 
 This appendix provides concrete examples of the two evolutionary failure
 modes documented in Section~\ref{sec:discussion}: question-only structural
-collapse and empathy marker stuffing. These failure modes were discovered
+collapse and empathy marker stuffing. These failuregrep -n "\\\\begin{abstract}" main.tex modes were discovered
 through trace analysis during early development, before the scoring function
 was redesigned. The examples below are representative of the response patterns
 produced by high-fitness genomes under the initial (flawed) scoring design.
@@ -1593,9 +2071,11 @@ The response achieves a perfect structure score by including five questions,
 but provides no emotional validation, no grounding exercise, and no
 actionable guidance. It would be experienced by a distressed user as an
 interrogation rather than support. This failure mode was corrected by
-introducing the question-only penalty term $\delta = 0.20$ (Equation~13),
-which deducts from the structure score when a question is present but
-grounding and action components are absent.
+replacing the continuous, count-based structure score with the discrete
+component-count lookup of Eq.~\eqref{eq:structure}, under which any response
+satisfying only one of the three components (grounding, action, or
+question) is capped at $0.20$, regardless of how many times that single
+component is echoed.
 
 \subsection*{A.2 Empathy Marker Stuffing}
 
@@ -1652,7 +2132,9 @@ intermediate generation, and the final converged best genome.
 \caption{Representative genome configurations at three GA stages.
 $w_e$, $w_s$, $w_c$ are empathy, safety, and structure weights
 (renormalised to sum to 1). $\theta_\mathrm{mid}$, $\theta_\mathrm{high}$
-are risk escalation thresholds.}
+are reserved escalation-threshold genes that are evolved alongside the
+others but are not currently read by the generator or fitness function
+(Section~\ref{sec:risk-escalation}); included here for completeness.}
 \label{tab:genome_evolution}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabularx}{\textwidth}{
@@ -1688,18 +2170,30 @@ genomes. The GA consistently discovers this structure-dominant configuration
 across all five independent runs, indicating a stable global optimum rather
 than a run-specific artefact.
 
+By contrast, $\theta_\mathrm{mid}$ and $\theta_\mathrm{high}$ show no
+comparable directional trend across the same three stages
+(0.550$\to$0.697$\to$0.700 and 0.800$\to$0.700$\to$0.731 respectively): they
+move under mutation without the monotonic pressure visible in $w_c$. This is
+consistent with Section~\ref{sec:risk-escalation}: because these two genes
+are not read by the generator or the fitness function in the present
+implementation, they carry no selection gradient and are expected to drift
+under mutation rather than converge, which is exactly the pattern observed
+here.
+
 \section{Dataset Composition}
 \label{app:dataset}
 
 Table~\ref{tab:dataset_stats} summarises the composition of the full
-$N = 2297$ prompt dataset used in all experiments.
+$N = 2872$ prompt dataset used in all experiments, recomputed from the
+underlying PHQ-4 screening data (\texttt{phq4\_cleaned.csv}) after filtering
+out rows with no recorded theme content (407 of 3,279 collected rows).
 
 \begin{table}[H]
 \centering
-\caption{Dataset composition ($N = 2297$ de-identified prompts).
+\caption{Dataset composition ($N = 2872$ de-identified prompts).
 PHQ-4 severity bands: Normal (0--2), Mild (3--5), Moderate (6--8),
 Severe (9--12). Risk labels are derived from PHQ-4 total score and
-explicit self-harm indicator detection (Section~\ref{sec:methods}).}
+explicit self-harm/suicide indicator detection (Section~\ref{sec:methods}).}
 \label{tab:dataset_stats}
 \renewcommand{\arraystretch}{1.3}
 \begin{tabularx}{\textwidth}{
@@ -1712,51 +2206,48 @@ explicit self-harm indicator detection (Section~\ref{sec:methods}).}
 \hline
 \multicolumn{3}{l}{\textit{Risk label distribution}} \\
 \hline
-High risk  & 1,516 & 46.2\% \\
-Mid risk   &   959 & 29.2\% \\
-Low risk   &   804 & 24.5\% \\
+High risk  & 1,342 & 46.7\% \\
+Mid risk   &   833 & 29.0\% \\
+Low risk   &   697 & 24.3\% \\
 \hline
 \multicolumn{3}{l}{\textit{PHQ-4 severity distribution}} \\
 \hline
-Severe (9--12)   & 1,459 & 44.5\% \\
-Moderate (6--8)  &   996 & 30.4\% \\
-Mild (3--5)      &   555 & 16.9\% \\
-Normal (0--2)    &   269 &  8.2\% \\
+Severe (9--12)   & 1,283 & 44.7\% \\
+Moderate (6--8)  &   871 & 30.3\% \\
+Mild (3--5)      &   494 & 17.2\% \\
+Normal (0--2)    &   224 &  7.8\% \\
 \hline
 \multicolumn{3}{l}{\textit{Language of interaction}} \\
 \hline
-Bengali (Bangla) & 3,107 & 94.8\%$^{\dagger}$ \\
-English          &   137 &  4.2\% \\
-Banglish         &    33 &  1.0\% \\
+Bengali (Bangla) & 2,745 & 95.6\% \\
+English          &   120 &  4.2\% \\
+Banglish         &     7 &  0.2\% \\
 \hline
 \multicolumn{3}{l}{\textit{Age group}} \\
 \hline
-18--22 years & 1,186 & 36.2\% \\
-23--27 years &   797 & 24.3\% \\
-28--34 years &   485 & 14.8\% \\
-13--17 years &   478 & 14.6\% \\
-35--44 years &   217 &  6.6\% \\
-45+ years    &   116 &  3.5\% \\
+18--22 years & 1,054 & 36.7\% \\
+23--27 years &   696 & 24.2\% \\
+13--17 years &   422 & 14.7\% \\
+28--34 years &   418 & 14.6\% \\
+35--44 years &   187 &  6.5\% \\
+45+ years    &    95 &  3.3\% \\
 \hline
 \multicolumn{3}{l}{\textit{Gender}} \\
 \hline
-Male   & 2,339 & 71.3\% \\
-Female &   826 & 25.2\% \\
-Other  &   114 &  3.5\% \\
+Male   & 2,063 & 71.8\% \\
+Female &   716 & 24.9\% \\
+Other  &    93 &  3.2\% \\
 \hline
 \end{tabularx}
-\noindent{\footnotesize{$^{\dagger}$ Language proportions are based on
-the full 3,279-row collection; 2,297 rows with valid prompts were used
-for experiments after filtering empty entries.}}
 \end{table}
 
 Several aspects of the dataset composition are noteworthy for interpreting
 the experimental results. First, the dataset is heavily skewed toward
-high-risk cases (46.2\%), reflecting the clinical context of the
-application. Second, the dataset is predominantly young (74.5\% aged 18--27),
-male (71.3\%), and Bengali-speaking (94.8\%), which limits generalisability
+high-risk cases (46.7\%), reflecting the clinical context of the
+application. Second, the dataset is predominantly young (60.9\% aged 18--27),
+male (71.8\%), and Bengali-speaking (95.6\%), which limits generalisability
 of the empathy marker sets to other populations. Third, the high proportion
-of severe PHQ-4 scores (44.5\% scoring 9--12) confirms that the dataset
+of severe PHQ-4 scores (44.7\% scoring 9--12) confirms that the dataset
 captures genuine clinical distress rather than mild wellbeing concerns.
 
 \authorcontributions{Conceptualization, J.R. and M.M.J.K.;
@@ -1770,19 +2261,30 @@ the manuscript.}
 
 \funding{This research received no external funding.}
 
+\acknowledgments{The authors thank Mohammad Abdullah,
+Saima Islam, Mahbub-ul-Asem, Tanvir Ahmed Pranto, and
+Imtiaz Gazi for their participation as clinical evaluators
+in the human evaluation study reported in
+Section~\ref{sec:human_eval}.}
+
 \institutionalreview{The dataset used in this study consists of
 de-identified prompts collected as part of routine mental-health
-screening and support services in Bangladesh. No personally
-identifiable information was retained. As the data were collected
-in the course of standard service delivery and fully anonymised
-prior to research use, formal ethical review was not required
-under applicable institutional guidelines. The study was conducted
-in accordance with the Declaration of Helsinki.}
+screening and support services in Bangladesh. Users provided
+informed consent within the application at the point of data
+collection, acknowledging that anonymised interaction data may be
+used for research purposes. No personally identifiable information
+was retained. As the data were collected in the course of standard
+service delivery and fully anonymised prior to research use, formal
+ethical review was not required under applicable institutional
+guidelines. The study was conducted in accordance with the
+Declaration of Helsinki.}
 
-\informedconsent{Not applicable. The dataset comprises fully
-de-identified text prompts with no personally identifiable
-information. No individual participants can be identified from
-the published data.}
+\informedconsent{Informed consent was obtained from all
+participants via the mental-health support application at the
+point of data collection. Users acknowledged that anonymised
+interaction data may be used for research purposes. No personally
+identifiable information was retained and no individual
+participants can be identified from the published data.}
 
 \dataavailability{The dataset used in this study is not publicly
 available due to patient privacy restrictions and the sensitive
