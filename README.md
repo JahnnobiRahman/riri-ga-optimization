@@ -1,5 +1,121 @@
+# EvoRiri: Risk-Aware Genetic Optimization of a Bangla/Banglish/English Mental-Health Assistant
+
+## Overview
+
+EvoRiri is a genetic-algorithm (GA) framework that evolves a small, interpretable **genome** controlling a template-based response generator ("Riri") for Bangla/Banglish/English mental-health support conversations. The generator makes no LLM calls at inference time; it assembles responses from fixed phrase banks, with the genome controlling which phrases and structural elements get included. Optimization is driven by a rule-based fitness function scored automatically per response.
+
+**Status:** Manuscript submitted for review to *Mathematics* (MDPI), Special Issue "Evolutionary Algorithms in Artificial Intelligence." See `paper/main.tex` / `paper/main.pdf` for the current submission draft.
+
+## Project structure
+
+```
+paper/
+  main.tex              # Manuscript source — THIS is the canonical, submission-ready file
+  main.pdf               # Compiled manuscript
+  references.bib
+  figures/                # Paper figures (Figs. 1-9)
+  Definitions/            # MDPI journal class / template files
+
+src/
+  ga/
+    genome.py             # Genome dataclass, random_genome(), normalize()
+    operators.py          # crossover(), mutate(), tournament_select()
+    runner.py             # run_ga() — main GA loop, hand-designed seed genomes
+    msga_runner.py         # run_ga_msga() — domain-division seeded init (Kabir 2017)
+  generation/
+    response_generator.py    # assemble_prompt_trace(), generate_response()
+    user_prompt_builder.py   # build_realistic_user_prompt() — synthetic NL prompts
+  evaluation/
+    scoring.py             # score_empathy/safety/structure, length_penalty, fitness()
+    distress_scorer.py      # compute_distress_score() — keyword-based h(x_i), v0.9+
+    risk_labeling.py        # label_risk() — PHQ-4 + regex risk labeling
+    trace_export.py         # export_traces() — full per-response trace CSV
+  rerun_distress_gated_2872.py  # re-runs GA with distress gating on full N=2872 dataset
+  rerun_size_experiments.py
+  plot_convergence_figures.py
+  plot_size_experiments.py
+
+main_ga_riri.py            # main entry point: loads data, runs GA, runs experiments
+baseline_comparison.py     # B1-B4 baseline comparison table + Wilcoxon tests
+baseline_prompt.py         # hand-written B1 example text for Table 7 (see caveat below)
+merge_baseline_optimised.py  # merges baseline_prompt.py output with trace_analysis.csv
+run_model_comparisons.py     # B6-B8: mT5/BanglaT5/BanglaGPT zero-shot baselines
+population_experiment.py     # population-size sensitivity sweep
+dataset_size_experiment.py   # dataset-size sensitivity sweep
+trace_analysis_plots.py      # generates Figures 6-8 (structure usage, safety by risk, empathy vs structure)
+plot_dataset_scaling.py / plot_dataset_scatter.py / plot_runtime_scaling.py  # Figures 2, 9
+
+experiments/
+  v2_population_experiment/   # N=2872 distress-gated runs (SPLIT/FIXED variants — see note below)
+  baseline_comparison/        # B4/B5 baseline logs
+
+data/
+  phq4_cleaned.csv       # private, not included — see Data Availability
+```
+
+> **Note on `main.tex` duplication:** an older, stale copy of `main.tex` exists at the repo root from before the v0.7 reorganization into `paper/`. It is unused and safe to ignore — `paper/main.tex` is the only file that matters for the manuscript.
+
+## Genome
+
+```python
+Genome(p_id, w_s, w_e, w_c, memory_window, theta_mid, theta_high, gamma)
+```
+
+| Gene | Range | What it actually does |
+|---|---|---|
+| `w_e` (empathy weight) | [0.10, 1.0], renormalized | Selects the empathy-line pool bucket (low/mid/high) and adds an extra empathy line when `w_e >= 0.45`. Functional. |
+| `w_c` (structure weight) | [0.10, 1.0], renormalized | Governs which structure regime applies (see below). Functional. |
+| `w_s` (safety weight) | [0.10, 1.0], renormalized | Selects one of several internal `[SAFETY]`-tagged annotation lines. These are stripped out before the response is finalized (`visible_response` filters `[SAFETY]`/`[TEMPLATE]` lines). **`w_s` currently has no effect on the visible response text or any automatic score.** |
+| `theta_mid`, `theta_high` | [0.40, 0.70], [0.70, 0.95] | Crossed over and mutated like every other gene. **Not read anywhere in `response_generator.py` or `scoring.py`.** They carry no fitness gradient; expect them to drift under mutation without converging. Reserved for a future graded-escalation mechanism. |
+| `gamma` (distress gate) | [0.0, 0.2] | **New in v0.9.** Evolved parameter that relaxes the fixed distress threshold τ_h=0.65 for high-distress mid-risk prompts (see Distress-Gated Escalation below). Functional — directly affects both generation-time escalation and a fitness penalty term. |
+| `p_id` | {0, 1, 2} | Discrete template selector. |
+| `memory_window` | {256, 512, 768, 1024} | Response context length; also gates a truncation rule (see caveat below). |
+
+**Normalization quirk worth knowing:** `Genome.normalize()` enforces a 0.10 floor on `w_s`/`w_e`/`w_c` and then rescales all three to sum to 1. If you construct a genome with all three at the floor (e.g. the B1 zero-shot baseline: `w_s=w_e=w_c=0.10`), normalization rescales each to `0.10/0.30 = 0.333`, **not** 0.10. This pushes `w_c` just past the 0.33 `weight_to_level()` boundary and into the stochastic structure regime described below — B1 is not as fully "zeroed out" post-normalization as the pre-normalization values suggest.
+
+## Response generation mechanism
+
+### Structure (grounding / action / question)
+
+Not a smooth per-component threshold function. Three regimes on `w_c`:
+
+- `w_c < 0.25`: no structural components added.
+- `0.25 <= w_c < 0.55`: components are shuffled and up to 2 of the 3 are included, each independently gated by a risk-level-dependent probability. **Stochastic** — which two components appear varies run to run for the same genome.
+- `w_c >= 0.55`: all three components included deterministically.
+
+### Escalation (updated in v0.9)
+
+Base rule is categorical, gated on the dataset's risk label:
+
+```python
+escalate_base = (risk_label == "high")
+```
+
+**As of v0.9**, this is supplemented by distress-score-gated escalation for mid-risk prompts:
+
+```python
+h_i = compute_distress_score(user_prompt)          # keyword-based, [0,1]
+effective_threshold = TAU_H - (genome.gamma * h_i)  # TAU_H = 0.65
+escalate_gated = (h_i > effective_threshold and risk_label == "mid")
+```
+
+High-risk prompts always get crisis-style escalation language. Mid-risk prompts get escalation language *if* the distress-gated condition fires, otherwise non-crisis soft-support language. Low-risk prompts get neither. `theta_mid`/`theta_high` still play no role — they remain non-functional (see above).
+
+**Truncation caveat:** when `memory_window <= 256`, the assembled response is truncated to its first 4 parts. For high-risk prompts under the B1 zero-shot genome (`memory_window=256`), this frequently truncates away the escalation line that was otherwise unconditionally added — the primary driver of B1's low safety score on high-risk prompts, an emergent consequence of truncation interacting with a short memory window, not an intentional safety mechanism.
+
+## Scoring (`evaluation/scoring.py`)
+
+### Empathy
+Category-presence scoring, not marker-count/tanh:
+```
+score = 0.30*[validation present] + 0.25*[reflection present]
+      + 0.20*[normalization present] + 0.15*[warmth present]
+      + 0.05*[len>=25 words] + 0.05*[len>=50 words]
+      - 0.05*[validation+reflection+normalization hits > 3]
+```
+
 ### Safety
-Categorical lookup by risk label and a single `has_escalation` boolean — no continuous S⁺/S⁻ decomposition:
+Categorical lookup by risk label and a single `has_escalation` boolean — no continuous S+/S- decomposition:
 
 | Risk | Escalation present | Score |
 |---|---|---|
@@ -8,7 +124,7 @@ Categorical lookup by risk label and a single `has_escalation` boolean — no co
 | low  | no / yes | 1.00 / 0.75 |
 
 ### Structure
-Discrete lookup on component count, not a continuous `(1/3)Σcᵢ` formula:
+Discrete lookup on component count, not a continuous `(1/3)*sum(c_i)` formula:
 
 | Components present | Score |
 |---|---|
@@ -46,7 +162,7 @@ The distress-gating penalty (`-0.10`) is a **fitness-level** incentive that comp
 
 There is no genome-level "hard kill" — the `-0.50`/`-0.15`/`-0.10` terms are all per-example, additive penalties, not a constraint that eliminates a genome from selection outright.
 
-**Note on B6–B8:** `run_model_comparisons.py` scores the LLM baselines with a simplified `0.40*E + 0.40*S + 0.15*C` only — no length penalty, no bonus/penalty adjustments. Not directly comparable to the B1–B5 fitness values on a like-for-like basis, though this doesn't change which baselines look worse or better; all three (mT5-small, BanglaT5, BanglaGPT) score far below any EvoRiri condition regardless.
+**Note on B6-B8:** `run_model_comparisons.py` scores the LLM baselines with a simplified `0.40*E + 0.40*S + 0.15*C` only — no length penalty, no bonus/penalty adjustments. Not directly comparable to the B1-B5 fitness values on a like-for-like basis, though this doesn't change which baselines look worse or better; all three (mT5-small, BanglaT5, BanglaGPT) score far below any EvoRiri condition regardless.
 
 ## GA configuration
 
@@ -58,16 +174,16 @@ An alternative MSGA-based (Kabir et al. 2017) seeding strategy is implemented in
 
 ## Distress-gated escalation results (v0.9)
 
-Full-dataset (N=2872) GA run with distress gating enabled converges to **γ⋆ ≈ 0.028** (`experiments/v2_population_experiment/best_genome_distress_gated_2872_SPLIT.json`). This is a small evolved relaxation, indicating the fixed threshold τ_h=0.65 already captures most of the useful escalation signal — the learned gate provides a secondary, fine-grained adjustment rather than a large behavioral shift (safety −0.003, empathy +0.004, structure −0.004, fitness −0.006 vs. base GA-optimized system B4).
+Full-dataset (N=2872) GA run with distress gating enabled converges to **gamma* approx 0.028** (`experiments/v2_population_experiment/best_genome_distress_gated_2872_SPLIT.json`). This is a small evolved relaxation, indicating the fixed threshold tau_h=0.65 already captures most of the useful escalation signal — the learned gate provides a secondary, fine-grained adjustment rather than a large behavioral shift (safety -0.003, empathy +0.004, structure -0.004, fitness -0.006 vs. base GA-optimized system B4).
 
-> **Note on file naming:** `best_genome_distress_gated_2872_SPLIT.json` is the genome reported in the paper (Table 4). `best_genome_distress_gated_2872_FIXED.json` is a **different, unrelated genome** from a separate run (γ=0.0137) — do not confuse the two.
+> **Note on file naming:** `best_genome_distress_gated_2872_SPLIT.json` is the genome reported in the paper (Table 4). `best_genome_distress_gated_2872_FIXED.json` is a **different, unrelated genome** from a separate run (gamma=0.0137) — do not confuse the two.
 
 ## Known caveats for anyone extending this code
 
 1. **`baseline_prompt.py` is a hand-written text bank, not a generator call.** `generate_baseline_response()` returns one of three fixed sentences keyed only on risk level — it does not invoke `response_generator.py` at all. If you're using its output as a genuine B1 example, regenerate directly from `zeroshot_genome` through `assemble_prompt_trace()` instead.
 2. **`theta_mid`/`theta_high` are non-functional** — see the genome table above. Any analysis of their evolved values is describing noise, not a fitness-driven result.
 3. **`w_s` doesn't affect the visible response.** Attribute safety-related qualitative differences between genomes to the risk-label/distress-gate escalation logic, not `w_s`.
-4. **Always serialize the full genome dict when running GA experiments** — `ga_log_*.json` files store only fitness curves (`best`/`avg`/`var` arrays), not genome fields. An early distress-gating run reported γ from an unserialized terminal readout (γ≈0.093) that could not later be verified; the properly serialized re-run (γ≈0.028) is what's reported in the paper. Use `rerun_distress_gated_2872.py`'s `best_genome_*.json` output as the source of truth for any genome value you plan to cite.
+4. **Always serialize the full genome dict when running GA experiments** — `ga_log_*.json` files store only fitness curves (`best`/`avg`/`var` arrays), not genome fields. An early distress-gating run reported gamma from an unserialized terminal readout (gamma≈0.093) that could not later be verified; the properly serialized re-run (gamma≈0.028) is what's reported in the paper. Use `rerun_distress_gated_2872.py`'s `best_genome_*.json` output as the source of truth for any genome value you plan to cite.
 
 ## Data
 
