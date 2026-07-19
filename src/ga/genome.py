@@ -20,6 +20,8 @@ class Genome:
     theta_mid: float
     theta_high: float
     gamma: float  # NEW: distress-gating parameter [0, 0.2]
+    history_turns: int = 6  # <-- NEW: how many prior user turns the
+
 
     def normalize(self):
         """
@@ -39,6 +41,8 @@ class Genome:
         
         # NEW: Clamp gamma to valid range [0, 0.2]
         self.gamma = float(np.clip(self.gamma, 0.0, 0.2))
+        self.history_turns = int(np.clip(self.history_turns, 4, 24))  # <-- NEW
+
 
 def random_genome() -> Genome:
     """
@@ -50,11 +54,14 @@ def random_genome() -> Genome:
         w_s=random.random(),
         w_e=random.random(),
         w_c=random.random(),
-        memory_window=random.choice([256, 512, 768, 1024]),
+        memory_window=random.choice([512, 768, 1024]),  # 256 excluded -- see
         theta_mid=random.uniform(0.40, 0.70),
         theta_high=random.uniform(0.70, 0.95),
-        gamma=random.uniform(0.0, 0.2)  # NEW
+        gamma=random.uniform(0.0, 0.2),  # NEW
+        history_turns=random.choice([4, 8, 12, 16, 20,24]),  # <-- NEW
+
     )
     g.normalize()
     return g
     
+

@@ -29,7 +29,9 @@ def crossover(a: Genome, b: Genome) -> Genome:
         memory_window=random.choice([a.memory_window, b.memory_window]),
         theta_mid=random.choice([a.theta_mid, b.theta_mid]),
         theta_high=random.choice([a.theta_high, b.theta_high]),
-        gamma=random.choice([a.gamma, b.gamma])  # NEW
+        gamma=random.choice([a.gamma, b.gamma]),  # NEW
+        history_turns=random.choice([a.history_turns, b.history_turns]),  # <-- NEW
+
     )
     child.normalize()
     return child
@@ -64,7 +66,7 @@ def mutate(g: Genome, pm: float = 0.30) -> Genome:
         m.w_c = float(np.clip(m.w_c + random.uniform(-0.25, 0.25), 0, 1))
 
     if random.random() < pm:
-        m.memory_window = random.choice([256, 512, 768, 1024])
+        m.memory_window = random.choice([512, 768, 1024])  # 256 excluded,
 
     if random.random() < pm:
         m.theta_mid = float(np.clip(m.theta_mid + random.uniform(-0.06, 0.06), 0.40, 0.70))
@@ -74,6 +76,11 @@ def mutate(g: Genome, pm: float = 0.30) -> Genome:
     # NEW: gamma mutation
     if random.random() < pm:
         m.gamma = float(np.clip(m.gamma + random.uniform(-0.05, 0.05), 0.0, 0.2))
+
+
+    # NEW: history_turns mutation
+    if random.random() < pm:                                              # <-- NEW
+        m.history_turns = random.choice([4, 8, 12, 16, 20,24])   
 
     m.normalize()
     return m
