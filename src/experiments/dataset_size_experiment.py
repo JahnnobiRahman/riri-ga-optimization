@@ -20,8 +20,9 @@ def dataset_size_experiment(train_df, val_df):
         print("==============================")
 
         subset = train_df.sample(
-            n=min(size, len(train_df)),
-        ).reset_index(drop=True)
+        n=min(size, len(train_df)),
+        random_state=42,  # ADD THIS — any fixed value works, just needs to be consistent
+    ).reset_index(drop=True)
 
         fitness_runs = []
         runtimes = []

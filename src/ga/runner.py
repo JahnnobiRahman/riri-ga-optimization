@@ -95,30 +95,34 @@ def run_ga(train_data: pd.DataFrame,
 
     log = {"best": [], "avg": [], "var": []}
 
+    best_genome_overall = None
+    best_fit_overall = -float("inf")
+
     for gen in range(1, generations + 1):
         best_i = int(np.argmax(fits))
         best_fit = float(fits[best_i])
         avg_fit = float(np.mean(fits))
         var_fit = float(np.var(fits))
-
         log["best"].append(best_fit)
         log["avg"].append(avg_fit)
         log["var"].append(var_fit)
-
         print(f"Gen {gen:02d} | best={best_fit:.4f} avg={avg_fit:.4f} var={var_fit:.6f} | best_genome={pop[best_i]}")
+
+        if best_fit > best_fit_overall:
+            best_fit_overall = best_fit
+            best_genome_overall = pop[best_i]
 
         # elitism: keep top 2
         elite_ids = np.argsort(fits)[-2:]
         new_pop = [pop[i] for i in elite_ids]
-
         while len(new_pop) < pop_size:
             p1 = tournament_select(pop, fits, k=3)
             p2 = tournament_select(pop, fits, k=3)
             child = mutate(crossover(p1, p2), pm=0.30)
             new_pop.append(child)
-
         pop = new_pop
         fits = [fitness(g, eval_data) for g in pop]
 
-    best_i = int(np.argmax(fits))
-    return pop[best_i], log
+    return best_genome_overall, log
+
+    

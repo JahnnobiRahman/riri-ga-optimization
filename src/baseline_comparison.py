@@ -19,6 +19,7 @@ import os
 import sys
 import json
 import random
+from dataclasses import asdict   # ADD THIS if not already present
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -29,6 +30,7 @@ from evaluation.risk_labeling import label_risk
 from evaluation.scoring import evaluate_breakdown, fitness
 from ga.genome import Genome, random_genome
 from ga.runner import run_ga
+from ga.msga_runner import run_ga_msga
 from generation.response_generator import generate_response
 
 # ──────────────────────────────────────────────
@@ -48,6 +50,9 @@ N_EVAL        = 400  # validation rows to score (matches your existing experimen
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_PATH    = os.path.join(PROJECT_ROOT, "data", "phq4_cleaned.csv")
+
+OUT_DIR = os.path.join(PROJECT_ROOT, "experiments", "baseline_comparison")
+os.makedirs(OUT_DIR, exist_ok=True)
 
 print("Loading dataset...")
 df = pd.read_csv(DATA_PATH)
@@ -108,7 +113,8 @@ zeroshot_genome = Genome(
     w_c=0.10,         # minimum structure weight → very little structure
     memory_window=256, # short context, minimal output
     theta_mid=0.70,   # high threshold → escalation rarely triggers
-    theta_high=0.95   # very high threshold → almost never escalates
+    theta_high=0.95,   # very high threshold → almost never escalates
+    gamma=0.0,        # no distress gating
 )
 zeroshot_genome.normalize()
 
@@ -132,7 +138,8 @@ gbal = Genome(
     w_c=0.34,
     memory_window=512,
     theta_mid=0.55,
-    theta_high=0.80
+    theta_high=0.80,
+    gamma=0.10,
 )
 gbal.normalize()
 
@@ -196,6 +203,47 @@ best_g, log = run_ga(
 
 b4_metrics = score_genome(best_g, val_df)
 print("B4 (GA optimised):", b4_metrics)
+
+print("\n── B4: GA Optimised ──")
+
+best_g, log = run_ga(
+    train_df,
+    pop_size=100,
+    generations=20,
+    eval_n=600,
+    seed=SEED
+)
+
+b4_metrics = score_genome(best_g, val_df)
+print("B4 (GA optimised):", b4_metrics)
+
+# ADD THIS BLOCK:
+b4_log_path = os.path.join(OUT_DIR, "b4_fitness_log.json")
+with open(b4_log_path, "w") as f:
+    json.dump(log, f, indent=2)
+print(f"Saved B4 fitness log to: {b4_log_path}")
+
+# ──────────────────────────────────────────────
+
+
+# ──────────────────────────────────────────────
+# 6b) B5 — GA + MSGA-seeded initialisation
+# ──────────────────────────────────────────────
+
+print("\n── B5: GA + MSGA seeds ──")
+
+best_g_msga, log_msga = run_ga_msga(
+    train_df,
+    pop_size=100,
+    generations=20,
+    eval_n=600,
+    seed=SEED,
+    m=4,
+    archive_size=25,
+)
+
+b5_metrics = score_genome(best_g_msga, val_df)
+print("B5 (MSGA-seeded):", b5_metrics)
 
 # ──────────────────────────────────────────────
 # 7) Statistical significance tests
@@ -281,6 +329,17 @@ table = pd.DataFrame([
         "Fitness Score":   round(b4_metrics["fitness"],   3),
         "vs GA (p-value)": "—",
     },
+
+    {
+        "Condition":       "B5: GA + MSGA seeds",
+        "Empathy Score":   round(b5_metrics["empathy"],   3),
+        "Safety Score":    round(b5_metrics["safety"],    3),
+        "Structure Score": round(b5_metrics["structure"], 3),
+        "Fitness Score":   round(b5_metrics["fitness"],   3),
+        "vs GA (p-value)": "—",
+    },
+
+
 ])
 
 print(table.to_string(index=False))
@@ -289,8 +348,6 @@ print(table.to_string(index=False))
 # 9) Save results
 # ──────────────────────────────────────────────
 
-OUT_DIR = os.path.join(PROJECT_ROOT, "experiments", "baseline_comparison")
-os.makedirs(OUT_DIR, exist_ok=True)
 
 table.to_csv(os.path.join(OUT_DIR, "baseline_comparison_table.csv"), index=False)
 
@@ -311,6 +368,13 @@ print(f"\nSaved results to: {OUT_DIR}")
 print("  baseline_comparison_table.csv")
 print("  stats_summary.json")
 
+msga_log_path = os.path.join(OUT_DIR, "b5_msga_log.json")
+with open(msga_log_path, "w") as f:
+    json.dump(log_msga, f, indent=4)
+print(f"  b5_msga_log.json")
+
+
+
 # ──────────────────────────────────────────────
 # 10) Best genome summary (for paper Section 3.6 hyperparameter table)
 # ──────────────────────────────────────────────
@@ -323,3 +387,10 @@ print(f"  w_c (structure): {best_g.w_c:.4f}")
 print(f"  theta_mid:     {best_g.theta_mid:.4f}")
 print(f"  theta_high:    {best_g.theta_high:.4f}")
 print(f"  memory_window: {best_g.memory_window}")
+print(f"  gamma:         {best_g.gamma:.4f}")
+
+# Save the full best genome so this value is never lost to terminal scrollback again
+best_genome_path = os.path.join(OUT_DIR, "best_genome_B4.json")
+with open(best_genome_path, "w") as f:
+    json.dump(asdict(best_g), f, indent=4)
+print(f"  Saved: {best_genome_path}")

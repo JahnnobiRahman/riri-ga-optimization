@@ -207,10 +207,8 @@ def fitness(g: Genome, data: pd.DataFrame) -> float:
         
         # Step 1: Compute distress score h(x_i)
         h_i = compute_distress_score(user_prompt)
-        
-        # Step 2: Decide if we should override escalation
-        #   - For mid-risk prompts with high distress, escalate
-        escalate_gated = (h_i > TAU_H and risk_label == "mid")
+        effective_threshold = TAU_H - (g.gamma * h_i)
+        escalate_gated = (h_i > effective_threshold and risk_label == "mid")
         
         # Step 3: Generate response with escalation override
         r = generate_response(
@@ -287,6 +285,8 @@ def evaluate_breakdown(g: Genome, data: pd.DataFrame, n: int = 400) -> dict:
     """
     d = data.sample(n=min(n, len(data)), random_state=7).reset_index(drop=True)
 
+    TAU_H = 0.65 
+
     E, S, C, L, H = [], [], [], [], []
 
     for _, row in d.iterrows():
@@ -300,9 +300,11 @@ def evaluate_breakdown(g: Genome, data: pd.DataFrame, n: int = 400) -> dict:
         # Step 1: Compute distress score
         h_i = compute_distress_score(user_prompt)
         H.append(h_i)
+        effective_threshold = TAU_H - (g.gamma * h_i)
+        escalate_gated = (h_i > effective_threshold and risk_label == "mid")
         
         # Step 2: Decide gated escalation
-        escalate_gated = (h_i > 0.65 and risk_label == "mid")
+        escalate_gated = (h_i > effective_threshold and risk_label == "mid")
         
         # Step 3: Generate with override
         r = generate_response(

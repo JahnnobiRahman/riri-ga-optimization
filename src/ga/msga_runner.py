@@ -80,7 +80,7 @@ def genome_to_vec(g: Genome) -> np.ndarray:
 
 
 def vec_to_genome(vec: np.ndarray, p_id: int = 1,
-                  memory_window: int = 512) -> Genome:
+                  memory_window: int = 512, gamma: float = 0.10) -> Genome:
     """Reconstruct a Genome from a continuous vector."""
     g = Genome(
         p_id=p_id,
@@ -90,6 +90,7 @@ def vec_to_genome(vec: np.ndarray, p_id: int = 1,
         memory_window=memory_window,
         theta_mid=float(np.clip(vec[3], *GENE_BOUNDS["theta_mid"])),
         theta_high=float(np.clip(vec[4], *GENE_BOUNDS["theta_high"])),
+        gamma=gamma
     )
     g.normalize()
     return g
@@ -342,6 +343,9 @@ def run_ga_msga(train_data: pd.DataFrame,
     # ── Phase 5: Evolutionary loop ──
     print(f"\n[MSGA] Phase 5: Running {generations} generations...\n")
 
+    best_genome_overall = None
+    best_fit_overall = -float("inf")
+
     for gen in range(1, generations + 1):
         best_i = int(np.argmax(fits))
         best_fit = float(fits[best_i])
@@ -355,24 +359,21 @@ def run_ga_msga(train_data: pd.DataFrame,
         print(f"Gen {gen:02d} | best={best_fit:.4f} avg={avg_fit:.4f} "
               f"var={var_fit:.6f} | best_genome={pop[best_i]}")
 
-        # Elitism: keep top 2
+        if best_fit > best_fit_overall:
+            best_fit_overall = best_fit
+            best_genome_overall = pop[best_i]
+
         elite_ids = np.argsort(fits)[-2:]
         new_pop = [pop[i] for i in elite_ids]
-
-        # Fill rest via tournament selection + crossover + mutation
         while len(new_pop) < pop_size:
             p1 = tournament_select(pop, fits, k=3)
             p2 = tournament_select(pop, fits, k=3)
             child = mutate(crossover(p1, p2), pm=0.30)
             new_pop.append(child)
-
         pop = new_pop
         fits = [fitness(g, eval_data) for g in pop]
 
-    best_i = int(np.argmax(fits))
-    best_genome = pop[best_i]
+    print(f"\n[MSGA] Done. Best fitness: {best_fit_overall:.4f}")
+    print(f"[MSGA] Best genome: {best_genome_overall}")
 
-    print(f"\n[MSGA] Done. Best fitness: {fits[best_i]:.4f}")
-    print(f"[MSGA] Best genome: {best_genome}")
-
-    return best_genome, log
+    return best_genome_overall, log
