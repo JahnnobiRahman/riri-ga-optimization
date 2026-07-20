@@ -21,17 +21,24 @@ handled separately in conversation_generator.py (see select_scoring_window),
 using "most recent N turns" rather than an arbitrary truncated input to
 this module.
 
-Escalation state machine (EscalationStateMachine) is unchanged from the
-original design: FULL on first crossing or a new distinct spike, LIGHT on
-sustained-but-not-worsening distress, NONE below threshold. Session-level
-risk label (from PHQ-4 total_score) is never changed by this module --
-only escalation *timing* within a mid-risk session is affected, mirroring
-the existing single-turn gamma mechanism in Eq. 6.
+PERFORMANCE FIX: run_conversation_escalation() previously called
+compute_distress_score(msg) a SECOND time per turn, purely to populate
+TurnDistressResult.raw_distress -- even though the trajectory builder
+already computed this value internally. compute_conversation_distress_with_raw()
+exposes both raw and decayed values so escalation can reuse them
+directly instead of recomputing.
+
+Escalation state machine (EscalationStateMachine): FULL on first crossing
+or a new distinct spike, LIGHT on sustained-but-not-worsening distress,
+NONE below threshold. Session-level risk label (from PHQ-4 total_score)
+is never changed by this module -- only escalation *timing* within a
+mid-risk session is affected, mirroring the existing single-turn gamma
+mechanism in Eq. 6.
 """
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List
+from typing import List, Tuple
 
 from evaluation.distress_scorer import compute_distress_score
 
@@ -58,6 +65,24 @@ class TurnDistressResult:
     escalation_level: EscalationLevel
 
 
+def compute_conversation_distress_with_raw(user_turns: List[str]) -> List[Tuple[float, float]]:
+    """
+    Returns (raw, h_t) pairs for every user message in the conversation.
+    raw is this turn's own compute_distress_score() value; h_t is the
+    decayed trajectory value. Both are computed here, ONCE, so callers
+    never need to call compute_distress_score() again for the same turn.
+    """
+    results: List[Tuple[float, float]] = []
+    carried = 0.0
+    for msg in user_turns:
+        raw = compute_distress_score(msg)
+        h_t = max(raw, DECAY_ALPHA * carried)
+        results.append((raw, h_t))
+        carried = h_t
+
+    return results
+
+
 def compute_conversation_distress(user_turns: List[str]) -> List[float]:
     """
     Returns h_t for EVERY user message in the conversation, in order.
@@ -65,15 +90,7 @@ def compute_conversation_distress(user_turns: List[str]) -> List[float]:
     fade on their own (see module docstring for why explicit windowing
     was removed here).
     """
-    trajectory: List[float] = []
-    carried = 0.0
-    for msg in user_turns:
-        raw = compute_distress_score(msg)
-        h_t = max(raw, DECAY_ALPHA * carried)
-        trajectory.append(h_t)
-        carried = h_t
-
-    return trajectory
+    return [h_t for _, h_t in compute_conversation_distress_with_raw(user_turns)]
 
 
 class EscalationStateMachine:
@@ -123,18 +140,17 @@ def run_conversation_escalation(
 ) -> List[TurnDistressResult]:
     """
     Computes the full distress trajectory and escalation-level decision
-    for EVERY turn in the conversation (no truncation). Mirrors Eq. 6's
-    tau_h - gamma * h_i relaxation, applied per turn, over the whole
-    conversation history.
+    for every turn. Does not call compute_distress_score() a second time --
+    reuses the raw/h_t pair already computed by
+    compute_conversation_distress_with_raw().
     """
-    trajectory = compute_conversation_distress(user_turns)
+    raw_and_trajectory = compute_conversation_distress_with_raw(user_turns)
 
     machine = EscalationStateMachine()
     results = []
-    for i, (msg, h_t) in enumerate(zip(user_turns, trajectory)):
+    for i, (raw, h_t) in enumerate(raw_and_trajectory):
         tau_h_effective = tau_h - (gamma * h_t)
         level = machine.step(h_t, tau_h_effective)
-        raw = compute_distress_score(msg)
         results.append(TurnDistressResult(
             turn_index=i,
             raw_distress=raw,
