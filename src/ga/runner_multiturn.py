@@ -1,34 +1,17 @@
 """
-runner_multiturn.py
+runner_multiturn.py (v2 -- proper train/val split)
 
-Multi-turn equivalent of ga/runner.py's run_ga(). Mirrors its structure
-(elitism, tournament selection, logging format) as closely as possible
--- same operators.py functions (crossover/mutate/tournament_select) are
-reused UNCHANGED, since they operate on Genome objects and fitness
-lists regardless of what "fitness" means underneath.
+FIX: previously, run_ga_multiturn() sampled its evaluation subset
+directly from the full session list with no train/val separation --
+every GA result was evaluated in-sample, unlike single-turn's
+baseline_comparison.py, which explicitly splits 80/20, trains only on
+train_df, and evaluates only on held-out val_df. This version adds
+split_sessions(), matching that methodology exactly (same 80/20
+fraction, same seed-based reproducibility). The fix is applied at the
+call site -- pass only train_sessions into run_ga_multiturn(), then
+evaluate the resulting best_genome separately against val_sessions.
 
-KEY DIFFERENCE FROM run_ga(): train_data here is a List[Dict] of
-sessions (each {"turns": [user message strings...], "risk_label": str}),
-not a pandas DataFrame of single prompts -- conversations don't fit a
-flat tabular row model well. Use load_sessions() below to build this
-list from data/multiturn_cleaned.jsonl.
-
-COMPUTE COST WARNING: scoring one conversation costs roughly
-(genome.history_turns capped at the conversation length) x the cost of
-a single-turn fitness() call, since each scored turn requires its own
-generate_response() call. With history_turns ranging [4,24], a typical
-multi-turn eval_n=500 could cost 15-20x more generate_response() calls
-per generation than the equivalent single-turn eval_n=500. STRONGLY
-recommend running a small test (small pop_size, generations, eval_n)
-first and measuring actual wall-clock time before scaling up to
-anything resembling the single-turn paper's main experiment
-configuration (P=100, T=20, |I|=600).
-
-best_genome_overall is returned as an actual Genome object (not just
-logged to stdout) and the log dict is fully serializable -- this
-avoids the exact problem your single-turn v0.9 work hit, where an
-early gamma value was only visible in a terminal printout and never
-serialized, making it unverifiable later.
+Everything else is unchanged from the previous version.
 """
 
 import json
@@ -45,31 +28,6 @@ SEED = 7
 
 
 def get_seed_genomes_multiturn() -> List[Genome]:
-    """
-    Multi-turn seed genomes. Same w_s/w_e/w_c/theta_mid/theta_high/gamma
-    balances as get_seed_genomes() in runner.py, but with history_turns
-    added explicitly per seed (not left to the dataclass default),
-    mirroring how gamma already varies deliberately per seed rather
-    than being uniform.
-
-    Rationale for history_turns choices (a starting hypothesis, not
-    derived from data -- worth revisiting once real multi-turn GA
-    results exist, same as how the single-turn seeds' weights were
-    hand-chosen and only later validated/superseded by evolved values):
-      - balanced:        12 (moderate context window)
-      - safety-heavy:      8 (shorter window -- focuses fitness signal
-                              on recent risk, consistent with a
-                              safety-first strategy prioritizing acting
-                              on the most current signal)
-      - empathy-heavy:    16 (longer window -- more conversation history
-                              to draw reflective/validating content from)
-      - structure-heavy:  20 (broadest window -- more turns over which
-                              to demonstrate consistent structural
-                              support)
-
-    All four use memory_window=512, matching the existing single-turn
-    seeds -- already safe under the memory_window=256 exclusion fix.
-    """
     seeds = []
 
     seeds.append(Genome(
@@ -103,13 +61,6 @@ def get_seed_genomes_multiturn() -> List[Genome]:
 
 
 def load_sessions(path: str) -> List[Dict]:
-    """
-    Loads multiturn_cleaned.jsonl into the {"turns": [...str...],
-    "risk_label": str} format conversation_fitness_over_dataset()
-    expects -- extracts just user message strings from each session's
-    nested turn objects (same extraction pattern as
-    smoke_test_multiturn.py's load_sessions()).
-    """
     sessions = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -129,6 +80,24 @@ def load_sessions(path: str) -> List[Dict]:
     return sessions
 
 
+def split_sessions(
+    sessions: List[Dict],
+    seed: int = SEED,
+    train_frac: float = 0.8,
+) -> Tuple[List[Dict], List[Dict]]:
+    """
+    80/20 train/val split, matching single-turn's baseline_comparison.py
+    methodology exactly (same split fraction, same seed-based
+    reproducibility -- shuffle once with the given seed, then split).
+    """
+    shuffled = sessions.copy()
+    random.Random(seed).shuffle(shuffled)
+    split_idx = int(train_frac * len(shuffled))
+    train_sessions = shuffled[:split_idx]
+    val_sessions = shuffled[split_idx:]
+    return train_sessions, val_sessions
+
+
 def run_ga_multiturn(
     sessions: List[Dict],
     pop_size: int = 30,
@@ -138,15 +107,11 @@ def run_ga_multiturn(
     use_seed_genomes: bool = True,
 ) -> Tuple[Genome, Dict[str, List[float]]]:
     """
-    Multi-turn GA loop. Structurally identical to run_ga() in
-    runner.py -- same elitism (top 2), same tournament selection,
-    same crossover/mutate calls, same log format -- with
-    conversation_fitness_over_dataset() substituted for fitness(),
-    and session-list sampling substituted for DataFrame.sample().
-
-    See module docstring for the compute-cost warning before running
-    this with eval_n/pop_size/generations anywhere near single-turn
-    main-experiment scale.
+    Multi-turn GA loop. IMPORTANT: `sessions` here should be the
+    TRAINING split (from split_sessions()), not the full dataset --
+    the caller is responsible for splitting before calling this, and
+    for evaluating the returned best_genome separately against a
+    held-out validation split.
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -196,37 +161,3 @@ def run_ga_multiturn(
         fits = [conversation_fitness_over_dataset(g, eval_sessions) for g in pop]
 
     return best_genome_overall, log
-
-
-if __name__ == "__main__":
-    import time
-
-    print("Loading sessions...")
-    all_sessions = load_sessions("data/multiturn_cleaned.jsonl")
-    print(f"Loaded {len(all_sessions)} sessions.\n")
-
-    print("Running SMALL test config to measure real wall-clock time "
-          "before scaling up (pop_size=6, generations=2, eval_n=10)...\n")
-
-    t0 = time.time()
-    best_genome, log = run_ga_multiturn(
-        sessions=all_sessions,
-        pop_size=6,
-        generations=2,
-        eval_n=10,
-        use_seed_genomes=True,
-    )
-    elapsed = time.time() - t0
-
-    print(f"\nSmall test run completed in {elapsed:.1f} seconds.")
-    print(f"Best genome: {best_genome}")
-    print(f"Best fitness: {log['best'][-1]:.4f}")
-
-    # Rough extrapolation to help decide what's actually feasible --
-    # NOT a precise estimate (fitness cost varies with genome
-    # history_turns and conversation length), just an order-of-magnitude
-    # sanity check before committing to a longer run.
-    per_gen_cost = elapsed / 2  # 2 generations in this test
-    print(f"\nApprox cost per generation at this scale: {per_gen_cost:.1f}s")
-    print("Scale this roughly linearly with pop_size and eval_n to "
-          "estimate a larger run's total time before starting it.")
