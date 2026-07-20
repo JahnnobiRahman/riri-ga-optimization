@@ -36,6 +36,8 @@ from evaluation.scoring import score_empathy, score_safety, score_structure, len
 from evaluation.conversation_distress import EscalationLevel
 from generation.conversation_generator import generate_conversation_responses
 
+TAU_H_BASE = 0.65  
+
 # Same fixed fitness-weight coefficients as the single-turn pipeline (Table 2)
 A, B, C, D = 0.40, 0.40, 0.15, 0.05
 
@@ -94,6 +96,15 @@ def score_conversation(
         base_score += 0.05 * e
         base_score += 0.05 * c
         base_score += 0.05 * min(c, 0.8)
+
+        
+        # NEW: flat mid-risk over-escalation penalty
+        if session_risk_label == "mid":
+            turn_escalated = (turn["escalation_level"].value == "full")
+            if turn_escalated:
+                h_t = turn["effective_distress"]
+                if h_t <= TAU_H_BASE:
+                    base_score -= 0.12
 
         per_turn_fitness.append(base_score)
 
