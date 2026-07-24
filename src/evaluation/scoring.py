@@ -67,6 +67,11 @@ GROUNDING_MARKERS = [
     "5-4-3-2-1",
     "গভীর শ্বাস",
     "৫টা জিনিস",
+    # Cover remaining phrase-bank lines (were previously undetectable)
+    "pause",
+    "notice your breathing",
+    "noticing 3 things",
+    "ধীরে ধীরে ভাবি",
 ]
 
 ACTION_MARKERS = [
@@ -80,6 +85,9 @@ ACTION_MARKERS = [
     "কাজ",
     "পারো",
     "করে দেখো",
+    # Cover remaining phrase-bank lines (were previously undetectable)
+    "write one sentence",
+    "stay near someone",
 ]
 
 
