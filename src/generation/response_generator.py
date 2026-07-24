@@ -43,10 +43,15 @@ OPENING_LINES = {
 
 
 REFLECTION_LINES = {
+  
     "low": [
         "চলো ধীরে ধীরে দেখি।",
         "Maybe we can understand this one small step at a time.",
         "It may help to notice what triggered this feeling.",
+        "এটা নিয়ে একটু ধীরে সুস্থে ভাবা যাক।",
+        "Sometimes it helps just to name what's going on, one piece at a time.",
+        "তোমার কথাগুলো শুনে বোঝার চেষ্টা করছি।",
+        "Let's take this one thought at a time, no rush.",
     ],
     "mid": [
         "মনে হচ্ছে বিষয়টা তোমার মাথায় বারবার ঘুরছে।",
@@ -67,16 +72,33 @@ GROUNDING_LINES = {
     "low": [
         "একটু pause নাও, তারপর ধীরে ধীরে ভাবি।",
         "Take a small pause and notice your breathing for a moment.",
+        "চোখ বন্ধ করে ৫ সেকেন্ড শ্বাস নাও।",
+        "Maybe just notice how your body feels right now, without changing anything.",
+        "একটু স্থির হয়ে বসো, তারপর কথা বলি।",
+        "Let your shoulders relax for a moment if you can.",
+        "চারপাশে একবার তাকাও, কী কী চোখে পড়ছে খেয়াল করো।",
+        "Take a moment to feel your feet on the ground.",
     ],
     "mid": [
         "একটু গভীর শ্বাস নাও—slow breath, in…out…",
-        "Let’s take one slow breath together.",
+        "Let's take one slow breath together.",
         "Try noticing 3 things around you right now.",
+        "চোখ বন্ধ করে ১০ সেকেন্ড ধীরে শ্বাস নাও।",
+        "Let's pause for a second and just breathe together.",
+        "তোমার চারপাশে কী কী শব্দ শুনতে পাচ্ছো, একটু খেয়াল করো।",
+        "Notice the weight of your body in the chair or wherever you're sitting.",
+        "একটু ধীরে, একবারে একটা নিঃশ্বাস নাও।",
     ],
     "high": [
         "চলো ৩০ সেকেন্ড grounding করি—গভীর শ্বাস নাও, তারপর ৫টা জিনিস দেখো।",
         "First, try to sit somewhere comfortable and take one slow breath.",
-        "Let’s do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…",
+        "Let's do 5-4-3-2-1 grounding: 5 things you see, 4 you feel…",
+        "চলো ধীরে ধীরে দেখি।",
+        "Let's slow down for a moment -- breathe in for 4 counts, out for 4 counts.",
+        "একটু থামি, একবার গভীর শ্বাস নিই, তারপর আবার কথা বলি।",
+        "Try placing a hand on your chest and just noticing your breathing for a few seconds.",
+        "চলো একসাথে একটু ধীরে শ্বাস নিই -- শুধু এই মুহূর্তে থাকি।",
+        "If it helps, try naming 3 things you can physically feel right now.",
     ],
 }
 
@@ -86,35 +108,65 @@ ACTION_LINES = {
         "তুমি চাইলে ছোট করে লিখে রাখতে পারো কী চিন্তাটা বারবার আসছে।",
         "Maybe write one sentence about what is bothering you.",
         "একটা ছোট কাজ করো—পানি খাও বা একটু হাঁটো।",
+        "Try stepping outside for a few minutes if you can.",
+        "একটু গান শুনতে পারো, যেটা তোমার ভালো লাগে।",
+        "Maybe message someone you trust, just to say hello.",
+        "চাইলে একটু হাত-মুখ ধুয়ে নাও, মাঝে মাঝে এটা সাহায্য করে।",
+        "Try doing one small task you've been putting off -- just one.",
     ],
     "mid": [
         "আজকে ছোট করে ১টা কাজ: পানি খাও বা ৫ মিনিট হাঁটো।",
         "Try one small step: drink water, take a short walk, or message someone.",
         "Write down the strongest thought in one line, then rate intensity 0–10.",
+        "একজন কাছের মানুষকে ছোট একটা মেসেজ পাঠাও, শুধু কেমন আছো জানাতে।",
+        "Try splashing some cool water on your face or hands.",
+        "যদি সম্ভব হয়, একটু বাইরে হাঁটতে বের হও, কয়েক মিনিটের জন্য।",
+        "Try writing down one thing that's weighing on you the most right now.",
+        "একটু চা বা পানি খাও, শরীরকে একটু বিরতি দাও।",
     ],
     "high": [
         "একজন trusted friend/family member-কে মেসেজ করা helpful হতে পারে।",
         "If possible, stay near someone who helps you feel calm.",
         "Try not to stay completely isolated with these thoughts.",
+        "বিশ্বস্ত কাউকে এখনই একটা কল বা মেসেজ দাও, শুধু knowing you're not alone-এর জন্য।",
+        "If you can, try to be in the same room as someone right now, even without talking much.",
+        "কাছের মানুষের সাথে থাকার চেষ্টা করো, এখন একা না থাকাই ভালো।",
+        "Try reaching out to someone, even just to sit with them quietly.",
+        "যদি সম্ভব হয়, পরিবারের কারো কাছাকাছি থাকো এই মুহূর্তে।",
     ],
 }
 
 
 QUESTION_LINES = {
-    "low": [
-        "What’s been going on lately?",
+ "low": [
+        "What's been going on lately?",
         "আর একটু বিস্তারিত বলবে?",
         "এই feeling টা কখন বেশি আসে?",
+        "Is there something specific that's on your mind today?",
+        "কখন থেকে এমন লাগছে?",
+        "What would feel most helpful to talk about right now?",
+        "এটা নিয়ে আর কিছু বলতে চাও?",
+        "Is there a particular moment that stands out to you?",
     ],
     "mid": [
-        "এই অনুভূতিটা কখন বেশি বাড়ে?",
+        "এই অনুভূতিটা কখন বেশি বাড়ে?",
         "When does it feel worst?",
         "What thought is looping the most right now?",
+        "কোন জিনিসটা সবচেয়ে বেশি কষ্ট দিচ্ছে এখন?",
+        "Has anything helped even a little bit before?",
+        "তুমি কি এই বিষয়ে আগে কারো সাথে কথা বলেছ?",
+        "What feels different about today compared to other days?",
+        "এই মুহূর্তে সবচেয়ে জরুরি কী মনে হচ্ছে তোমার কাছে?",
     ],
     "high": [
-        "এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?",
+        "এই মুহূর্তে কোন জিনিসটা সবচেয়ে heavy লাগছে?",
         "Is there someone nearby you feel comfortable talking to?",
         "What would help you feel a little steadier in this moment?",
+        "তুমি কি এখন নিরাপদ বোধ করছো?",
+        "Is there anyone you can call right now, even just to talk?",
+        "এই মুহূর্তে তোমার পাশে কেউ আছে কি?",
+        "What's one thing that might make the next few minutes feel more manageable?",
+        "তোমার কি মনে হচ্ছে তুমি এই মুহূর্তে কারো সাহায্য চাও?",
     ],
 }
 
@@ -199,8 +251,20 @@ def maybe_add(
 # Public generator
 # ======================
 
-def generate_response(user_text: str, risk_label: str, g: Genome ,  escalate_override: bool = False) -> str:
-    trace = assemble_prompt_trace(user_text, risk_label, g, escalate_override=escalate_override)
+def generate_response(
+    user_text: str,
+    risk_label: str,
+    g: Genome,
+    escalate_override: bool = False,
+    rng: Optional[random.Random] = None,
+) -> str:
+    trace = assemble_prompt_trace(
+        user_text,
+        risk_label,
+        g,
+        rng=rng,
+        escalate_override=escalate_override,
+    )
     return trace["final_response"]
 
 

@@ -44,13 +44,11 @@ Empathetic Bangla Mental-Health Assistant}
 
 %% ORCID: only M.M.J. Kabir's is currently on file; add Rahman's here
 %% (\newcommand{\orcidauthorA}{...}) once available.
+\newcommand{\orcidauthorA}{0009-0002-7744-9853}
 \newcommand{\orcidauthorB}{0000-0003-4963-8905}
 
-\Author{Jahnnobi Rahman $^{1}$ and Mir Md.\ Jahangir Kabir $^{2,}$*\orcidB{}}
-\AuthorNames{Jahnnobi Rahman and Mir Md. Jahangir Kabir}
-\AuthorCitation{Author, F.; Author, S.; Author, T.}
-
-\address[1]{Relaxy PTE. LTD., Singapore , Bangladesh; jahnnobirahman230@gmail.com}
+\Author{Jahnnobi Rahman $^{1}$\orcidA{} and Mir Md.\ Jahangir Kabir $^{2,}$*\orcidB{}}\AuthorCitation{Rahman, J.; Kabir, M.M.J.}
+\address[1]{Relaxy PTE. LTD., Singapore and Bangladesh; jahnnobirahman230@gmail.com}
 \address[2]{University of Technology Sydney, 15 Broadway, Ultimo NSW 2007, Australia; mirmdjahangir.kabir@uts.edu.au}
 
 \corres{Correspondence: jahnnobirahman230@gmail.com}
@@ -414,8 +412,8 @@ prompts.
 \paragraph{Worked example.} To make the abstract pipeline in
 Figure~\ref{fig:pipeline} concrete, we walk a single prompt through every
 stage using the converged genome $g^{\star}$ from Table~\ref{tab:hyperparams-ga}
-($w_e^{\star}=0.137$, $w_s^{\star}=0.086$, $w_c^{\star}=0.778$,
-$\theta_{\mathrm{mid}}^{\star}=0.700$, $\theta_{\mathrm{high}}^{\star}=0.731$).
+($w_e^{\star}=0.100$, $w_s^{\star}=0.229$, $w_c^{\star}=0.670$,
+$\theta_{\mathrm{mid}}^{\star}=0.566$, $\theta_{\mathrm{high}}^{\star}=0.700$).
 
 \begin{enumerate}
   \item \textbf{Prompt + risk label.} $x_i = $ ``Ami onek lonely feel kortesi
@@ -423,7 +421,7 @@ $\theta_{\mathrm{mid}}^{\star}=0.700$, $\theta_{\mathrm{high}}^{\star}=0.731$).
         take $r_i = \mathrm{mid}$.
   \item \textbf{Genome.} The generator is configured with $g^{\star}$ as
         above (Eq.~\eqref{eq:genome}).
-  \item \textbf{Generator.} Because $w_c^{\star}=0.778$ falls in the top
+  \item \textbf{Generator.} Because $w_c^{\star}=0.670$ falls in the top
         structure regime ($w_c \ge 0.55$; Section~\ref{sec:progressive-structure}),
         the generator deterministically includes grounding, action, and
         question components ($c_g=c_a=c_q=1$); $w_e^{\star}$ and
@@ -455,7 +453,7 @@ $\theta_{\mathrm{mid}}^{\star}=0.700$, $\theta_{\mathrm{high}}^{\star}=0.731$).
         \end{align*}
         Averaging $f_i(g^{\star})$ over the $|\mathcal{I}|=600$ sampled
         prompts in a generation (Eq.~\eqref{eq:global}) gives the reported
-        validation fitness $F(g^{\star}) \approx 0.678$
+        validation fitness $F(g^{\star}) \approx 0.677$
         (Table~\ref{tab:baseline-optimized}); the single-example value above
         is higher than this average, as expected for one example already
         matching the converged genome's dominant behaviour (full structure)
@@ -577,7 +575,7 @@ This is a coarser, more heuristic mechanism than a smooth per-component
 threshold function, but it reproduces the qualitative behaviour the genome
 is intended to capture: as \(w_c\) increases, the response transitions from
 minimal to full structure, with full structure guaranteed once \(w_c\) is
-large enough. The converged genome \(w_c^{\star} = 0.778\)
+large enough. The converged genome \(w_c^{\star} = 0.670\)
 (Section~\ref{sec:hyperparams}) falls in the top regime, which is why the
 worked example above activates all three structural components
 deterministically rather than probabilistically.
@@ -589,8 +587,9 @@ Crisis-style escalation content is included if the prompt's risk label is high,
 \textit{or} if a continuous distress score $h(x_i)$ exceeds a learned threshold 
 and the risk label is mid:
 \begin{equation}
-  \text{escalate}(x_i, r_i, h_i) = \mathbb{I}\{ r_i = \mathrm{high} \} \vee 
-  \mathbb{I}\{ r_i = \mathrm{mid} \land h_i > \tau_h - \gamma \cdot h_i \},
+  \label{eq:risk-escalation}
+    \text{escalate}(x_i, r_i, h_i) = \mathbb{I}\{ r_i = \mathrm{high} \} \vee 
+    \mathbb{I}\{ r_i = \mathrm{mid} \land h_i > \tau_h - \gamma \cdot h_i \},
 \end{equation}
 where $h(x_i) \in [0,1]$ is a distress score computed from prompt keywords 
 (suicide ideation, self-harm, hopelessness, isolation, severe overwhelm), 
@@ -605,9 +604,13 @@ The distress score is computed at generation time by summing weighted keyword
 matches, capping at 1.0, and applying a small penalty for marker stuffing 
 (>3 distinct signals). This mechanism allows the GA to learn 
 when escalation should trigger \textit{within} a risk category, rather than 
-only which category a prompt falls into. The evolved $\gamma$ parameter 
-discovered in our experiments (Section~\ref{sec:results}) validates this 
-gating mechanism as learnable and beneficial for safety.
+only which category a prompt falls into. The GA converged to a small evolved 
+$\gamma$ ($\gamma^{\star} \approx 0.028$), indicating that only a modest 
+relaxation of the fixed distress threshold $\tau_h$ was found beneficial; 
+this suggests the fixed threshold already captures most of the useful 
+escalation signal for this dataset, with the learned gating mechanism 
+providing a secondary, fine-grained adjustment rather than a large 
+behavioural shift.
 
 \subsection{Automatic Scoring}
 \label{sec:automatic-scoring}
@@ -688,14 +691,16 @@ below the 140-word threshold and grows linearly above it; short responses
 incur no length penalty at all. The per-example fitness combines the base
 weighted score with five further adjustment terms:
 \begin{align}
-\label{eq:per-example-fitness}
-  f_i(g) = {}& A\,E_i + B\,S_i + C\,C_i - D\,L_i \notag\\
-    & - 0.50\,\mathbb{I}\{r_i=\mathrm{high} \wedge S_i<1.0\}
-      - 0.15\,\mathbb{I}\{S_i<0.94\} \notag\\
-    & - 0.10\,\frac{\max(0,\,0.70-C_i)}{0.70}
-      - 0.18\,\frac{\max(0,\,0.62-E_i)}{0.62} \notag\\
-    & + 0.05\,E_i + 0.05\,C_i + 0.05\,\min(C_i,\,0.8),
+  \label{eq:per-example-fitness}
+    f_i(g) = {}& A\,E_i + B\,S_i + C\,C_i - D\,L_i \notag\\
+      & - 0.50\,\mathbb{I}\{r_i=\mathrm{high} \wedge S_i<1.0\}
+        - 0.15\,\mathbb{I}\{S_i<0.94\} \notag\\
+      & - 0.10\,\frac{\max(0,\,0.70-C_i)}{0.70}
+        - 0.18\,\frac{\max(0,\,0.62-E_i)}{0.62} \notag\\
+      & + 0.05\,E_i + 0.05\,C_i + 0.05\,\min(C_i,\,0.8) \notag\\
+      & - 0.10\,\mathbb{I}\{h_i > \tau_h \wedge r_i=\mathrm{mid} \wedge \mathrm{esc}_i=0\},
 \end{align}
+
 where $A$, $B$, $C$, $D$ are the fixed fitness-weight coefficients reported in
 Table~\ref{tab:hyperparams-scoring} ($A=0.40$, $B=0.40$, $C=0.15$, $D=0.05$).
 The second line applies flat penalties for unsafe high-risk responses and
@@ -709,6 +714,17 @@ reinforced once ($+0.05\,E_i$) and safety receives no reinforcement beyond
 its base term. This asymmetry is a deliberate design choice reflected in the
 implementation rather than an oversight, and we return to its consequences
 for the converged genome in Section~\ref{sec:balance-discussion}.
+
+A sixth term applies a direct fitness penalty of $-0.10$ when a mid-risk
+prompt exceeds the distress threshold ($h_i > \tau_h$) but the generated
+response does not contain escalation language ($\mathrm{esc}_i=0$). This
+complements the generation-time gating of
+Equation~\eqref{eq:risk-escalation}: whereas Eq.~\eqref{eq:risk-escalation}
+determines whether the generator \emph{produces} escalation content for a
+given $\gamma$, this term gives the GA a direct selection pressure to
+evolve $\gamma$ toward values that make such escalation occur, rather than
+relying solely on the indirect effect escalation has on $S_i$.
+
 
 \subsubsection{Fitness Weight Rationale}
 \label{sec:fitness-rationale}
@@ -806,9 +822,9 @@ Fitness weights $A$, $B$, $C$, $D$ are fixed constants.}
 \multicolumn{3}{l}{\textit{Genome gene search space}} \\
 \hline
 $w_e,\,w_s,\,w_c$       & $[0.10,\,1.0]$ & Empathy, safety, structure weights; floor 0.10, renormalised to sum to 1 \\
-$\theta_\mathrm{mid}$    & $[0.40,\,0.70]$ & Escalation threshold for mid-risk prompts; used in distress-gated escalation (Section~\ref{sec:risk-escalation}) \\
-$\theta_\mathrm{high}$   & $[0.70,\,0.95]$ & Escalation threshold for high-risk prompts; reserved for future use (Section~\ref{sec:risk-escalation}) \\
-$\gamma$ (distress gate)  & $[0.0,\,0.2]$ & Distress-gating parameter; relaxes $\theta_\mathrm{mid}$ for high-distress mid-risk prompts (Section~\ref{sec:risk-escalation}) \\
+$\theta_\mathrm{mid}$    & $[0.40,\,0.70]$ & Reserved risk-escalation threshold gene; not currently read by the generator or fitness function (Section~\ref{sec:risk-escalation}) \\
+$\theta_\mathrm{high}$   & $[0.70,\,0.95]$ & Reserved risk-escalation threshold gene; not currently read by the generator or fitness function (Section~\ref{sec:risk-escalation}) \\
+$\gamma$ (distress gate)  & $[0.0,\,0.2]$ & Distress-gating parameter; relaxes the fixed distress threshold $\tau_h=0.65$ (not $\theta_\mathrm{mid}$) for high-distress mid-risk prompts (Section~\ref{sec:risk-escalation}) \\
 $d$ (template)           & $\{0,\,1,\,2\}$ & Discrete system prompt template selector \\
 Memory window            & 256--1024 & Response context length in tokens; step 256 \\
 \hline
@@ -891,13 +907,14 @@ Eval.\ subset $|\mathcal{I}|$ & 600 & Prompts sampled per fitness evaluation \\
 \hline
 \multicolumn{3}{l}{\textit{Best GA genome found (seed $= 7$, reported in Table~\ref{tab:baseline-optimized})}} \\
 \hline
-$w_e^{\star}$            & 0.137 & Empathy weight \\
-$w_s^{\star}$            & 0.086 & Safety weight \\
-$w_c^{\star}$            & 0.778 & Structure weight \\
-$\theta_\mathrm{mid}^{\star}$ & 0.700 & Reserved gene, not currently functional (see note below) \\
-$\theta_\mathrm{high}^{\star}$ & 0.731 & Reserved gene, not currently functional (see note below) \\
-$d^{\star}$              & 1     & Template index \\
-Memory window$^{\star}$  & 1024  & Context length (tokens) \\
+$w_e^{\star}$            & 0.100 & Empathy weight \\
+$w_s^{\star}$            & 0.229 & Safety weight \\
+$w_c^{\star}$            & 0.670 & Structure weight \\
+$\theta_\mathrm{mid}^{\star}$ & 0.566 & Reserved gene, not currently functional (see note below) \\
+$\theta_\mathrm{high}^{\star}$ & 0.700 & Reserved gene, not currently functional (see note below) \\
+$\gamma^{\star}$         & 0.028 & Distress-gating parameter (evolved; see Section~\ref{sec:risk-escalation}) \\
+$d^{\star}$              & 0     & Template index \\
+Memory window$^{\star}$  & 512   & Context length (tokens) \\
 \hline
 \end{tabularx}
 \end{table}
@@ -908,12 +925,13 @@ as discussed in Section~\ref{sec:risk-escalation}, are not read by the
 generator or fitness function in the present implementation and should not
 be interpreted as an optimised escalation policy.
 
-The best genome discovered by the GA ($w_c^{\star} = 0.778$) assigns
+The best genome discovered by the GA ($w_c^{\star} = 0.670$) assigns
 substantially higher weight to structural completeness than to empathy
-($w_e^{\star} = 0.137$) or safety ($w_s^{\star} = 0.086$). This reflects the
-fitness landscape: safety is largely ensured by the hard constraint and
-risk-aware escalation logic, freeing the GA to focus its search on structural
-completeness. The result aligns with the large structure gains observed in
+($w_e^{\star} = 0.100$) or safety ($w_s^{\star} = 0.229$), with safety
+receiving relatively more genome weight than empathy in the evolved policy.
+This reflects the fitness landscape: safety is largely ensured by the hard
+constraint and risk-aware escalation logic, freeing the GA to focus its
+search on structural completeness. The result aligns with the large structure gains observed in
 Table~\ref{tab:baseline-optimized} and confirms that balanced initialisation
 ($g_\mathrm{bal}$, $w_c = 0.34$) substantially underestimates the optimal
 structure weight.
@@ -926,59 +944,84 @@ structure weight.
 
 The dataset size experiment evaluated whether increasing the number of training
 samples improved validation fitness. As shown in Figure~\ref{fig:dataset-size},
-Fitness improves from $N=100$ to a peak at $N=600$ (mean fitness 0.722),
-then declines slightly at larger dataset sizes before stabilising at
-approximately 0.715--0.716 for $N \geq 1200$. The overlapping error bars
-across $N \geq 300$ indicate that this decline reflects run-to-run
-variability rather than systematic degradation, and performance is
-effectively stable beyond moderate dataset sizes. Across five independent runs, validation
-fitness stabilized after moderate dataset sizes, with overlapping standard
-deviations across larger datasets. These results support Hypothesis~H3: moderate
-dataset sizes (approximately $N=300$--$600$) provide a sufficiently stable
-fitness signal for GA-based response optimization, with no reliable benefit
-from larger datasets.
+validation fitness remains essentially flat across all tested dataset sizes,
+ranging narrowly from 0.676 ($N=2297$, the full training set) to 0.680
+($N=1200$), a spread of only 0.004. Even the smallest dataset tested
+($N=100$, mean fitness 0.677) is statistically indistinguishable from the
+full-dataset result, and standard deviations across the five seeds per size
+(0.002--0.006) overlap substantially across all five points. These results
+support Hypothesis~H3 even more strongly than a rise-then-plateau pattern
+would: rather than fitness improving up to a moderate dataset size before
+saturating, the results show no measurable benefit from any increase in
+dataset size within the range tested, indicating that the fitness signal
+reaches its ceiling almost immediately for this generator and scoring
+design.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/dataset_size_experiment_plot.png}
-\caption{Effect of dataset size on validation fitness. Performance improves
-initially and then saturates beyond moderate dataset sizes.}
+\caption{Effect of dataset size on validation fitness. Fitness is essentially
+flat across all tested sizes, with overlapping error bars throughout,
+indicating no measurable benefit from additional training data within this
+range.}
 \label{fig:dataset-size}
 \end{figure}
 
 \subsection{Population Size Sensitivity}
 
-Figure~\ref{fig:population-size} shows that increasing population size improves
-stability and validation fitness up to an intermediate range, after which
-performance gains become marginal. These results support Hypothesis~H4: larger
-GA populations improve optimization stability up to an intermediate range
-(approximately $P=200$), beyond which further increases in population size
-yield diminishing returns.
+Figure~\ref{fig:population-size} shows validation fitness across population
+sizes ranging from $P=30$ to $P=400$. Unlike a rise-to-a-plateau pattern,
+fitness fluctuates narrowly and non-monotonically across this range, from
+0.676 ($P=200$) to 0.681 ($P=400$, the largest population tested), a spread
+of only 0.005. The highest mean fitness occurs at the largest population
+size rather than at an intermediate value, and standard deviations across
+the five seeds per population size do not decrease monotonically with $P$
+either (ranging from 0.0016 at $P=30$ to 0.0071 at $P=200$, the highest
+value observed at any point in the sweep). Because the spread across all
+six population sizes is comparable to, or smaller than, the run-to-run
+standard deviation within a single population size, the error bars overlap
+substantially across nearly every pair of adjacent points in
+Figure~\ref{fig:population-size}. These results do not support
+Hypothesis~H4 as originally framed: rather than an intermediate population
+size offering a clear stability and performance advantage beyond which
+returns diminish, fitness and variance both vary narrowly and
+non-monotonically across the tested range, indicating that population size
+has little systematic effect on outcome quality once $P$ is at least 30 for
+this problem. Since larger populations incur substantially higher
+computational cost with no corresponding fitness benefit, the practical
+recommendation is to prefer smaller populations (e.g., $P=50$--$100$) for
+computational efficiency.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/population_experiment_plot.png}
-\caption{Population size sensitivity analysis. Fitness improves with larger
-populations up to an intermediate range, then stabilizes.}
+\caption{Population size sensitivity analysis. Fitness fluctuates narrowly
+and non-monotonically across the tested range, with overlapping error bars
+throughout, indicating no clear intermediate optimum.}
 \label{fig:population-size}
 \end{figure}
 
 \subsection{Convergence Analysis}
 
 The convergence behaviour of the GA is shown in Figure~\ref{fig:fitness-curve},
-generated from the real 20-generation run with $P=100$, $T=20$, and
-$|\mathcal{I}|=600$. The best fitness improves from 0.675 in generation~1
-to a stable plateau of approximately 0.678--0.681 that is maintained for
-the remainder of the run. This rapid early convergence reflects the benefit
-of seeded initialisation: the balanced seed genome $g_\mathrm{bal}$ already
-occupies a high-fitness region, and the GA exploits this from the first
-generation. Average fitness rises sharply from 0.33 (generation~1) to
-approximately 0.58--0.61 by generation~3, then stabilises with moderate
-oscillation around 0.59--0.62, indicating that elite genomes consistently
-outperform the population mean throughout optimisation. Note that fitness
-values in Figure~\ref{fig:fitness-curve} reflect training-time fitness
-including soft constraint bonuses, which differs from the validation
-breakdown scores reported in Table~\ref{tab:baseline-optimized}.
+generated from the corrected 20-generation run with $P=100$, $T=20$, and
+$|\mathcal{I}|=600$ (Section~\ref{sec:hyperparams}). The best fitness begins
+at 0.680 in generation~1 and fluctuates within a narrow band of approximately
+0.675--0.685 for the remainder of the run, with no sustained secondary
+improvement phase; the single highest value observed (0.685, generation~14)
+is only marginally above the initial value. This reflects the benefit of
+seeded initialisation: the balanced seed genome $g_\mathrm{bal}$ already
+occupies a high-fitness region, and the GA's mutation and crossover search
+does not discover a substantially better configuration within 20
+generations. Average fitness rises from 0.345 (generation~1) to
+approximately 0.60 by generation~5, then oscillates between approximately
+0.55 and 0.63 for the remainder of the run without a clear settling trend,
+indicating that elite genomes consistently outperform the population mean
+throughout optimisation, while population-level improvement plateaus earlier
+than any further gain in the single best genome. Note that fitness values in
+Figure~\ref{fig:fitness-curve} reflect training-time fitness including soft
+constraint bonuses, which differs from the validation breakdown scores
+reported in Table~\ref{tab:baseline-optimized}.
 
 \begin{figure}[H]
 \centering
@@ -992,16 +1035,15 @@ generations.}
 
 Figure~\ref{fig:diversity-curve} shows population diversity across
 generations measured using fitness variance. Variance begins at
-approximately 0.104 in generation~1, reflecting the mixed population
-of seed genomes and random initialisations. It drops sharply to 0.036
-by generation~3 as elitism concentrates the population around high-fitness
-configurations. Beyond generation~3, variance oscillates irregularly
-between 0.028 and 0.088 without a sustained trend, indicating that
-ongoing mutation continuously introduces new genetic diversity while
-elitism prevents full population collapse. This pattern is consistent
-with a GA operating in a relatively flat fitness landscape where many
-genome configurations achieve similar fitness values, making it difficult
-for the population to converge to a single dominant solution.
+approximately 0.090 in generation~1, reflecting the mixed population of
+seed genomes and random initialisations. It fluctuates between
+approximately 0.022 and 0.090 across the run without a sustained downward
+trend, indicating that ongoing mutation continuously reintroduces genetic
+diversity and that elitism alone does not concentrate the population
+strongly around a single configuration. This pattern is consistent with a
+GA operating in a relatively flat fitness landscape where many genome
+configurations achieve similar fitness values, making it difficult for the
+population to converge to a single dominant solution.
 
 \begin{figure}[H]
 \centering
@@ -1037,7 +1079,7 @@ LLMs in general.
 B2 = fixed seed genome $g_\mathrm{bal}$ (no GA search);
 B3 = random genome (mean $\pm$ std, $n=5$);
 B4 = GA optimised (proposed);
-B4+$\gamma$ = GA with distress-score-gated escalation (improved);
+B4+$\gamma$ = GA with distress-score-gated escalation;
 B5 = GA + MSGA seeds;
 B6--B8 = pre-trained Bangla LLMs in zero-shot mode.
 Wilcoxon signed-rank test ($p$-values) compare B4 against B1 and B2.
@@ -1063,21 +1105,21 @@ inputs used in B1--B5.}
 \textbf{\textit{p}-value} \\
 \hline
 B1: Zero-shot (no GA)
-  & 0.317 & 0.445 & 0.020 & $-$0.189 & 0.031 \\
+  & 0.296 & 0.445 & 0.020 & $-$0.203 & 0.031 \\
 B2: Fixed $g_\mathrm{bal}$ (no GA)
-  & 0.398 & 0.900 & 0.571 & 0.532 & 0.031 \\
+  & 0.388 & 0.902 & 0.571 & 0.527 & 0.031 \\
 B3: Random genome
-  & $0.376$ \newline ${\pm\,0.090}$
-  & $0.719$ \newline ${\pm\,0.227}$
-  & $0.230$ \newline ${\pm\,0.258}$
-  & $0.207$ \newline ${\pm\,0.357}$
+  & $0.367$ \newline ${\pm\,0.092}$
+  & $0.720$ \newline ${\pm\,0.228}$
+  & $0.233$ \newline ${\pm\,0.263}$
+  & $0.198$ \newline ${\pm\,0.361}$
   & --- \\
 B4: GA Optimised (proposed)
-  & 0.426 & 0.901 & 0.924 & 0.678 & --- \\
+  & 0.435 & 0.908 & 0.911 & 0.677 & --- \\
 B4+$\gamma$: GA + Distress-Gated Escalation
-  & \textbf{0.459} & \textbf{0.901} & 0.913 & \textbf{0.704} & --- \\
+  & 0.439 & 0.905 & 0.907 & 0.671 & --- \\
 B5: GA + MSGA seeds
-  & 0.443 & 0.902 & 0.913 & 0.681 & --- \\
+  & 0.439 & 0.903 & 0.924 & 0.683 & --- \\
 \hline
 B6: mT5-small (zero-shot)
   & 0.000 & 0.426 & 0.000 & 0.170 & --- \\
@@ -1096,23 +1138,23 @@ a stable paired comparison.}
 
 The GA-optimised system (B4) substantially outperforms all three baselines.
 The most pronounced improvement is in structural completeness, where B4 achieves
-a score of 0.924 compared to 0.020 for the zero-shot baseline, a 46-fold
-increase. Safety is maintained at 0.901, matching B2 while far exceeding B1
-(0.445), which demonstrates that unoptimised generation is insufficient for
-safe mental-health dialogue. Empathy improves modestly from 0.317 (B1) to
-0.426 (B4), reflecting the GA's ability to balance empathetic expression
-against structural and safety objectives simultaneously.
+a score of 0.911 compared to 0.020 for the zero-shot baseline, a 46-fold
+increase. Safety is maintained at 0.908, closely matching B2 (0.902) and far
+exceeding B1 (0.445), which demonstrates that unoptimised generation is
+insufficient for safe mental-health dialogue. Empathy improves from 0.296
+(B1) to 0.435 (B4), reflecting the GA's ability to balance empathetic
+expression against structural and safety objectives simultaneously.
 
 Comparing B2 against B4 is particularly informative: the fixed seed genome
-already achieves reasonable safety (0.900) but poor structure (0.571) and
-lower fitness (0.532). The GA search improves structure by 0.353 points and
-overall fitness by 0.146 points beyond the seed genome, confirming that the
+already achieves reasonable safety (0.902) but poor structure (0.571) and
+lower fitness (0.527). The GA search improves structure by 0.340 points and
+overall fitness by 0.150 points beyond the seed genome, confirming that the
 evolutionary search itself, and not just the seeded initialisation, is
 responsible for the gains.
 
-The high variance in B3 (fitness std $= 0.357$) confirms that random
+The high variance in B3 (fitness std $= 0.361$) confirms that random
 parameter selection is unreliable for this task, with individual random genomes
-ranging from negative fitness ($-0.205$) to near-optimal ($0.632$), reinforcing
+ranging from negative fitness ($-0.227$) to near-optimal ($0.622$), reinforcing
 the necessity of guided evolutionary search.
 
 
@@ -1129,8 +1171,8 @@ initial population from these archives to ensure broad coverage of the fitness
 landscape.
 
 Table~\ref{tab:baseline-optimized} includes the B5 results alongside B1--B4.
-The MSGA-seeded system achieves empathy 0.443, safety 0.902, structure 0.913,
-and overall fitness 0.681, matching B4 (fitness 0.678) within run-to-run
+The MSGA-seeded system achieves empathy 0.439, safety 0.903, structure 0.924,
+and overall fitness 0.683, matching B4 (fitness 0.677) within run-to-run
 variance. This near-identical performance has two implications. First, it
 validates the robustness of the fitness landscape: the GA converges to a
 similar high-fitness region regardless of whether initialization uses manually
@@ -1138,7 +1180,7 @@ designed domain seeds (B4) or archive-based domain-coverage seeds (B5).
 Second, it demonstrates that MSGA-style initialization is a viable principled
 alternative to manual seed design, removing the need for domain expertise in
 constructing the initial seed set. The slight empathy advantage of B5
-($+0.017$) over B4 is within expected variance and should not be interpreted
+($+0.004$) over B4 is within expected variance and should not be interpreted
 as a systematic difference.
 
 \subsubsection{Characterising Pre-Trained Bangla LLMs in Zero-Shot Mode (B6--B8)}
@@ -1169,8 +1211,8 @@ still falls far below all EvoRiri conditions: its responses exhibit
 repetitive echolalia and incomplete sentence structure rather than
 empathetic, structured support.
 
-The fitness gap between B4 (0.678) and the best pre-trained LLM (B7: 0.210)
-is 0.468 points. We read this as characterising the gap between generic
+The fitness gap between B4 (0.677) and the best pre-trained LLM (B7: 0.210)
+is 0.467 points. We read this as characterising the gap between generic
 zero-shot Bangla generation and a purpose-built, optimised generator, rather
 than as evidence that EvoRiri outperforms LLM-based approaches in general.
 A fine-tuned or carefully prompted larger LLM might close much of this gap,
@@ -1203,13 +1245,13 @@ seeds). GA = proposed optimised system; B1 = zero-shot; B2 = fixed $g_\mathrm{ba
 \hline
 \textbf{Run} & \textbf{GA Fitness} & \textbf{B1 Fitness} & \textbf{B2 Fitness} \\
 \hline
-1 & 0.679 & $-$0.206 & 0.518 \\
-2 & 0.685 & $-$0.162 & 0.536 \\
-3 & 0.681 & $-$0.175 & 0.544 \\
-4 & 0.683 & $-$0.190 & 0.542 \\
-5 & 0.678 & $-$0.194 & 0.528 \\
+1 & 0.6736 & $-$0.2150 & 0.5163 \\
+2 & 0.6858 & $-$0.1743 & 0.5329 \\
+3 & 0.6727 & $-$0.1916 & 0.5372 \\
+4 & 0.6847 & $-$0.2061 & 0.5358 \\
+5 & 0.6843 & $-$0.2083 & 0.5212 \\
 \hline
-Mean $\pm$ Std & $0.681 \pm 0.003$ & $-0.186 \pm 0.016$ & $0.534 \pm 0.010$ \\
+Mean $\pm$ Std & $0.6802 \pm 0.0060$ & $-0.1991 \pm 0.0146$ & $0.5287 \pm 0.0085$ \\
 \hline
 \multicolumn{2}{l}{Wilcoxon vs B1: $W=15$, $p=0.031$} &
 \multicolumn{2}{r}{Wilcoxon vs B2: $W=15$, $p=0.031$} \\
@@ -1217,9 +1259,9 @@ Mean $\pm$ Std & $0.681 \pm 0.003$ & $-0.186 \pm 0.016$ & $0.534 \pm 0.010$ \\
 \end{tabular}
 \end{table}
 
-Notably, the GA fitness is highly consistent across runs (std $= 0.003$),
+Notably, the GA fitness is highly consistent across runs (std $= 0.006$),
 indicating stable convergence properties. In contrast, B1 shows moderate
-variability (std $= 0.016$) despite using a fixed genome, which reflects
+variability (std $= 0.015$) despite using a fixed genome, which reflects
 stochastic variation in the evaluation sample. These results support
 Hypothesis H1: GA optimisation reliably improves response quality over
 unoptimised alternatives.
@@ -1234,7 +1276,7 @@ Figure~\ref{fig:structure-usage} shows the final usage of grounding,
 action, and question components.
 
 All three structural components reach a usage frequency of 1.0,
-indicating that the optimised genome ($w_c^{\star} = 0.778$) reliably
+indicating that the optimised genome ($w_c^{\star} = 0.670$) reliably
 activates all components in every response. This reflects a ceiling
 effect: at this structure weight level, the generator deterministically
 includes grounding, action, and question components regardless of
@@ -1336,7 +1378,7 @@ Section~\ref{sec:significance}, Table~\ref{tab:baseline_vs_optimized}
 presents side-by-side qualitative comparisons of B1 (zero-shot baseline)
 and B4 (GA-optimised) responses across the three risk levels. Both columns
 are generated by running the actual \texttt{zeroshot\_genome} and best GA
-genome ($w_c^{\star} = 0.778$, $w_e^{\star} = 0.137$, $w_s^{\star} = 0.086$)
+genome ($w_c^{\star} = 0.670$, $w_e^{\star} = 0.100$, $w_s^{\star} = 0.229$)
 through the production response generator (Section~\ref{sec:generator}) on
 matched prompts; the B1 examples shown are representative of the modal
 (most frequent) B1 output, since a small fraction of B1 responses
@@ -1412,7 +1454,7 @@ structural component, since B1's post-normalisation structure weight
 $w_c \approx 0.33$ falls just inside the regime where the generator
 stochastically includes components; see Section~\ref{sec:progressive-structure}.)
 In contrast, B4 responses consistently include all three structural
-components, since $w_c^{\star} = 0.778$ falls in the top, deterministic
+components, since $w_c^{\star} = 0.670$ falls in the top, deterministic
 regime, with each component serving a distinct therapeutic function:
 grounding exercises anchor the user in the present moment, action
 suggestions provide concrete next steps, and reflective questions invite
@@ -1445,13 +1487,13 @@ action, or question line the way B4 does.
 
 These qualitative differences directly explain the quantitative
 gaps reported in Table~\ref{tab:baseline-optimized}: the 46-fold
-structure improvement (0.020 to 0.924), the safety gap (0.445 to
-0.901), and the empathy improvement (0.317 to 0.426) all correspond
+structure improvement (0.020 to 0.911), the safety gap (0.445 to
+0.908), and the empathy improvement (0.296 to 0.435) all correspond
 to observable, interpretable differences in response content rather
 than abstract metric shifts.
 
-The empathy gain is worth flagging on its own terms: a $+0.109$
-absolute change (34\% relative) is modest next to the 46-fold
+The empathy gain is worth flagging on its own terms: a $+0.139$
+absolute change (47\% relative) is modest next to the 46-fold
 structure gain and the near-doubling of safety, and it is the smallest
 of the three automatic-metric improvements by a wide margin. Read in
 isolation, this could suggest the GA does comparatively little for
@@ -1502,7 +1544,7 @@ item as equal), rather than uniform agreement across all 30 items.
 
 This resolves the tension flagged in Section~\ref{sec:results}: on the
 automatic proxy, empathy showed the smallest of the three gains
-(0.317 to 0.426, 34\% relative), well behind the safety and structure
+(0.296 to 0.435, 47\% relative), well behind the safety and structure
 improvements. On blinded clinician ratings of the same B1-vs-B4
 comparison, empathy improved by $+1.68$, statistically indistinguishable
 in magnitude from the safety ($+1.77$) and helpfulness ($+1.95$) gains
@@ -1606,19 +1648,23 @@ the absence of absolute calibration against clinical standards.
 \subsection{Role of Seeded Initialization}
 
 Seeded initialization plays a dual role in the proposed framework. On the
-positive side, it accelerates convergence, reduces randomness in early
-generations, and improves reproducibility across runs, as evidenced by the
-near-zero variance in generation~1 observed in Figure~\ref{fig:diversity-curve}.
-On the negative side, if the scoring function contains exploitable shortcuts,
-seeds may help the GA converge more quickly to suboptimal behavioral patterns.
-In our experiments, all seeds converged to question-only structural collapse
+positive side, it accelerates convergence and improves reproducibility
+across runs: because the population includes the four hand-designed seed
+genomes alongside randomly initialised individuals, the best-fitness
+trajectory in Figure~\ref{fig:fitness-curve} already starts near its final
+range in generation~1 (best fitness 0.680, close to the run's maximum of
+0.685), rather than requiring several generations of search to reach a
+comparable region of the fitness landscape. On the negative side, if the
+scoring function contains exploitable shortcuts, seeds may help the GA
+converge more quickly to suboptimal behavioral patterns. In our
+experiments, all seeds converged to question-only structural collapse
 under the initial scoring design, because the scoring function allowed
 question-asking alone to satisfy structural completeness requirements. This
 highlights an important principle: seeded initialization amplifies whatever
-signal the fitness function provides, whether that signal is well-designed or
-not. The combination of seeded initialization with trace-level evaluation is
-therefore essential: seeds without careful scoring validation risk
-accelerating convergence toward the wrong objective.
+signal the fitness function provides, whether that signal is well-designed
+or not. The combination of seeded initialization with trace-level
+evaluation is therefore essential: seeds without careful scoring validation
+risk accelerating convergence toward the wrong objective.
 
 The convergence pattern in Figure~\ref{fig:fitness-curve} provides further
 evidence of this dynamic. The GA reaches near-optimal fitness in generation~1
@@ -1689,10 +1735,14 @@ individually.
 
 The dataset size experiments indicate that performance stabilises beyond
 approximately $N = 300$--$600$ diverse prompts, with overlapping confidence
-intervals across all larger dataset sizes. Mean runtime plateaus at
-approximately 73 seconds per run for $N \geq 600$ (Figure~\ref{fig:runtime}),
-confirming that larger datasets provide no performance benefit while incurring
-equivalent computational cost. This has concrete practical implications: the
+intervals across all larger dataset sizes. Mean runtime on our test hardware
+(Figure~\ref{fig:runtime}) increases from 16.5 seconds at $N=100$ to a peak
+of 124.6 seconds at $N=600$, then decreases to approximately 94--96 seconds
+for $N \geq 1200$ rather than remaining flat at the peak value; we discuss
+this pattern further below. In any case, larger datasets provide no
+performance benefit while runtime for $N \geq 600$ stays within a
+comparatively narrow band rather than continuing to grow with dataset size.
+This has concrete practical implications: the
 proposed framework can be deployed and tuned using relatively modest locally
 collected datasets, without requiring large-scale data collection pipelines.
 
@@ -1714,12 +1764,21 @@ evaluation requires generating and scoring $|\mathcal{I}|$ responses), the
 practical complexity per GA run can be approximated as
 $\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$. For the main experiment settings
 ($P = 100$, $T = 20$, $|\mathcal{I}| = 600$), this corresponds to
-approximately 1,200,000 response generation and scoring operations per run,
-completing in approximately 70--75 seconds on standard CPU hardware
-(Figure~\ref{fig:runtime}). Runtime plateaus beyond $|\mathcal{I}| = 600$
-because the evaluation subset is capped at this value regardless of total
-dataset size, confirming that the framework scales independently of dataset
-size beyond the saturation point. This contrasts favourably with fine-tuning
+approximately 1,200,000 response generation and scoring operations per run.
+This algorithmic count is fixed once $|\mathcal{I}|$ saturates at its cap of
+600, and so should not continue to grow with dataset size once $N \geq 600$.
+Our measured wall-clock runtimes (Figure~\ref{fig:runtime}) are broadly
+consistent with this in that runtime for $N \geq 600$ does not continue to
+grow with dataset size, but the measurements do not show a clean plateau
+either: runtime peaks at 124.6 seconds at $N=600$ and then decreases to
+94--96 seconds for $N \geq 1200$, rather than remaining flat at the peak.
+We attribute this non-monotonicity to system-level timing variability on
+non-dedicated consumer hardware, e.g.\ background processes, thermal
+throttling, and disk I/O contention across sequentially-run experiment
+blocks, rather than to any property of the algorithm itself; the
+$\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$ operation count, which is what
+the complexity argument above actually establishes, is unaffected by this
+wall-clock variability. This contrasts favourably with fine-tuning
 or RLHF-based approaches, which typically require GPU infrastructure and hours
 of training time per optimisation cycle~\cite{when_llms_meet_ea2025}.
 
@@ -1727,9 +1786,12 @@ of training time per optimisation cycle~\cite{when_llms_meet_ea2025}.
 \centering
 \includegraphics[width=0.85\textwidth]{figures/runtime_scaling_plot.png}
 \caption{Runtime scaling of GA optimisation with dataset size. Mean runtime
-increases from approximately 15 seconds at $N=100$ to a plateau of 70--75
-seconds beyond $N=600$, confirming that the evaluation subset cap of
-$|\mathcal{I}|=600$ dominates runtime independently of total dataset size.}
+increases from approximately 16.5 seconds at $N=100$ to a peak of 124.6
+seconds at $N=600$, then decreases to approximately 94--96 seconds for
+$N \geq 1200$ rather than remaining flat, a pattern we attribute to
+system-level timing variability on non-dedicated hardware rather than to
+the algorithm's computational complexity, which is fixed once the
+evaluation subset saturates at $|\mathcal{I}|=600$.}
 \label{fig:runtime}
 \end{figure}
 
@@ -1747,9 +1809,9 @@ that minimum-weight generation fails to reliably include risk-appropriate
 crisis guidance for high-risk prompts.
 
 The gap between B2 and B4 isolates the specific contribution of evolutionary
-search. The balanced seed genome already achieves high safety (0.900) but
-leaves substantial room for structural improvement (0.571 vs.\ 0.924). The GA
-discovers that high structure weight ($w_c \approx 0.74$--$0.78$) consistently
+search. The balanced seed genome already achieves high safety (0.902) but
+leaves substantial room for structural improvement (0.571 vs.\ 0.911). The GA
+discovers that high structure weight ($w_c \approx 0.67$--$0.74$) consistently
 produces better outcomes than the balanced initialisation, a non-obvious
 finding that would be difficult to arrive at through manual tuning alone.
 The finding also suggests that safety and empathy are more easily satisfied
@@ -1759,11 +1821,23 @@ completeness.
 
 These observations align with Hypothesis~H5: hard safety constraints prevent
 the GA from exploiting structural shortcuts at the cost of safety, as evidenced
-by B4 maintaining safety parity with B2 (0.901 vs.\ 0.900) while dramatically
+by B4 maintaining safety parity with B2 (0.908 vs.\ 0.902) while dramatically
 improving structure. The same comparison supports Hypothesis~H2: progressive
 structure enforcement drives the 46-fold structural completeness gain over B1
-(and the 0.353-point gain over B2) without substantially reducing safety,
+(and the 0.340-point gain over B2) without substantially reducing safety,
 which stays essentially flat between B2 and B4.
+
+The absence of a clear population-size effect (Section~\ref{sec:results},
+population size sensitivity) is itself informative rather than merely a
+non-result. For practitioners considering similar template-based,
+GA-optimized generators, it suggests that computational budget is better
+spent on other hyperparameters, or on dataset and scoring-function design,
+rather than on scaling population size beyond a modest value, at least for
+problems with a comparably small, low-dimensional genome such as the one
+used here. A well-evidenced absence of effect, with overlapping error bars
+and non-monotonic variance across the tested range as reported above, is a
+useful and generalisable finding in its own right, distinct from a failure
+to find an effect that may simply reflect an underpowered experiment.
 
 \subsection{Did the GA Achieve Multi-Objective Balance?}
 \label{sec:balance-discussion}
@@ -1774,7 +1848,7 @@ deserves explicit discussion. The fixed fitness-weight coefficients
 ($A=B=0.40$) and structure the smallest among the three score components
 ($C=0.15$), reflecting our intended prioritisation of safe, empathetic
 responses. Yet the genome actually discovered by the GA is structure-dominant:
-$w_c^{\star}=0.778$, versus $w_e^{\star}=0.137$ and $w_s^{\star}=0.086$
+$w_c^{\star}=0.670$, versus $w_e^{\star}=0.100$ and $w_s^{\star}=0.229$
 (Table~\ref{tab:hyperparams-ga}). On the surface, a fitness function that weights
 empathy and safety most heavily produced a generator that behaviourally
 prioritises structure. We consider this worth resolving explicitly rather
@@ -1822,8 +1896,8 @@ and structure, or did it instead find a corner solution that satisfies two
 objectives near a floor imposed by hard constraints and then maximises the
 third? Our results are more consistent with the latter. B4 maintains safety
 and empathy at levels statistically indistinguishable from the fixed seed
-baseline B2 (safety 0.901 vs.\ 0.900; Section~\ref{sec:interp-baseline})
-while structure improves by 0.353 points beyond B2. The GA's contribution
+baseline B2 (safety 0.908 vs.\ 0.902; Section~\ref{sec:interp-baseline})
+while structure improves by 0.340 points beyond B2. The GA's contribution
 is concentrated in the one objective with available headroom rather than a
 smooth trade-off across all three. This is a genuine limitation of collapsing
 multi-objective optimisation into a single scalar fitness with fixed
@@ -1901,7 +1975,7 @@ backgrounds) may use different linguistic patterns to express distress or
 respond to support. A marker set that works well for the PHQ-4 screening
 population in the training dataset may not generalise to other populations.
 The cultural specificity of empathetic language is particularly important
-given that the optimised genome's high structure weight ($w_c^{\star} = 0.778$)
+given that the optimised genome's high structure weight ($w_c^{\star} = 0.670$)
 means structural components dominate the response, potentially at the cost
 of culturally-appropriate emotional tone~\cite{humanai2024}.
 
@@ -1966,23 +2040,44 @@ ratings; both are future work.
   \item \textbf{Distress-score-gated escalation implemented.} The present 
   implementation now includes a continuous distress score $h(x_i)$ computed 
   from prompt keywords (Section~\ref{sec:risk-escalation}), which gates 
-  escalation for high-distress mid-risk prompts. The GA evolves the $\gamma$ 
-  parameter (converged: $\gamma \approx 0.093$) to balance when escalation 
-  should trigger within a risk category. This extension improves safety 
-  (+0.014) and empathy (+0.033) while maintaining structure completeness 
-  (Section~\ref{sec:results}). Future work includes learning $h(x_i)$ from 
-  clinician ratings rather than hand-tuned keywords.
+  escalation for high-distress mid-risk prompts. The GA converges to a small 
+  evolved $\gamma$ ($\gamma^{\star} \approx 0.028$), and the resulting 
+  distress-gated system (B4+$\gamma$ in Table~\ref{tab:baseline-optimized}) 
+  performs comparably to the base GA-optimised system B4 (safety $-0.003$, 
+  empathy $+0.004$, structure $-0.004$, fitness $-0.006$), indicating that 
+  the fixed threshold $\tau_h=0.65$ already captures most of the useful 
+  escalation signal for this dataset, with the learned gating mechanism 
+  providing only a marginal, largely neutral adjustment rather than a 
+  substantial improvement. Future work includes learning $h(x_i)$ from 
+  clinician ratings rather than hand-tuned keywords, and testing whether 
+  $\gamma$'s effect becomes more pronounced on prompts nearer the distress 
+  threshold.
 
   \item \textbf{Single-turn interactions only.} All experiments evaluate
-        single-turn prompt-response pairs. Real mental-health conversations
-        are multi-turn, where risk levels may escalate across turns and
-        emotional context accumulates. The current genome parametrises a
-        single response policy; extending to multi-turn would require a
-        sequential decision framework where the GA optimises a turn-level
-        policy conditioned on conversation history. The
-        \texttt{memory\_window} gene in the current genome was designed
-        with this extension in mind and provides a natural starting point
-        for future work.
+  single-turn prompt-response pairs. Real mental-health conversations
+  are multi-turn, where risk levels may escalate across turns and
+  emotional context accumulates. Recent work argues that the basic
+  unit of safety evaluation in mental-health chatbots should be the
+  dialogue rather than the single turn, since risk-relevant cues
+  accumulate across a conversation rather than appearing at one fixed
+  point~\cite{journey2026}; empirical evidence confirms that
+  concerning chatbot behaviour escalates significantly across
+  conversation turns, with the trajectory varying by user
+  vulnerability profile~\cite{vail2026}. The current genome
+  parametrises a single response policy; extending to multi-turn
+  would require a sequential decision framework where the GA
+  optimises a turn-level policy conditioned on conversation history.
+  Preliminary exploratory work in this direction surfaced two
+  architectural considerations for future study: first, that
+  escalation \emph{timing} can be made conversation-history-aware
+  without requiring the underlying response generator to reference
+  prior turns---suggesting these are separable concerns that can be
+  tackled independently; and second, that a template-based
+  generator's phrase banks, adequate for independent single-turn
+  evaluation, require substantial expansion to sustain variety across
+  extended multi-turn dialogue. The \texttt{memory\_window} gene in
+  the current genome was designed with this extension in mind and
+  provides a natural starting point for future work.
 
   \item \textbf{Limited cultural validation.} Bangla emotional expression
         norms are only partially captured by the current marker sets. Future
@@ -2003,8 +2098,9 @@ ratings; both are future work.
 
 Future extensions include: (1)~multi-turn sequential genome policies,
 where the GA optimises escalation and structure decisions conditioned on
-full conversation history (the most impactful near-term research
-direction); (2)~multi-objective evolutionary algorithms maintaining Pareto
+full conversation history---the most impactful near-term direction,
+supported both by clinical literature~\cite{journey2026,vail2026} and
+by the preliminary architectural findings noted above; (2)~multi-objective evolutionary algorithms maintaining Pareto
 fronts of empathy, safety, and structure to explicitly model trade-offs
 rather than collapsing them into a scalar fitness; (3)~learned empathy
 evaluators trained on clinically validated datasets, replacing the current
@@ -2042,7 +2138,7 @@ resource-constrained mental-health applications in multilingual settings.
 
 This appendix provides concrete examples of the two evolutionary failure
 modes documented in Section~\ref{sec:discussion}: question-only structural
-collapse and empathy marker stuffing. These failuregrep -n "\\\\begin{abstract}" main.tex modes were discovered
+collapse and empathy marker stuffing. These failure modes were discovered
 through trace analysis during early development, before the scoring function
 was redesigned. The examples below are representative of the response patterns
 produced by high-fitness genomes under the initial (flawed) scoring design.
@@ -2153,16 +2249,17 @@ $\theta_\mathrm{mid}$ & $\theta_\mathrm{high}$ & \textbf{Fitness} \\
 Seed $g_\mathrm{bal}$ (Gen 0)
   & 0.330 & 0.330 & 0.340 & 0.550 & 0.800 & 0.532 \\
 Intermediate (Gen 10)
-  & 0.152 & 0.100 & 0.748 & 0.697 & 0.700 & 0.678 \\
-Converged best (Gen 20)
-  & 0.137 & 0.086 & 0.778 & 0.700 & 0.731 & 0.678 \\
+  & 0.101 & 0.163 & 0.736 & 0.473 & 0.921 & 0.681 \\
+Converged best (Gen 14)
+  & 0.100 & 0.229 & 0.670 & 0.566 & 0.700 & 0.685 \\
 \hline
 \end{tabularx}
 \end{table}
 
 The evolution shows a clear directional shift: $w_c$ increases from 0.340
-to 0.778 across 20 generations, while $w_e$ and $w_s$ decrease to their
-minimum floor values. This reflects the fitness landscape discussed in
+to 0.670 across the run, while $w_e$ decreases toward its minimum floor
+value; $w_s$ settles at a moderate value above its floor rather than at the
+floor itself. This reflects the fitness landscape discussed in
 Section~\ref{sec:hyperparams}: safety is largely satisfied by the hard
 constraint and escalation logic, and empathy by the phrase bank design,
 leaving structural completeness as the primary differentiator between
@@ -2172,7 +2269,7 @@ than a run-specific artefact.
 
 By contrast, $\theta_\mathrm{mid}$ and $\theta_\mathrm{high}$ show no
 comparable directional trend across the same three stages
-(0.550$\to$0.697$\to$0.700 and 0.800$\to$0.700$\to$0.731 respectively): they
+(0.550$\to$0.473$\to$0.566 and 0.800$\to$0.921$\to$0.700 respectively): they
 move under mutation without the monotonic pressure visible in $w_c$. This is
 consistent with Section~\ref{sec:risk-escalation}: because these two genes
 are not read by the generator or the fitness function in the present

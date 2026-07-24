@@ -1,62 +1,88 @@
 """
-conversation_generator.py
+conversation_generator.py (v4 -- no-repeat phrase selection)
 
-Wires the escalation state machine (conversation_distress.py) into
-per-turn response generation. Reuses generate_response() UNCHANGED --
-this module only decides WHEN to pass escalate_override=True/False.
+FIX: response_generator.py's assemble_prompt_trace() draws phrase-bank
+lines via independent random.choice() calls with no memory across
+turns -- fine for single-turn (each call is genuinely a fresh,
+unrelated prompt), but produces visible repetition within a single
+multi-turn conversation (same grounding/action line drawn 5+ times in
+an 18-turn conversation, purely by chance).
 
-CONFIRMED against actual response_generator.py source:
-  generate_response(user_text: str, risk_label: str, g: Genome,
-                     escalate_override: bool = False) -> str
+FIXED (this file only, NOT response_generator.py): assemble_prompt_trace()
+already accepts an optional custom `rng` parameter matching Python's
+random.Random interface. This module builds a NoRepeatRandom wrapper
+that remembers which specific phrase-bank lines have already been used
+THIS CONVERSATION and avoids repeating them until every option in that
+context has been used once (falls back to full reuse only once a
+bank's variety is genuinely exhausted, which unavoidably happens with
+long conversations and small banks -- can't manufacture variety that
+doesn't exist in the phrase banks).
 
-escalate_override is STRICTLY boolean. response_generator.py already has
-a built-in soft-support tier (SOFT_SUPPORT_LINES) that fires automatically
-for mid-risk prompts whenever escalate_override=False -- so both
-EscalationLevel.LIGHT and EscalationLevel.NONE map to False here; no
-changes to response_generator.py are required.
-
-history_turns NOW HAS A REAL PURPOSE (as of this version): it governs
-how many of a conversation's MOST RECENT turns actually get a bot
-response generated and scored, per genome -- letting the GA evolve
-whether shorter or longer scored context performs better. This was a
-deliberate choice over letting it remain evolved-but-unused (which
-would have repeated the theta_mid/theta_high non-functional-gene
-pattern). Range widened to [4, 24] to actually span real conversation
-lengths -- see history_turns_range_patch.txt.
-
-ABSOLUTE_MAX_TURNS_SCORED below is a separate, fixed safety ceiling
-(not evolved) that applies regardless of what any individual genome's
-history_turns value is -- bounds worst-case compute cost on the rare
-very long conversations (max observed: 45 turns) even if a genome
-evolves history_turns all the way to its 24-turn upper bound.
-
-The distress trajectory itself is still computed over the FULL
-conversation (see conversation_distress.py) -- history_turns/
-ABSOLUTE_MAX_TURNS_SCORED only affect which turns get GENERATED and
-SCORED, not the escalation state machine's view of conversation
-history, which remains correct regardless of the scoring window.
+This does NOT fix the separate, larger issue that assemble_prompt_trace()
+has no conversation-history parameter and generates each turn's
+CONTENT independently of prior turns -- that is a distinct, deliberate
+scope limitation being decided separately, not addressed here.
 """
 
-from typing import List, Dict
+import random
+from typing import List, Dict, Any
 
 from ga.genome import Genome
-from generation.response_generator import generate_response
+from generation.response_generator import assemble_prompt_trace
 from evaluation.conversation_distress import (
     run_conversation_escalation,
     EscalationLevel,
     TurnDistressResult,
 )
 
-TAU_H = 0.65                    # same fixed threshold as the single-turn mechanism (Eq. 6)
-ABSOLUTE_MAX_TURNS_SCORED = 30  # fixed safety ceiling, independent of genome.history_turns
+TAU_H = 0.65
+ABSOLUTE_MAX_TURNS_SCORED = 30
+
+
+class NoRepeatRandom:
+    """
+    Wraps a random.Random instance. Passes .random() and .shuffle()
+    through unchanged (no dedup needed for probability checks or
+    reordering). .choice() prefers options not yet used earlier in
+    this same instance's lifetime, falling back to the full option
+    set only once every option in the current call's list has
+    already been used at least once.
+
+    Intended to be instantiated FRESH per conversation (not shared
+    across conversations, not shared across genomes) so repetition
+    tracking is scoped correctly.
+    """
+
+    def __init__(self, seed=None):
+        self._rnd = random.Random(seed)
+        self._used = set()
+
+    def random(self):
+        return self._rnd.random()
+
+    def shuffle(self, seq):
+        return self._rnd.shuffle(seq)
+
+    def choice(self, options):
+        if not options:
+            return self._rnd.choice(options)  # let it raise naturally
+
+        unused = [o for o in options if self._key(o) not in self._used]
+        pool = unused if unused else options  # fallback: bank exhausted, allow reuse
+        chosen = self._rnd.choice(pool)
+        self._used.add(self._key(chosen))
+        return chosen
+
+    @staticmethod
+    def _key(option):
+        # structure_blocks entries are (name, line) tuples; everything
+        # else is a plain phrase string. Dedup on the actual text either way.
+        if isinstance(option, tuple):
+            return option[1]
+        return option
 
 
 def select_scoring_window(user_turns: List[str], max_turns: int) -> List[str]:
-    """
-    Returns the turns that will actually get a bot response generated
-    and scored: the most recent `max_turns` messages, or the whole
-    conversation if it's already shorter than that.
-    """
     if len(user_turns) <= max_turns:
         return user_turns
     return user_turns[-max_turns:]
@@ -66,33 +92,14 @@ def generate_conversation_responses(
     user_turns: List[str],
     session_risk_label: str,
     genome: Genome,
-) -> List[Dict]:
+    seed: int = None,
+) -> List[Dict[str, Any]]:
     """
-    Generates a bot response for each SCORED turn (see
-    select_scoring_window) in a conversation, with escalation timing
-    driven by the distress trajectory computed over the FULL
-    conversation -- so even if a genome's history_turns caps
-    generation/scoring to a shorter window, the escalation state
-    machine still correctly reflects whether an earlier crossing
-    happened, not just what's visible in the capped window.
-
-    The effective scoring cap for this genome is
-    min(genome.history_turns, ABSOLUTE_MAX_TURNS_SCORED) -- the genome
-    value governs evolved behavior; the absolute ceiling exists purely
-    as a compute-cost safety net and should rarely bind in practice
-    given genome.history_turns' own upper bound of 24.
-
-    session_risk_label is fixed for the whole conversation (from the
-    PHQ-4 total_score) -- this function never changes risk_label
-    mid-conversation.
-
-    Returns a list of dicts, one per scored turn:
-        {
-            "user_message": str,
-            "bot_response": str,
-            "escalation_level": EscalationLevel,
-            "effective_distress": float,
-        }
+    Generates a bot response for each scored turn, using ONE
+    NoRepeatRandom instance for the entire conversation so phrase
+    repetition is tracked and minimized across turns. Escalation
+    timing logic (distress trajectory, FULL/LIGHT/NONE state machine)
+    is unchanged from the previous version.
     """
     full_results: List[TurnDistressResult] = run_conversation_escalation(
         user_turns=user_turns,
@@ -103,7 +110,10 @@ def generate_conversation_responses(
     effective_cap = min(genome.history_turns, ABSOLUTE_MAX_TURNS_SCORED)
     scored_turns = select_scoring_window(user_turns, effective_cap)
     n_skipped = len(user_turns) - len(scored_turns)
-    scored_results = full_results[n_skipped:]  # aligned suffix of full_results
+    scored_results = full_results[n_skipped:]
+
+    # ONE no-repeat RNG for the whole conversation -- this is the key change.
+    conv_rng = NoRepeatRandom(seed=seed)
 
     conversation_log = []
 
@@ -113,15 +123,17 @@ def generate_conversation_responses(
             escalate_override = True
         elif session_risk_label == "mid":
             escalate_override = (turn_result.escalation_level == EscalationLevel.FULL)
-        else:  # low risk
+        else:
             escalate_override = False
 
-        bot_response = generate_response(
+        trace = assemble_prompt_trace(
             user_text=user_msg,
             risk_label=session_risk_label,
             g=genome,
+            rng=conv_rng,
             escalate_override=escalate_override,
         )
+        bot_response = trace["final_response"]
 
         conversation_log.append({
             "user_message": user_msg,
