@@ -10,7 +10,7 @@ EvoRiri is a genetic-algorithm (GA) framework that evolves a small, interpretabl
 
 ```
 paper/
-  main.tex              # Manuscript source — THIS is the canonical, submission-ready file
+  main.tex              # Canonical manuscript source (compile from paper/)
   main.pdf               # Compiled manuscript
   references.bib
   figures/                # Paper figures (Figs. 1-9)
@@ -30,13 +30,13 @@ src/
     distress_scorer.py      # compute_distress_score() — keyword-based h(x_i), v0.9+
     risk_labeling.py        # label_risk() — PHQ-4 + regex risk labeling
     trace_export.py         # export_traces() — full per-response trace CSV
+  baseline_comparison.py  # B1–B5 baseline table + five-seed Wilcoxon tests
   rerun_distress_gated_2872.py  # re-runs GA with distress gating on full N=2872 dataset
   rerun_size_experiments.py
   plot_convergence_figures.py
   plot_size_experiments.py
 
 main_ga_riri.py            # main entry point: loads data, runs GA, runs experiments
-baseline_comparison.py     # B1-B4 baseline comparison table + Wilcoxon tests
 baseline_prompt.py         # hand-written B1 example text for Table 7 (see caveat below)
 merge_baseline_optimised.py  # merges baseline_prompt.py output with trace_analysis.csv
 run_model_comparisons.py     # B6-B8: mT5/BanglaT5/BanglaGPT zero-shot baselines
@@ -47,13 +47,12 @@ plot_dataset_scaling.py / plot_dataset_scatter.py / plot_runtime_scaling.py  # F
 
 experiments/
   v2_population_experiment/   # N=2872 distress-gated runs (SPLIT/FIXED variants — see note below)
-  baseline_comparison/        # B4/B5 baseline logs
+  baseline_comparison/        # B4/B5 baseline logs, five-seed genomes, metrics
+  human_eval/                 # clinician ratings (CSV; not in git — see Data)
 
 data/
   phq4_cleaned.csv       # private, not included — see Data Availability
 ```
-
-> **Note on `main.tex` duplication:** an older, stale copy of `main.tex` exists at the repo root from before the v0.7 reorganization into `paper/`. It is unused and safe to ignore — `paper/main.tex` is the only file that matters for the manuscript.
 
 ## Genome
 
@@ -188,6 +187,8 @@ Full-dataset (N=2872) GA run with distress gating enabled converges to **gamma* 
 ## Data
 
 `phq4_cleaned.csv` is private and not included. Expected columns: `common_themes`, `thought_progression`, `risk_assessment`, `total_score`. Risk labels are derived via `evaluation/risk_labeling.py::label_risk()` (PHQ-4 total score thresholds + regex self-harm/suicide detection). User prompts are constructed as `common_themes + " | " + thought_progression`; empty prompts are dropped. 80/20 train/validation split, seed 7.
+
+Human-evaluation CSVs under `experiments/human_eval/` (clinician Likert ratings behind Table 8 and Krippendorff’s α) are also deliberately gitignored for privacy and have never been committed. Summary statistics are in the manuscript; the raw rating files are available from the corresponding author upon reasonable request, consistent with the paper’s data-availability statement.
 
 ## Running
 

@@ -42,7 +42,11 @@ stdin.log
 stdin.pdf
 paper.zip
 
-# Human evaluation ratings (private clinician annotations)
+# Human evaluation ratings — deliberately excluded (privacy).
+# Clinician Likert ratings on mental-health response samples (Table 8 /
+# Krippendorff α). Never tracked in git history; available from the
+# corresponding author on reasonable request (see paper data-availability
+# statement and README). Do not commit without an explicit privacy review.
 experiments/human_eval/*.csv
 
 # Debug files
