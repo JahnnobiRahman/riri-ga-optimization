@@ -42,6 +42,9 @@ stdin.log
 stdin.pdf
 paper.zip
 
+# Human evaluation ratings (private clinician annotations)
+experiments/human_eval/*.csv
+
 # Debug files
 debug_sample_respo*
 debug_sample_with_input.txt
@@ -58,3 +61,6 @@ __pycache__/
 *.aux
 *.log
 *.out
+
+# Local backups / stale manuscript copies
+*.bak
