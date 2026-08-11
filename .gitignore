@@ -68,3 +68,16 @@ __pycache__/
 
 # Local backups / stale manuscript copies
 *.bak
+
+# Derived TOST equivalence statistics — tracked as the audit trail for the
+# tail-direction correction documented in README ("Analysis corrections").
+# These contain aggregate statistics only (mean differences, one-sided
+# p-values, confidence intervals), no per-prompt or per-participant data.
+# The *_prebugfix files are the superseded outputs, retained for auditability
+# and not cited in the manuscript. Raw per-seed CSVs
+# (*_corrected_raw.csv) remain ignored.
+!experiments/baseline_comparison/dataset_size_equivalence.csv
+!experiments/baseline_comparison/population_size_equivalence.csv
+!experiments/baseline_comparison/equivalence_tost_table.csv
+!experiments/baseline_comparison/dataset_size_equivalence_prebugfix.csv
+!experiments/baseline_comparison/population_size_equivalence_prebugfix.csv

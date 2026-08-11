@@ -24,13 +24,9 @@
 \datepublished{}
 \datecorrected{}
 \dateretracted{}
-\hreflink{https://doi.org/}
 
-\Title{EvoRiri: Risk-Aware Genetic Optimization of an
-Empathetic Bangla Mental-Health Assistant}
-
-\TitleCitation{Risk-Aware Genetic Optimization of Mental-Health Responses}
-
+\Title{EvoRiri: Interpretable Evolutionary Search for Diagnosing
+Reward-Design Failures in a Bangla Mental-Health Assistant}
 
 \newcommand{\orcidauthorA}{0009-0002-7744-9853}
 \newcommand{\orcidauthorB}{0000-0003-4963-8905}
@@ -38,8 +34,6 @@ Empathetic Bangla Mental-Health Assistant}
 \Author{Jahnnobi Rahman $^{1,}$*\orcidA{} and Mir Md.\ Jahangir Kabir $^{2}$\orcidB{}}
 
 \AuthorNames{Jahnnobi Rahman, Mir Md. Jahangir Kabir}
-
-\AuthorCitation{Rahman, J.; Kabir, M.M.J.}
 
 \address{%
 $^{1}$ \quad Relaxy PTE. LTD., 160 Robinson Road \#14-04, Singapore 068914, Singapore;
@@ -49,23 +43,37 @@ mirmdjahangir.kabir@uts.edu.au}
 
 \corres{Correspondence: jahnnobirahman230@gmail.com}
 
-\abstract{Large language models are increasingly deployed in emotionally sensitive applications
-such as mental-health support, where optimization must jointly consider empathy, safety, and
-conversational structure. We present a genetic-algorithm (GA) framework for optimizing the
-response-generation policy of \textit{Riri}, a Bangla/Banglish/English mental-health assistant.
-Rather than updating model weights, the GA searches an interpretable genome parametrizing a
-risk-aware, template-based generator requiring no LLM calls at deployment. A non-differentiable
-fitness function combines automatic empathy, safety, and structure scores under per-example
-safety penalties. Experiments on 2872 de-identified prompts, synthetically constructed from
-structured clinical theme fields, show the GA improves structural completeness from 0.65 to
-1.00 relative to a fixed hand-designed baseline while maintaining an already-strong
-escalation-calibration safety proxy (0.903 to 0.905) and slightly increasing empathy. A
-near-zero-structure, short-budget baseline illustrates a compounding failure mode. Validation
-fitness remains within a tight, non-monotonic range across dataset sizes from 100 to 2297
-training prompts, though formal equivalence was not established. Trace analysis surfaces
-evolutionary failure modes that aggregate scores conceal. A grid search and an equal-budget
-random search each reach comparable peak fitness, indicating a broadly reachable plateau rather
-than a narrow optimum, though search reliability across repeated runs was not directly compared.}
+\abstract{Mental-health conversational systems require evaluation that considers empathy,
+risk-aware safety, and actionable response structure, yet optimising
+hand-designed proxies for these qualities can introduce reward-design failures.
+We present EvoRiri, an interpretable evolutionary-search framework for a
+template-based Bangla--Banglish--English mental-health assistant. Rather than
+updating language-model parameters, the method searches a compact mixed
+continuous--discrete genome controlling response composition, escalation
+behaviour, structure, and template configuration. A scalar fitness function
+combines automatic empathy, safety, and structure proxies with per-example
+safety penalties.
+Experiments on 2,872 de-identified records represented as synthetically
+constructed prompts show that the reported evolved configuration achieves
+higher structural completeness and fitness than the fixed reference genome
+under a frozen scoring pipeline, while maintaining a similar
+escalation-calibration safety proxy. Trace-level analysis was central to the
+study: it identified question-only structural collapse, empathy-marker
+stuffing, a structure-marker coverage gap, and a response-part-budget
+truncation defect that aggregate fitness scores alone did not reveal.
+After correcting the scoring and generation pipeline, the reported
+configuration reaches complete measured structural coverage under the current
+proxy.
+A 12-point structure-weight sweep and five equal-budget random searches reach
+the same high-fitness region as the GA. Re-evaluation of archived GA and
+random-search genomes reveals no resolvable difference between the methods
+under the available evaluation design. Thus, for this genome space and fitness
+function, the contribution is not a demonstrated unique optimisation advantage
+of GA search; it is an interpretable framework for exposing how reward design,
+thresholded generator behaviour, and baseline construction shape observed
+performance. The findings are limited to a synthetic single-turn corpus and
+rule-based proxy metrics, and do not establish clinical effectiveness or
+deployment readiness.}
 
 \keyword{evolutionary algorithms; genetic algorithms; mental-health chatbots;
 large language models; empathy; safety; multi-objective optimization;
@@ -79,21 +87,31 @@ conversational agents; Bangla; risk-aware AI}
 
 \section{Introduction}
 
-Large language models (LLMs) are increasingly used as conversational agents in
-domains such as mental-health support, coaching, and
-counseling~\cite{jmir2025_chatbots,pmc2026_chatbots}. Deploying these systems
+Conversational agents, increasingly built on large language models (LLMs),
+are now widely deployed for mental-health
+support~\cite{jmir2025_chatbots,pmc2026_chatbots}. Deploying these systems
 safely requires more than grammatical correctness or task accuracy; responses
 must be empathetic, structurally helpful, and aligned with risk-aware safety
-principles~\cite{jmir2024_empathic,apa2024_advisory,harvard2024_safety}.
+principles~\cite{jmir2024_empathic,apa2025_advisory,harvard2024_safety}.
+These systems are also unevenly distributed: emotion-aware AI is shaped
+largely by Western, educated, industrialised, rich and democratic contexts,
+sentiment tooling rarely extends beyond a handful of high-resource
+languages, and low- and middle-income countries often lack the
+infrastructure for AI-mediated support, a divide that risks a bifurcated
+system benefiting the Global North~\cite{ijca2025emotion}. The present work
+targets that gap directly: a Bangla/Banglish/English assistant that runs
+without GPU infrastructure or API access.
 
 Conventional fine-tuning and reinforcement learning from human feedback (RLHF)
-are powerful but expensive and tightly coupled to model weights. In contrast,
-evolutionary algorithms (EAs) can optimize high-level, interpretable policies
-using arbitrary non-differentiable
-objectives~\cite{llm_ea_survey2025,when_llms_meet_ea2025}. In the context of
+are powerful but expensive as it involves significant computational demands that may require considerable 
+investments in infrastructure and resources~\cite{WongTan2024}. In contrast,
+evolutionary algorithms (EAs) can explore large design spaces and evolve novel high performing solutions 
+being both lightweight and scalable~\cite{Nath2026}. A growing literature
+applies them in combination with
+LLMs~\cite{mles2026,gendl2025}. In the context of
 conversational agents, this makes them attractive for optimizing template-based
-generators or routing strategies while keeping the underlying LLM
-fixed~\cite{mles2026,gendl2025}.
+generators or routing strategies without modifying, or in the present case
+without invoking, an underlying language model~\cite{Hu2025}.
 
 Unlike prior evolutionary prompt optimization approaches that focus primarily on
 reasoning accuracy, feature activation, or prompt engineering, the proposed
@@ -105,46 +123,52 @@ among the first studies applying interpretable genetic optimization to
 empathy--safety--structure balancing in Bangla mental-health conversational
 systems.
 
-In this article we introduce an evolutionary optimization framework for
+In this article we introduce a Genetic Algorithm (GA)-based risk-aware framework for
 \emph{Riri}, a mental-health-oriented assistant designed for Bangla-speaking
 users. The system composes responses via a structured, template-based
 generator that controls when to include empathy, grounding, action
 suggestions, and reflective questions, without calling an external LLM at
-inference time (Section~\ref{sec:generator}). A
-genetic algorithm (GA) evolves a genome of continuous and discrete parameters
-that govern this generator. The optimization objective aggregates scores for
-empathy, safety, and structure, with safety considerations entering via
-strong per-example penalty terms for suicide and
-self-harm risk. From a methodological perspective, the work studies mixed
-continuous--discrete, non-differentiable genetic optimization over an
-interpretable policy space, with a scalarized multi-objective fitness
-function and sensitivity analyses across dataset and population size.
+inference time (Section~\ref{sec:generator}). A genetic algorithm (GA) evolves
+a genome of continuous and discrete parameters that govern this generator. The
+optimisation objective aggregates scores for empathy, safety, and structure,
+with safety considerations entering via strong per-example penalty terms for
+suicide and self-harm risk. From a methodological perspective, the work studies
+mixed continuous--discrete, non-differentiable genetic optimiation over an
+interpretable policy space, with a scalarized multi-objective fitness function
+and sensitivity analyses across dataset and population size.
+
+Accordingly, this article should be read primarily as an empirical study of
+interpretable optimisation and reward-design diagnosis, rather than as evidence
+that genetic search is uniquely superior to other sufficiently exploratory
+search procedures in the present genome space.
+
 
 The main contributions of this work are:
 \begin{itemize}
-  \item A risk-aware GA formulation for mental-health response generation,
-        including an interpretable genome, progressively structured generator,
-        and a penalty-based fitness function incorporating safety considerations.
-  \item An empirical study of GA convergence, data efficiency, and
-        population-size sensitivity on a corpus of 2872 de-identified,
-        synthetically constructed
-        mental-health prompts with risk labels.
-  \item A trace-based analysis of evolutionary failure modes (structural
-        collapse, empathy overfitting) and demonstration of how revised scoring
-        and safety penalty terms yield behaviorally meaningful responses.
-  \item An empirical comparison of the GA against grid search and
-        equal-budget random search, showing that the discovered high-fitness
-        configuration sits on a broadly reachable plateau for this genome
-        space and fitness design; this repositions the framework's central
-        contribution around interpretable diagnosis of reward-design
-        failure modes, rather than around evolutionary search being
-        uniquely necessary to reach this performance level.
+  \item An interpretable evolutionary-search framework for a template-based
+    Bangla--Banglish--English mental-health assistant, using a mixed
+    continuous--discrete genome to control response composition, structural
+    support, escalation behaviour, and template configuration.
+
+  \item A trace-based diagnostic analysis showing how aggregate fitness can
+    conceal reward-design and generator failures, including question-only
+    structural collapse, empathy-marker stuffing, a structure-marker coverage
+    gap, and response-part-budget truncation.
+
+  \item An empirical characterisation of the corrected search space,
+    including validation behaviour across dataset and population sizes, a
+    structure-weight sweep, and equal-budget random-search comparisons.
+
+  \item Evidence that the high-fitness, structure-dominant region is broadly
+    reachable in the present genome space and fitness design: grid search and
+    equal-budget random search reach the same region as the GA, so the study
+    does not claim that evolutionary search is uniquely required to find it.
 \end{itemize}
 
 The novelty of this work lies less in evolutionary search being uniquely
 necessary to reach a given fitness level -- Section~\ref{sec:interp-baseline}
-shows that a grid search and an equal-budget random search both reach
-comparable fitness -- and more in the interpretable genome, generator, and
+shows that a grid search and five equal-budget random searches all reach
+the same fitness region, and more in the interpretable genome, generator, and
 scoring design providing a framework for discovering and diagnosing
 reward-design failure modes (structural collapse, empathy-marker
 stuffing, a genome-construction bug, and a response-truncation defect)
@@ -169,29 +193,30 @@ Section~\ref{sec:results} presents experimental results.
 Section~\ref{sec:discussion} discusses implications and limitations, and
 Section~\ref{sec:conclusion} concludes.
 
+
 \subsection{Research Questions}
 
-Rather than framing this study around hypotheses to be confirmed or
-rejected -- a framing that fits some of the following questions better
-than others, given the confounded comparisons and formal equivalence
-tests discussed in Sections~\ref{sec:results}
-and~\ref{sec:interp-baseline} -- we pose four research questions that this
-study investigates:
+Under a frozen, rule-based evaluation pipeline, this study examines the
+behaviour and diagnostic value of an interpretable evolutionary search
+framework. The guiding research questions are as follows:
 
-\textbf{RQ1:} Does GA optimisation improve response fitness compared with
-fixed, hand-designed, and randomly sampled baseline genomes?
+\begin{enumerate}
+    \item \textbf{RQ1:} How consistently do the reported GA-optimised
+    configurations achieve higher validation fitness and component scores than
+    fixed and randomly sampled reference configurations under the frozen
+    scorer?
 
-\textbf{RQ2:} How does progressive structure enforcement affect structural
-completeness and the safety proxy, and can these effects be attributed
-specifically to the GA's search rather than to other differences between
-conditions?
+    \item \textbf{RQ2:} Which generator mechanisms, score components, and
+    baseline-design choices account for the observed differences in structure,
+    the safety proxy, and overall fitness?
 
-\textbf{RQ3:} How sensitive is the optimisation outcome to dataset size
-and population size?
+    \item \textbf{RQ3:} How sensitive are the observed search outcomes to
+    dataset size and population size under the present evaluation design?
 
-\textbf{RQ4:} Does the GA reach high-fitness genome regions more reliably
-than an equal-budget grid search or random search over the same genome
-space?
+    \item \textbf{RQ4:} Do GA, grid search, and equal-budget random search
+    reach distinguishable fitness regions in the present genome space after
+    re-evaluation of selected genomes?
+\end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Related Work}
@@ -199,145 +224,128 @@ space?
 
 \subsection{Evolutionary Algorithms for LLM and Prompt Optimization}
 
-Recent research has increasingly explored the integration of Evolutionary
-Algorithms (EAs) with Large Language Models (LLMs) for optimization, reasoning,
-and controllable generation tasks. A growing body of work suggests that
-evolutionary search provides a promising alternative to gradient-based alignment
-methods, particularly in black-box API settings where direct model fine-tuning
-is impractical.
+Recent work has explored the integration of Evolutionary Algorithms (EAs) and
+Large Language Models (LLMs), particularly for evolutionary fine-tuning and
+LLM-enhanced evolutionary optimization. Such approaches are relevant in
+black-box settings, where direct access to model gradients or other internal
+information is unavailable. The survey ``When Large Language Models Meet
+Evolutionary Algorithms''~\cite{when_llms_meet_ea2025} draws \emph{conceptual}
+parallels between text generation and evolutionary search, motivated by their
+shared collective and directional characteristics. At a micro level, it relates
+token and individual representations, position encoding and fitness shaping,
+position embedding and selection, Transformer blocks and reproduction, and
+model training and parameter adaptation. The authors emphasize that these
+analogies are intended to motivate technical cross-fertilization rather than to
+establish mathematical equivalence between LLMs and EAs.
 
-The survey ``When Large Language Models Meet Evolutionary
-Algorithms''~\cite{when_llms_meet_ea2025} establishes a conceptual bridge
-between token-sequence generation in LLMs and population-based search in
-evolutionary systems. The authors argue that prompts, policies, and language
-structures can be treated as evolvable individuals within an optimization
-landscape. Their framework motivates the use of mutation, crossover, and fitness
-shaping in language-space optimization. The present work follows this paradigm
-by treating conversational behavior policies as evolvable genomes composed of
-interpretable parameters such as empathy weight, safety weight, structure
-weight, escalation thresholds, and template configurations.
+In contrast, we apply evolutionary optimization to an interpretable,
+template-based response-generation policy, without evolving textual prompts,
+LLM parameters, or an external LLM at inference time. Each candidate policy is
+represented by a mixed continuous--discrete genome containing generation-control
+weights for empathic, safety-oriented, and structural response components,
+together with escalation thresholds and template-configuration variables. These
+evolved genes determine the composition of the generated response. They are
+distinct from the per-response empathy, safety, and structure scores used for
+evaluation, as well as from the fixed scalarization coefficients used to
+aggregate these scores into the fitness function.
 
-Similarly, Promptbreeder~\cite{epo2025} proposes a self-referential
-prompt evolution framework in which mutation operators are themselves
-evolved alongside the prompts. Promptbreeder demonstrates that genetic
-search can discover diverse, high-performing prompts across reasoning
-tasks without manual engineering. While Promptbreeder targets task
-accuracy, the proposed framework extends the evolutionary optimization
-paradigm toward safety-critical conversational behavior.
+A related approach in spirit is, Multimodal LLM-assisted Evolutionary
+Search (MLES)~\cite{mles2026}, which incorporates behavioural-level analysis of
+candidate programatic control policies within the evolutionary loop. MLES uses
+this evidence to identify failure patterns and guide targeted, LLM-mediated
+policy revisions, complementing scalar evaluation signals.
+Our framework adopts a related diagnostic perspective, but applies it
+post hoc rather than as an in-loop search mechanism. Specifically, the
+trace-level analysis in Section~\ref{sec:scoring-bottleneck} examines generated
+responses to reveal failure modes that are not apparent from aggregate fitness
+alone, including structural collapse and empathy overfitting. These observations
+then motivate revisions to the scoring design and safety penalties.
 
-GAAPO~\cite{gaapo2025} further demonstrates the effectiveness of Genetic
-Algorithms for automatic prompt optimization in LLM systems. Their work explores
-mutation, crossover, selection strategies, and population hyperparameter
-trade-offs across benchmark reasoning tasks such as ETHOS, MMLU-Pro, and GPQA.
-Similar to GAAPO, the present study investigates population-size and
-dataset-size sensitivity in evolutionary optimization. However, unlike GAAPO,
-the proposed framework focuses on multi-objective optimization for mental-health
-dialogue systems, balancing empathy, safety, structural completeness, and
-conversational naturalness.
+Furthermore, GenDLN~\cite{gendl2025} applies genetic search to jointly optimize
+prompt pairs in a stacked-LLM architecture. It is explicitly designed to
+leverage commercial API free tiers, enabling resource-limited teams to conduct
+EA-based prompt optimization at no cost. This focus on deployment cost is
+relevant to our resource-constrained setting.
 
-GenDLN~\cite{gendl2025} applies evolutionary optimization to stacked LLM
-reasoning pipelines using non-differentiable objectives. The work demonstrates
-that GA-based optimization can effectively operate over black-box API systems
-without gradient access. However, GenDLN primarily targets logical reasoning and
-classification performance, whereas the present work investigates emotionally
-sensitive conversational optimization under safety constraints.
+GAAPO~\cite{gaapo2025} explicitly studies evaluation-cost trade-offs in
+evolutionary prompt optimization. It compares complete , successive-halving,
+and bandit-based candidate evaluation, noting that subset-based evaluation can
+substantially reduce API calls but may prematurely eliminate promising
+candidates because of variability in subset-based scores. It also varies
+population size and generation count under a comparable total LLM-call budget.
 
-Another closely related direction is Multimodal LLM-assisted Evolutionary
-Search (MLES)~\cite{mles2026}, which combines LLM reasoning with evolutionary
-optimization to generate interpretable programmatic control policies. MLES
-emphasizes behavioral evidence and transparent policy evolution rather than
-relying solely on scalar reward signals.
+In contrast to these studies, which optimize task accuracy on labeled
+classification or question-answering benchmarks, our objective evaluates
+open-ended response quality through task-specific proxy measures of empathy,
+safety, and structural support. Although risk labels inform safety evaluation,
+these dimensions do not admit a single externally verifiable ground-truth
+response. Consequently, shortcomings in proxy-based fitness design may be
+difficult to identify from aggregate fitness alone.
 
-A recent systematic survey on LLMs for Evolutionary
-Optimization~\cite{llm_ea_survey2025} categorizes hybrid EA-LLM systems into
-low-level and high-level optimization frameworks. The proposed framework
-does not fit neatly into either category, since it involves no LLM calls
-at all, at training or deployment time (Section~\ref{sec:generator}): it is
-evolutionary optimization of a template-based conversational policy, a
-distinct and more inference-efficient point in the design space than the
-LLM-in-the-loop systems this taxonomy was built to describe.
-
-Existing EA+LLM research primarily focuses on reasoning accuracy,
-feature activation, program synthesis, or prompt engineering; this work
-extends that literature to risk-aware, multi-objective conversational
-optimization in a mental-health setting.
+In our development process, trace-level inspection of generated responses was
+used to diagnose shortcomings in early scoring designs, including
+question-dominated responses and overly marker-driven empathy behavior. These
+diagnostic observations motivated revisions to the structural scorer and
+safety-penalty design. The retained experiments evaluate the revised pipeline
+rather than reproduce the initial failure modes as controlled baselines.
+They nevertheless quantify selected residual and implementation-level issues:
+the B1 truncation analysis shows that escalation content can be removed by the
+part-budget mechanism; re-evaluation of archived responses measures a
+structure-marker coverage gap; and B1 retains near-zero structure under the
+current scorer. Conversely, the component-usage, safety-by-risk, and
+empathy--structure analyses characterize post-fix behavior under the revised
+pipeline.
 
 \subsection{Mental-Health Conversational Agents}
 
-Mental-health chatbots and conversational agents have received significant
-attention in recent years due to their potential to provide scalable
-psychological support. Systematic
-reviews~\cite{jmir2025_chatbots,pmc2026_chatbots} suggest that generative
-conversational agents can improve emotional accessibility and user engagement,
-particularly among populations with limited access to professional mental-health
-care.
+Meta-analyses of randomized controlled trials suggest that mental-health
+chatbot interventions can yield small-to-moderate reductions in selected
+symptoms, including depression and anxiety, although effects vary across
+systems, outcomes, and populations~\cite{jmir2025_chatbots,pmc2026_chatbots}.
+These findings motivate the investigation of chatbots as scalable,
+complementary sources of support in settings where access to professional
+mental-health care is limited, which is the deployment context targeted by
+this work. They do not establish chatbots as replacements for clinical care.
 
-Recent work on empathic conversational agent design~\cite{jmir2024_empathic}
-highlights the importance of empathy, conversational structure, and safety
-mechanisms in determining user trust and therapeutic effectiveness. These
-findings directly motivate the three-dimensional optimization objective used in
-the proposed framework: empathy, safety, and structural support.
+A systematic review of empathic conversational-agent design
+\cite{jmir2024_empathic} surveys architectures for detecting and responding
+to user emotion, together with approaches for evaluating their technical
+performance and acceptability to users. Empathy is therefore included as one
+of the response-quality dimensions in our fitness function. The remaining
+dimensions, conversational structure and escalation safety, were informed by
+consultation with five collaborating clinical psychologists
+(Section~\ref{sec:fitness-rationale}).
 
-Emotionally intelligent chatbot systems have also raised important ethical and
-safety concerns~\cite{ijca2025emotion}, including data privacy, bias in
-emotion recognition, and the risk of fostering emotional over-dependence,
-underscoring the need for careful design of safety and escalation behaviour
-rather than assuming it emerges from emotional responsiveness alone.
+Two further findings shape the design directly. A preliminary comparison of
+LLM-generated responses with certified-counselor responses, using manual
+qualitative analysis and cosine similarity, found that GPT-4 and Mistral could
+produce syntactically correct, coherent, and professionally structured output,
+but often did not capture the emotional nuance, personalization, and
+dialogue-oriented engagement present in counselor responses
+\cite{humanai2024}. This motivates scoring empathy separately rather than
+folding it into a single response-quality measure.
 
-Other mental-health chatbot systems have relied primarily on decision-tree-based,
-rule-based response generation~\cite{scitepress2025chatbot}. In contrast, the
-proposed framework employs evolutionary optimization to dynamically shape
-conversational behavior based on fitness feedback.
+Earlier mental-health chatbots such as Woebot established in a randomized trial
+that a CBT-oriented automated conversational agent significantly reduced
+depressive symptoms relative to an information-only control
+\cite{woebot2017}. Woebot used a decision-tree architecture with suggested
+responses whose structure and parameters remained fixed for each participant
+during the study; related reviews likewise characterize it as using rule-based
+CBT modules~\cite{ijca2025emotion}. In contrast, the present framework exposes
+response-composition behavior as an evolvable, inspectable parameter set.
 
-The American Psychological Association (APA) advisory on generative AI for
-mental health~\cite{apa2024_advisory} further stresses the necessity of explicit
-safety constraints and escalation policies in AI mental-health systems.
-
-Empirical studies on the safety of generative AI chatbots in mental-health
-contexts~\cite{harvard2024_safety} also demonstrate that conversational agents
-may exhibit inconsistent crisis behavior when not explicitly constrained.
-
-A comparative study of LLM-generated and human-therapist responses to
-mental-health questions~\cite{humanai2024} found that LLM responses,
-while grammatically coherent, consistently lacked the conversational
-structure (e.g.\ dialogic follow-up questions) and emotional depth
-present in human therapist responses, motivating explicit design
-attention to both dimensions rather than assuming they emerge from
-model scale alone.
-
-\subsection{Empathy Modeling and Conversational Behavior Optimization}
-
-Empathy modeling has become an increasingly important area within conversational
-AI research. Surveys on artificial empathy
-classification~\cite{empathysurvey2025} discuss various methods for evaluating
-empathetic language using linguistic markers, neural scoring systems, and
-psychological frameworks. The present work adopts a lightweight rubric-based
-evaluation approach due to its interpretability and compatibility with black-box
-optimization settings.
-
-Neural empathetic conversational systems~\cite{empatheticagents2025} have
-demonstrated strong performance in emotionally aware dialogue generation, but
-these methods often require large-scale supervised training and expensive
-fine-tuning pipelines. In contrast, the proposed framework explores whether
-evolutionary search over interpretable conversational policies can improve
-empathetic behavior without retraining the underlying LLM.
-
-A recent survey of chatbot evolution, architecture, and design
-techniques~\cite{chatbotevolution2024} traces the field's progression from
-early rule-based, pattern-matching systems toward architectures that
-combine retrieval, generation, and adaptive dialogue management,
-reflecting a broader trend toward more context-sensitive conversational
-design that the present framework's genome-driven approach also follows.
+We operationalize empathy through an interpretable marker-based proxy rather
+than a learned affect-recognition model. This choice supports transparent
+fitness evaluation but limits construct validity, particularly for contextual,
+implicit, sarcastic, or culturally specific expressions
+(Section~\ref{sec:limitations}).
 
 \subsection{Research Gap and Positioning}
 
-Existing studies on evolutionary prompt optimization primarily focus on
-improving reasoning performance, feature activation, or general task accuracy.
-Similarly, prior mental-health conversational systems often emphasize either
-empathy or safety independently, with limited attention to structural balance
-and risk-aware escalation. There remains a gap in developing interpretable
-optimization frameworks that jointly balance empathy, safety, structure, and
-adaptive risk-sensitive behavior in multilingual mental-health support systems.
+Across the works reviewed here, we find limited emphasis on interpretable
+optimization frameworks that explicitly and jointly evaluate empathy, response
+structure, safety, and risk-sensitive escalation for multilingual mental-health
+support. 
 
 \begin{table}[H]
 \centering
@@ -362,7 +370,7 @@ LLM-based mental-health assistants
   & No & Yes & Partial & Partial & Partial \\
 RLHF-based alignment methods
   & No & Yes & Yes & Limited & Partial \\
-GA-based prompt optimization (e.g., Promptbreeder, GAAPO)
+GA-based prompt optimization (e.g., GenDLN, GAAPO)
   & Yes & Limited & Limited & Limited & No \\
 \rowcolor{gray!10}\textbf{Proposed framework}
   & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} & \textbf{Yes} \\
@@ -370,11 +378,10 @@ GA-based prompt optimization (e.g., Promptbreeder, GAAPO)
 \end{tabularx}
 \end{table}
 
-As shown in Table~\ref{tab:related-comparison}, existing approaches typically
-optimize either conversational quality or alignment objectives independently. In
-contrast, the proposed framework jointly optimizes empathy, safety, structural
-coherence, and risk-aware escalation within a unified evolutionary optimization
-framework.
+As shown in Table~\ref{tab:related-comparison}, existing approaches commonly optimize prompts, model-level alignment,
+or individual response-quality dimensions, rather than evolving an
+interpretable response-generation policy under an explicit risk-aware
+objective.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
@@ -383,8 +390,11 @@ framework.
 \subsection{Problem Formulation}
 
 Let \(X\) denote the space of user prompts and
-\(R = \{\mathrm{low}, \mathrm{mid}, \mathrm{high}\}\) the set of
-suicide/self-harm risk labels. A response-generation policy is a function
+\(R = \{\mathrm{low}, \mathrm{mid}, \mathrm{high}\}\) the three
+risk/support-intensity categories used by the system. These categories
+combine PHQ-4 severity with an explicit self-harm keyword override
+(Section~\ref{sec:risk-labels}) and are not presented as clinically
+validated suicide-risk classifications. A response-generation policy is a function
 \begin{equation}
   \pi_{\theta} : X \times R \rightarrow Y,
 \end{equation}
@@ -514,10 +524,13 @@ discussed in Section~\ref{sec:limitations}).
 
 For some experiments we consider subsets of size
 \(N_s \in \{100, 300, 600, 1200, 2872\}\) to study data efficiency. Each subset
-is split into an optimization set and a held-out validation set using an
+is split into an optimization set and a validation set using an
 80/20 split, stratified by risk label so that the proportion of low-, mid-,
 and high-risk prompts in the validation set matches the proportion in the
-full subset. For the main experiment ($N_s = 2872$), this yields
+full subset. The validation set is disjoint from the optimization set, but
+was also used during scorer development (Section~\ref{sec:structure-analysis});
+we therefore describe it as a combined development and validation split
+rather than as an untouched final test set. For the main experiment ($N_s = 2872$), this yields
 approximately 2,297 optimization prompts and 575 validation prompts, with
 fitness evaluation during GA optimisation performed on a random sample of
 $|\mathcal{I}| = 600$ prompts drawn from the optimization set per generation
@@ -540,9 +553,22 @@ risk-assessment note recorded at the point of data collection. The PHQ-4 is
 a validated four-item screening instrument for depression and anxiety
 severity~\cite{phq4}, with standard severity bands of Normal (0--2), Mild
 (3--5), Moderate (6--8), and Severe (9--12) (Appendix~\ref{app:dataset}).
-PHQ-4 does not itself include a suicide or self-harm item, so it is not a
-validated suicide-risk instrument on its own; we use its severity score as
-one input to a risk label rather than as a direct measure of suicide risk.
+Two qualifications apply to our use of it. First, PHQ-4 contains no suicide
+or self-harm item, so it is not a validated suicide-risk instrument on its
+own; we use its severity score as one input to a risk label rather than as
+a direct measure of suicide risk. Second, the original instrument was validated on 2,149 patients across 15
+primary-care clinics in the United States~\cite{phq4}. A Bangla-language
+validation has since been published: in 357 adults sampled from one urban
+and two rural Bangladeshi communities, the Bangla PHQ-4 reproduced the
+two-factor structure with excellent fit, showed high internal consistency
+($\omega = 0.869$) and strong construct validity, and achieved good
+diagnostic accuracy (AUC $= 0.906$) against clinician
+judgement~\cite{banglaphq4_2026}. That study supports the instrument's
+psychometric properties in Bangla, though its sample is a general community
+population rather than a self-referring digital-support population, and it
+establishes a caseness cutoff ($\ge 6$) rather than validating the
+four-band severity scheme we use for stratification
+(Section~\ref{sec:limitations}).
 
 The mapping from these two signals to the three-way risk label is our own
 design choice, not a property of the PHQ-4 instrument itself:
@@ -663,9 +689,9 @@ budget additionally interacts with the fixed assembly order to truncate
 escalation content for high-risk prompts before it reaches the visible
 response, independent of its genome weights; we treat B1 primarily as an
 illustrative floor condition for this reason and rely on B2 as the more
-informative non-GA comparator (Section~\ref{sec:interp-baseline}). The fixed seed baseline
-(B2) uses the balanced initialisation genome $g_\mathrm{bal}$ without
-evolutionary search, isolating the contribution of the search process itself.
+informative non-GA comparator (Section~\ref{sec:interp-baseline}). The fixed seed baseline B2 uses the balanced initialisation genome
+$g_{\mathrm{bal}}$ without evolutionary search, providing a fixed non-GA
+reference condition.
 The random baseline (B3) averages five genomes sampled uniformly from the
 genome space, establishing a chance-level reference.
 
@@ -766,6 +792,19 @@ increasing $\gamma$ lowers the effective distress threshold below $\tau_h$,
 allowing earlier escalation to crisis language without changing the formal
 risk label.
 
+Escalation here \emph{augments} the response rather than terminating it: the
+generator appends crisis guidance to a complete empathetic, structured reply
+rather than issuing a refusal or halting the exchange. This is a deliberate
+design choice. Recent work characterizes hard refusal as a common safety break
+in current models and argues that the manner of disengagement may itself have
+psychological consequences. Drawing on psychotherapy and crisis-line evidence,
+it notes that premature or imposed termination is associated with poorer
+outcomes and that unplanned disconnection can interrupt de-escalation and
+aftercare~\cite{journey2026}. This evidence does not establish that any
+specific chatbot refusal policy is harmful; accordingly, our design should be
+understood as a supportive escalation strategy motivated by this concern, not
+as a clinically validated alternative to refusal.
+
 \emph{On the direct distress-gating penalty term.} A further fitness term
 penalises mid-risk responses lacking escalation content when the distress
 score exceeds the fixed threshold $\tau_h$; however, this term does not
@@ -779,19 +818,21 @@ behaviour. See Appendix~\ref{app:distress-penalty} for the full argument.
 Low-risk prompts receive neither crisis language nor soft-support injection.
 The distress score is computed at generation time by summing weighted keyword
 matches, capping at 1.0, with a small penalty for marker stuffing
-(>3 distinct signals). We verified computationally that this stuffing
-penalty is clinically questionable in principle but empirically inert on
-this dataset -- it never fires on any prompt that actually enters the
-fitness pipeline (Appendix~\ref{app:stuffing}). This mechanism
-allows the GA to learn
-when escalation should trigger \textit{within} a risk category, rather than
-only which category a prompt falls into. The GA converged to a small evolved
-$\gamma$ ($\gamma^{\star} \approx 0.059$), indicating that only a modest
-relaxation of the fixed distress threshold $\tau_h$ was found beneficial;
-this suggests the fixed threshold already captures most of the useful
-escalation signal for this dataset, with the learned gating mechanism
-providing a secondary, fine-grained adjustment rather than a large
-behavioural shift.
+(>3 distinct signals). We verified computationally that this stuffing penalty
+is clinically questionable in principle but empirically inert on this dataset:
+it never fires on any prompt that actually enters the fitness pipeline
+(Appendix~\ref{app:stuffing}). This mechanism permits variation in escalation
+behaviour \textit{within the mid-risk category}: high-risk prompts always
+receive crisis escalation, whereas low-risk prompts never receive it under the
+present design. The GA converged to a small evolved $\gamma$
+($\gamma^{\star} \approx 0.059$), corresponding to only a modest relaxation
+of the fixed distress threshold $\tau_h$. We do not read this small magnitude
+as evidence that the fixed threshold already captures most of the useful
+escalation signal: as shown in Appendix~\ref{app:distress-penalty}, the
+fitness function does not functionally distinguish $\gamma$ values across most
+of their range, so $\gamma^{\star}$ is only weakly identified by the present
+fitness design and its value should not be given a behavioural interpretation
+(Section~\ref{sec:limitations}).
 
 \subsection{Automatic Scoring}
 \label{sec:automatic-scoring}
@@ -929,9 +970,10 @@ $F_{\mathrm{train},t}(g) = \frac{1}{600}\sum_{i \in \mathcal{I}_t} f_i(g)$
 is computed once per generation $t$ over a random $|\mathcal{I}_t|=600$
 sample drawn from the optimisation set and is
 what the GA uses as its selection signal; validation fitness
-$F_{\mathrm{val}}(g) = \frac{1}{575}\sum_{i \in V} f_i(g)$ is computed
-once, after search, over the fixed, disjoint 575-prompt held-out
-validation set $V$, and is what Table~\ref{tab:baseline-optimized} and
+$F_{\mathrm{val}}(g) = \frac{1}{400}\sum_{i \in V_{400}} f_i(g)$ is
+computed once, after search, over a fixed 400-prompt subsample $V_{400}$
+(drawn at seed 7) of the disjoint 575-prompt validation set $V$,
+and is what Table~\ref{tab:baseline-optimized} and
 the significance analysis (Table~\ref{tab:significance}) report. The two
 use the same per-example fitness formula but different, non-overlapping
 prompt populations, and are not directly interchangeable. Note that all penalty and reinforcement terms in Eq.~\eqref{eq:per-example-fitness}
@@ -942,24 +984,53 @@ toward low mean fitness by the accumulation of per-example penalties across
 the evaluation sample, which has a similar aggregate effect to a hard
 constraint without being implemented as one.
 
+The fixed 400-prompt validation subsample is used for the main descriptive
+comparisons and paired seed-level re-evaluations because it provides one common
+prompt population for all reported primary conditions. The full 575-prompt
+validation split is used only for the separate age-record sensitivity analysis
+in Section~\ref{sec:ethics}, where exclusion must be assessed over all
+available validation records.
+
+\emph{Evaluation noise.} Because the generator samples from its phrase
+banks at generation time without a fixed random seed, repeated evaluation
+of the same genome on the same prompts is not deterministic. Ten repeated
+evaluations of the reported genome on the fixed 400-prompt subsample span
+0.6966--0.7041 (mean 0.7002, SD 0.0027). All fitness values reported in
+this manuscript are single evaluations and therefore carry an approximate
+single-evaluation standard deviation of 0.003. Differences between two
+reported values smaller than roughly 0.008 should not be treated as
+resolvable. We return to the consequences of this noise floor for the
+GA-versus-random-search comparison in
+Section~\ref{sec:interp-baseline} and list the absence of generation-seed
+control as a limitation in Section~\ref{sec:limitations}.
+
+\subsubsection{Frozen Scoring and Reporting Protocol}
+\label{sec:frozen-scorer}
+
+All reported conditions were evaluated under one frozen, version-controlled
+scoring pipeline. Here, ``frozen'' means that the scorer implementation,
+marker lists, fitness formula, and evaluation procedure were held fixed for
+the final reported analyses.
+
 \subsection{Genetic Algorithm Configuration}
 \label{sec:ga-config}
 
 We employ a mixed continuous/discrete GA with:
 \begin{itemize}
-  \item Population size \(P \in \{30, 50, 100, 200, 300, 400\}\).
+  \item Population size
+        \(P \in \{30, 50, 100, 200, 300, 400\}\).
   \item Generations $T = 20$.
   \item Tournament selection of size~3.
   \item Uniform crossover for every gene: each child gene is copied from
-        parent~$a$ or parent~$b$ with equal probability (including the
-        continuous weights and the discrete genes \(d\) and \(m\)).
-  \item Per-gene mutation with probability $p_m = 0.30$: continuous genes
-        (\(w_e, w_s, w_c, \theta_{\mathrm{mid}}, \theta_{\mathrm{high}},
-        \gamma\)) receive additive uniform noise clipped to their feasible
-        ranges; discrete \(d\) is resampled from \(\{0,1,2\}\); the
-        response-part budget \(m\) is resampled categorically from
-        \(\{256, 512, 768, 1024\}\) (integer-coded, but not mutated as a
-        continuous integer).
+        parent~$a$ or parent~$b$ with equal probability, including continuous
+        weights and the discrete genes \(d\) and \(m\).
+  \item Per-gene mutation with probability $p_m = 0.30$. Continuous genes
+        ($w_e$, $w_s$, $w_c$, $\theta_{\mathrm{mid}}$,
+        $\theta_{\mathrm{high}}$, $\gamma$) receive additive uniform noise
+        clipped to their feasible ranges. Discrete \(d\) is resampled from
+        \(\{0,1,2\}\). The response-part budget \(m\) is resampled
+        categorically from \(\{256, 512, 768, 1024\}\) (integer-coded, but
+        not mutated as a continuous integer).
   \item Elitism: the top \(E\) individuals are copied to the next generation.
 \end{itemize}
 Five independent runs with different random seeds are performed per setting;
@@ -989,8 +1060,11 @@ manual inspection on a small held-out development set prior to GA optimisation
 and held fixed throughout. The fitness function weights empathy and safety
 equally at 0.40 each, with smaller contributions from structure (0.15) and a
 length penalty (0.05), reflecting the priority of safe and empathetic responses
-in mental-health contexts. GA configuration follows standard practice in the
-evolutionary algorithms literature~\cite{back1997evolutionary}.
+in mental-health contexts. The per-gene mutation rate ($p_m = 0.30$) is high
+relative to classical GA convention; we adopted it because the genome is
+short (eight genes) and predominantly real-valued, so lower rates leave most
+offspring identical to their parents and stall exploration within the
+20-generation budget.
 
 \begin{table}[H]
 \centering
@@ -1113,10 +1187,15 @@ optimised escalation policy.
 
 \emph{Note on ``reported genome.''} The genome above is the final genome
 from our main GA run, used throughout this manuscript's worked example,
-qualitative comparisons, and Table~\ref{tab:baseline-optimized}; it is
-comparable in fitness to, though not the single highest among, the five
-independent significance-test seeds (Appendix~\ref{app:genome-evolution}), so
-we describe it as the ``reported genome'' rather than the ``best genome.''
+qualitative comparisons, and Table~\ref{tab:baseline-optimized}.
+Evaluated on the same 400-prompt subsample under the same scorer, it
+reaches 0.703, slightly above the range spanned by the five independent
+significance-test seeds (0.6949--0.7027;
+Appendix~\ref{app:genome-evolution}). We describe it as the ``reported
+genome'' rather than the ``best genome'' because we did not perform a
+formal top-1 selection across all six runs conducted; its position just
+above the observed seed range should be read as ordinary run-to-run
+variation rather than as evidence of a superior configuration.
 
 The genome discussed above ($w_c^{\star} = 0.768$) assigns
 substantially higher weight to structural completeness than to empathy
@@ -1138,44 +1217,74 @@ and one scoring design and do not claim this to be a global optimum.
 \subsection{Dataset Size Sensitivity}
 \label{sec:dataset-size}
 
-The dataset size experiment evaluated whether increasing the number of training
+The dataset-size experiment evaluated whether increasing the number of training
 samples improved validation fitness, using nested training subsets
 ($N=100 \subset N=300 \subset N=600 \subset N=1200 \subset N=2297$, the
 full optimisation set) so that smaller sizes are literal subsets of larger
-ones rather than independently drawn splits, with five GA seeds run per
-size under the same frozen, corrected scorer used throughout this
-manuscript (Section~\ref{sec:structure-analysis}). As shown in
-Figure~\ref{fig:dataset-size}, mean validation fitness across the five
-sizes ranges narrowly from 0.698 ($N=300$) to 0.704 ($N=600$), with no
-monotonic relationship to dataset size: the highest mean fitness occurs at
-an intermediate size ($N=600$), not at the largest ($N=2297$: 0.700) or
-smallest ($N=100$: 0.701) size tested. Standard deviations across the five
-seeds per size range from 0.0017 ($N=1200$) to 0.0073 ($N=600$).
+ones rather than independently drawn splits. Five GA seeds were run per size
+under the frozen scoring pipeline used throughout this manuscript
+(Section~\ref{sec:frozen-scorer}). As shown in
+Figure~\ref{fig:dataset-size}, mean validation fitness across the five sizes
+ranges narrowly from 0.698 ($N=300$) to 0.704 ($N=600$), with no monotonic
+relationship to dataset size: the highest mean fitness occurs at an
+intermediate size ($N=600$), not at the largest ($N=2297$: 0.700) or smallest
+($N=100$: 0.701) size tested. Standard deviations across the five seeds per
+size range from 0.0017 ($N=1200$) to 0.0073 ($N=600$).
 
-We formally tested equivalence to the full-dataset condition using
-TOST at a pre-specified margin of $\varepsilon=0.01$ fitness points; none
-of the four comparisons established equivalence at this margin, most
-plausibly reflecting limited statistical power at five seeds per condition
-rather than a genuine practically important difference (full statistics in
-Appendix~\ref{app:dataset-tost}). Descriptively,
-however, the total spread across all tested sizes (a 0.0068-point band,
-with a maximum difference from the full-dataset condition of 0.005) is an
-order of magnitude smaller than the gap between any GA-optimised condition
-and the non-GA baselines (Table~\ref{tab:baseline-optimized}, e.g.\ B4 vs.\
-B2: 0.147 points), and shows no trend indicating that additional data
-beyond $N=100$ improves fitness in this setting. We treat this as
-practically suggestive of data efficiency rather than as formally
-established equivalence (Section~\ref{sec:limitations}).
+We formally tested equivalence to the full-dataset condition using two
+one-sided tests (TOST) at a pre-specified margin of $\varepsilon=0.01$
+fitness points. Three of the four comparisons established equivalence:
+$N=100$ ($p=0.0168$), $N=300$ ($p=0.00678$), and $N=1200$ ($p=0.00527$)
+are each statistically equivalent to $N=2297$ at this margin. The
+remaining comparison, $N=600$, does not meet the margin ($p=0.101$),
+failing the upper one-sided test alone ($p_{\mathrm{upper}}=0.101$ against
+$p_{\mathrm{lower}}=0.00340$): its mean sits 0.0048 points above the
+full-dataset condition and its 90\% confidence interval reaches $+0.0119$,
+marginally outside $+\varepsilon$. This single exception coincides with the
+largest seed-level dispersion in the experiment (standard deviation 0.0073
+at $N=600$ against 0.0017 at $N=1200$), and the results across the four
+tested sizes do not form a monotonic pattern, since both the smallest and
+the largest subsets tested meet the margin. We report these observations
+without claiming to have established the cause of the $N=600$ result. Full
+statistics, including both one-sided $p$-values and 90\% confidence
+intervals for every comparison, are given in
+Appendix~\ref{app:dataset-tost}.
+
+Descriptively, the total spread across all tested sizes (a 0.0068-point
+band, with a maximum difference from the full-dataset condition of 0.005)
+is an order of magnitude smaller than the gap between any GA-optimised
+condition and the non-GA baselines
+(Table~\ref{tab:baseline-optimized}, e.g.\ B4 vs.\ B2: 0.147 points), and
+shows no trend indicating that additional data beyond $N=100$ improves
+fitness in this setting. Two qualifications apply to the equivalence
+result. The margin $\varepsilon=0.01$ is roughly three times the
+single-evaluation noise standard deviation ($\approx$0.003;
+Section~\ref{sec:automatic-scoring}), so equivalence here means that
+differences are small relative to a margin fixed in advance, not that the
+conditions are identical. The observed differences are themselves of the
+same order as the single-evaluation noise standard deviation, and each
+condition contributes only five independent GA seeds, so these tests bound
+the size of any difference at the chosen margin rather than estimating a
+per-condition effect precisely. And the
+validation split served scorer development as well as evaluation, so this
+is a statement about fitness stability under the frozen scorer rather than
+about generalisation to unseen data (Section~\ref{sec:limitations}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/dataset_size_experiment_plot.png}
-\caption{Effect of dataset size on validation fitness (nested subsets, 5
-seeds per size, corrected scorer). Fitness is essentially flat across all
-tested sizes with no monotonic trend; formal TOST equivalence at
-$\varepsilon=0.01$ was not established at this sample size (see
-Section~\ref{sec:dataset-size} for the raw differences and confidence
-intervals).}
+\caption{Effect of dataset size on validation fitness using nested subsets
+(five GA seeds per size, frozen scoring pipeline). The shaded band denotes
+the pre-specified TOST equivalence margin of $\pm 0.01$ fitness points
+around the full-dataset reference condition ($N=2297$). Fitness is
+essentially flat with no monotonic trend, and TOST establishes equivalence
+to the reference condition at $N=100$, $N=300$, and $N=1200$; $N=600$ is
+the one comparison that does not meet the margin. The band bounds point
+estimates, whereas the TOST decision depends on the confidence interval of
+the difference, which is why $N=600$ fails the margin even though its mean
+lies inside the band. Mean difference, 90\% confidence intervals, and both
+one-sided $p$-values are reported in Section~\ref{sec:dataset-size} and
+Appendix~\ref{app:dataset-tost}.}
 \label{fig:dataset-size}
 \end{figure}
 
@@ -1183,8 +1292,7 @@ intervals).}
 \label{sec:population-size}
 
 Figure~\ref{fig:population-size} shows validation fitness across population
-sizes ranging from $P=30$ to $P=400$, five GA seeds per size, under the
-same frozen, corrected scorer. Mean fitness ranges narrowly from 0.699
+sizes ranging from $P=30$ to $P=400$, five GA seeds per size, under the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}). Mean fitness ranges narrowly from 0.699
 ($P=300$) to 0.703 ($P=400$, the largest population tested), with no
 monotonic relationship to population size: $P=100$ and $P=50$ both give
 essentially identical means (0.7006), while the highest mean occurs at the
@@ -1193,41 +1301,56 @@ deviations range from 0.0016 ($P=100$) to 0.0047 ($P=50$) and do not
 decrease monotonically with $P$.
 
 We formally tested equivalence to the $P=100$ condition using the same
-TOST procedure; none of the five comparisons established equivalence at
-this margin, for the same power-and-margin reasons as the dataset-size
-result (full statistics in Appendix~\ref{app:population-tost}). As above,
-we do not claim formal statistical equivalence, but descriptively these
-differences are small relative to the GA-vs-baseline gaps reported in
+TOST procedure and margin. All five comparisons established equivalence
+($p=0.00146$, $0.00332$, $1.26\times10^{-4}$, $0.00304$, and $0.00461$ for
+$P=30$, $50$, $200$, $300$, and $400$ respectively; full statistics in
+Appendix~\ref{app:population-tost}). Every 90\% confidence interval lies
+inside $\pm 0.01$, the widest being $[-0.0051, +0.0028]$ at $P=300$, and
+the largest mean difference from $P=100$ is 0.0025 points. For the tested
+settings, the results support equivalence to $P=100$ within the
+pre-specified $\pm0.01$ fitness margin across the range $P=30$ to $P=400$.
+The same two qualifications noted for the dataset-size result apply. The
+margin is roughly three times the single-evaluation noise standard deviation
+(Section~\ref{sec:automatic-scoring}) and each condition rests on five
+independent GA seeds, so these tests bound the size of any difference at the
+chosen margin rather than estimating the effect of each population size
+precisely; and the validation split also served
+scorer development. Descriptively, the differences are likewise small
+relative to the GA-vs-baseline gaps reported in
 Table~\ref{tab:baseline-optimized} and show no systematic trend with
-population size once $P \ge 30$. Since larger populations incur
-substantially higher computational cost with no corresponding fitness
-benefit apparent in these
-results, the practical recommendation remains to prefer smaller populations
-(e.g., $P=50$--$100$) for computational efficiency, though we note this
-recommendation rests on the same descriptive rather than formally
-equivalence-tested basis as the dataset-size finding above.
+population size once $P \ge 30$.
+
+Since larger populations incur substantially higher computational cost with
+no corresponding fitness benefit, and since fitness at $P=30$ is
+statistically equivalent to fitness at $P=100$ at this margin, the
+practical recommendation is to prefer smaller populations
+(e.g., $P=50$--$100$) for computational efficiency.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/population_experiment_plot.png}
-\caption{Population size sensitivity analysis (5 seeds per size, corrected
-scorer). Fitness fluctuates narrowly and non-monotonically across the
-tested range; formal TOST equivalence to $P=100$ at $\varepsilon=0.01$ was
-not established at this sample size (see Section~\ref{sec:population-size}
-for the raw differences and confidence intervals).}
+\caption{Population size sensitivity analysis (five GA seeds per size,
+frozen scoring pipeline). The shaded band denotes the pre-specified TOST
+equivalence margin of $\pm 0.01$ fitness points around the $P=100$
+reference condition. Fitness fluctuates narrowly and non-monotonically
+across the tested range, and TOST establishes equivalence to $P=100$ at
+every tested population size from $P=30$ to $P=400$. Mean difference, 90\%
+confidence intervals, and both one-sided $p$-values are reported in
+Section~\ref{sec:population-size} and Appendix~\ref{app:population-tost}.}
 \label{fig:population-size}
 \end{figure}
 
 \subsection{Convergence Analysis}
 
-The convergence behaviour of the GA, from the main run under the frozen,
-corrected scorer described in Section~\ref{sec:structure-analysis}
+The convergence behaviour of the GA, from the main run under the frozen scoring pipeline described in Section~\ref{sec:frozen-scorer}
 ($P=100$, $T=20$, $|\mathcal{I}|=600$), is shown in
 Figure~\ref{fig:fitness-curve}. The best (training-time) fitness begins
 at 0.701 in generation~1 and fluctuates within a narrow band of approximately
 0.698--0.704 for the remainder of the run, with no sustained secondary
-improvement phase; the single highest value observed (0.704, generation~19)
-is only marginally above the initial value. Average fitness rises from 0.362
+improvement phase; this band is itself at the single-evaluation noise floor
+(Section~\ref{sec:automatic-scoring}), so the single highest value observed
+(0.704, generation~19)
+is not resolvable from the initial value. Average fitness rises from 0.362
 (generation~1) to approximately 0.60--0.65 by generation~5 and continues to
 fluctuate in that range without a clear settling trend for the remainder of
 the run, indicating that elite genomes consistently outperform the
@@ -1290,10 +1413,12 @@ see discussion in Section~\ref{sec:diversity}).}
 
 \subsection{Overall Performance Comparison}
 
-Table~\ref{tab:baseline-optimized} compares nine conditions: a minimal-structure, short-budget
-baseline (B1) and its non-truncating counterpart (B1-fixed), a fixed seed genome without GA search (B2), a random genome
-average (B3), the GA-optimised system (B4), a second GA-optimised system
-seeded via MSGA (B5), and three pre-trained Bangla LLM baselines (B6--B8).
+Table~\ref{tab:baseline-optimized} compares eight primary conditions: a
+minimal-structure, short-budget baseline (B1), a fixed seed genome without GA
+search (B2), a random-genome reference (B3), two GA-optimised conditions
+(B4--B5), and three zero-shot Bangla LLM baselines (B6--B8). The
+non-truncating B1-fixed diagnostic is reported separately in
+Section~\ref{sec:interp-baseline}.
 B1 uses $w_e=0.10$,
 $w_c=0.10$, $w_s=0.80$, $\gamma=0$ (Section~\ref{sec:methods}); because
 these already sum to 1, genome renormalisation leaves $w_c$ at its floor
@@ -1301,21 +1426,22 @@ value, placing it genuinely in the bottom, no-structure regime
 (Section~\ref{sec:progressive-structure}) rather than the stochastic
 mid-regime a naive equal-floor construction would otherwise produce. B1
 also uses the minimum response-part budget ($m=256$), representing
-unoptimised response generation with deliberately near-zero structure. B2 uses the balanced seed genome $g_\mathrm{bal}$
-evaluated directly without evolutionary search, isolating the contribution of
-the GA search itself. B3 reports the mean and standard deviation of five
+unoptimised response generation with deliberately near-zero structure.B2 uses the balanced seed genome $g_{\mathrm{bal}}$ evaluated directly without
+evolutionary search, providing a fixed non-GA reference condition. B3 reports the mean and standard deviation of five
 randomly sampled genomes, establishing a chance-level reference; we note
 that B3's five draws do not match the GA's population budget of
 $100 \times 20 = 2{,}000$ genome evaluations, so B3 demonstrates that a
 handful of random draws are unreliable rather than that random search at
 equal budget is inferior to the GA, and we do not claim the latter; a
 separate equal-budget random search (2,000 draws) is reported in
-Section~\ref{sec:interp-baseline}. B4 is a
+Section~\ref{sec:interp-baseline}.B4 is a
 single GA-optimised condition whose genome includes the evolved distress-gating
 parameter $\gamma^{\star}$ (Table~\ref{tab:hyperparams-ga}); there is no
-separate ``B4 without $\gamma$'' row. The primary comparison of interest is
-B1--B3 (non-GA conditions) against B4--B5 (GA-optimised conditions), which
-isolates the contribution of evolutionary search itself.
+separate ``B4 without $\gamma$'' row. The comparisons between B1--B3 and B4--B5 characterise performance
+differences between the reported non-GA and GA-optimised conditions. They do
+not, by themselves, isolate the causal contribution of evolutionary search,
+because conditions can differ in baseline construction, genome settings, and
+evaluation history.
 The pre-trained Bangla LLM baselines (B6--B8, Section~\ref{sec:llm-baselines})
 are included for context on how general-purpose generative models perform on
 this task out of the box, but are not intended as competitive baselines: they
@@ -1327,29 +1453,26 @@ LLMs in general.
 \begin{table}[H]
 \centering
 
-\caption{Baseline versus optimised performance, all evaluated under one
-frozen, version-controlled scoring pipeline, with per-seed genomes
+\caption{Baseline versus optimised performance, all evaluated under the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}), with per-seed genomes
 archived. B1 = minimal-structure, short-budget baseline (no GA; a
 deliberately near-zero-structure reference point that also carries a
 short response-part budget, Section~\ref{sec:interp-baseline});
-B1-fixed = the same genome ($w_e=0.10$, $w_s=0.80$, $w_c=0.10$) with
-\texttt{memory\_window} increased from 256 to 512, isolating the effect of
-removing B1's response-part-budget truncation defect while holding the
-minimal-structure weights fixed (Section~\ref{sec:interp-baseline}),
-evaluated on the full $N=2{,}872$ dataset rather than the $N=575$
-validation set used for B1--B5;
 B2 = fixed seed genome $g_\mathrm{bal}$ (no GA search);
 B3 = random genome (mean $\pm$ std, $n=5$, not equal-budget to the GA);
 B4 = GA optimised, genome reported in Table~\ref{tab:hyperparams-ga}, including the evolved distress-gating gene
 $\gamma^{\star}$;
 B5 = GA + MSGA seeds;
 B6--B8 = pre-trained Bangla LLMs in zero-shot mode (Section~\ref{sec:llm-baselines}).
-$p$-values are from a one-sided Wilcoxon signed-rank test
-($\alpha=0.05$) comparing each baseline against B4, computed on the
-five-seed data in Table~\ref{tab:significance}; B3 is excluded due to
-high run-to-run variance precluding a stable paired comparison.
+$p$-values are from one-sided Wilcoxon signed-rank tests
+($\alpha=0.05$) comparing B1 and B2 against B4, computed from the five paired
+seed-level re-evaluations in Table~\ref{tab:significance}. An em dash indicates
+that no paired five-seed comparison against B4 was performed: B3 is a
+five-draw random reference, B5 was evaluated once, and B6--B8 are single
+zero-shot LLM evaluations. B4 is the reference condition.
 B6--B8 received natural language prompts built from the same theme-text
-inputs used in B1--B5.}
+inputs used in B1--B5. All reported conditions are scored on the same fixed 400-prompt subsample of
+the 575-prompt validation set, drawn at seed 7, so their values are directly
+comparable on an identical prompt population.}
 
 \label{tab:baseline-optimized}
 \renewcommand{\arraystretch}{1.3}
@@ -1371,8 +1494,6 @@ inputs used in B1--B5.}
 \midrule
 B1: Minimal-structure, short-budget (no GA)
   & 0.269 & 0.472 & 0.017 & $-$0.227 & 0.031 \\
-B1-fixed: Minimal-structure, non-truncating (no GA)
-  & 0.329 & 0.900 & 0.015 & 0.279 & --- \\
 B2: Fixed $g_\mathrm{bal}$ (no GA)
   & 0.380 & 0.903 & 0.648 & 0.556 & 0.031 \\
 B3: Random genome ($n=5$, unequal budget)
@@ -1380,39 +1501,42 @@ B3: Random genome ($n=5$, unequal budget)
   & $0.732$ \newline ${\pm\,0.210}$
   & $0.473$ \newline ${\pm\,0.380}$
   & $0.284$ \newline ${\pm\,0.385}$
-  & --- \\
+  & \textemdash \\
+
 B4: GA Optimised
-  & 0.430 & 0.905 & 1.000 & 0.703 & --- \\
+  & 0.430 & 0.905 & 1.000 & 0.703 & \textemdash \\
+
 B5: GA + MSGA seeds
-  & 0.439 & 0.900 & 1.000 & 0.695 & --- \\
+  & 0.439 & 0.900 & 1.000 & 0.695 & \textemdash \\
+
 \midrule
-B6: mT5-small (zero-shot)
-  & 0.000 & 0.426 & 0.000 & 0.170 & --- \\
-B7: BanglaT5 (zero-shot)
-  & 0.064 & 0.426 & 0.094 & 0.210 & --- \\
-B8: BanglaGPT (zero-shot)
-  & 0.003 & 0.426 & 0.000 & 0.171 & --- \\
+B6: mT5-small zero-shot
+  & 0.000 & 0.426 & 0.000 & $-0.450$ & \textemdash \\
+
+B7: BanglaT5 zero-shot
+  & 0.064 & 0.426 & 0.094 & $-0.366$ & \textemdash \\
+
+B8: BanglaGPT zero-shot
+  & 0.003 & 0.426 & 0.000 & $-0.448$ & \textemdash \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\emph{Note on cross-table fitness values.} B2 and B4 fitness appears in
-three places in this manuscript with small numerical differences:
-Table~\ref{tab:baseline-optimized} reports the main single-run evaluation
-(B2: 0.556, B4: 0.703), Table~\ref{tab:significance} reports the mean
-across five independent seeds (B2: 0.5522, B4: 0.6993), and
-Table~\ref{tab:minors-sensitivity} reports a separate re-evaluation on the
-575-prompt validation set (B2: 0.549, B4: 0.698). All three use the same
-frozen scorer and differ only in evaluation run and prompt sample; every
-pairwise difference falls within the condition's own run-to-run evaluation
-noise as established in Table~\ref{tab:significance}.
+\emph{Note on cross-table fitness values.}
+Table~\ref{tab:baseline-optimized} reports single descriptive evaluations on
+the fixed 400-prompt validation subsample, whereas
+Table~\ref{tab:significance} reports the primary repeated comparison: means
+across five paired seed-level re-evaluations on that same subsample.
+Table~\ref{tab:minors-sensitivity} is a separate sensitivity analysis on the
+full 575-prompt validation set. All evaluations use the frozen scoring pipeline
+(Section~\ref{sec:frozen-scorer}); their values should therefore be interpreted
+in the context of their respective evaluation design, rather than as
+interchangeable repeated measurements.
 
 The GA-optimised system (B4) substantially outperforms the non-GA
-baselines. The most pronounced
-improvement is in structural completeness, where B4 achieves
-a score of 1.000 compared to 0.017 for the minimal-structure, short-budget baseline, a
-more than 58-fold
-increase. Safety is maintained at 0.905, closely matching B2 (0.903) and far
+baselines. The most pronounced difference is in structural completeness: B4 achieves a
+score of 1.000 compared with 0.017 for the minimal-structure, short-budget
+baseline, an absolute difference of 0.983 points. Safety is maintained at 0.905, closely matching B2 (0.903) and far
 exceeding B1 (0.472); as discussed in
 Section~\ref{sec:interp-baseline}, B1's low safety score is driven
 substantially by a response-part-budget truncation defect specific to its
@@ -1421,119 +1545,96 @@ also evaluated without any GA search, already achieves safety comparable
 to B4 (0.903), demonstrating that a fixed, non-truncating genome can be
 safe without evolutionary optimisation. B1's result instead demonstrates
 that this particular minimal-weight, short-budget configuration is unsafe.
-Empathy improves from 0.269
-(B1) to 0.430 (B4), reflecting the GA's ability to balance empathetic
-expression against structural and safety objectives simultaneously.
+Empathy is higher for B4 than for B1 (0.430 versus 0.269), alongside higher
+structure and safety; however, the B1--B4 difference also includes the
+short-budget truncation defect in B1.
 
 Comparing B2 against B4 is particularly informative, since B2 does not share
 B1's truncation defect and is therefore the more directly comparable
 non-GA reference point: the fixed seed genome
 already achieves reasonable safety (0.903) but poorer structure (0.648) and
-lower fitness (0.556). The GA search improves structure by 0.352 points and
-overall fitness by 0.147 points beyond the seed genome, consistent with the
-evolutionary search itself, and not just the seeded initialisation, contributing
-to the gains, though we have not run the controlled ablations (e.g.\ unseeded
-GA, unseeded vs.\ seeded at equal budget) that would isolate this
-contribution precisely; see Section~\ref{sec:limitations}.
+lower fitness (0.556). B4 has structure 0.352 points higher and fitness 0.147 points higher than
+the fixed seed genome B2. These differences are consistent with the
+GA-optimised configuration reaching a stronger region of the reported search
+space, but do not isolate evolutionary search as the sole cause because B2
+and B4 differ in multiple configuration settings.
 
 The high variance in B3 (fitness std $= 0.385$) confirms that five random
 draws are unreliable for this task, with individual random genomes
 spanning from clearly negative to substantially positive fitness; as noted
 above, this does not by itself establish that guided evolutionary search
-outperforms random search at an equal evaluation budget, which we list as a
-required follow-up comparison in Section~\ref{sec:limitations}.
+outperforms random search at an equal evaluation budget. A separate
+equal-budget random-search comparison is reported in
+Section~\ref{sec:interp-baseline}.
 
 
 \subsection{MSGA-Seeded Initialization Comparison}
 \label{sec:msga}
 
-To evaluate whether principled domain-coverage seeding can substitute for
-manually designed seed genomes, we implemented the Multiple Seeds Based
-Genetic Algorithm (MSGA)~\cite{kabir2017msga} as an alternative initialization
-strategy (condition B5). MSGA partitions the genome search space into $m = 4$
-domains based on empirical distance boundaries computed from 500 randomly
-sampled genomes, maintains an archive of size 25 per domain, and seeds the
-initial population from these archives to ensure broad coverage of the fitness
-landscape.
+To evaluate whether multiple-seed, domain-coverage initialization can
+substitute for manually designed seed genomes, we implemented an adaptation
+of the Multiple Seeds Based Genetic Algorithm (MSGA)~\cite{kabir2017msga} as
+an alternative initialization strategy (condition B5). MSGA constructs an
+initial population from multiple seed candidates selected across different
+regions of the solution space. In our adaptation, the mixed genome space is
+partitioned into \(m=4\) domains using empirical distance boundaries estimated
+from 500 randomly sampled genomes. We retain an archive of 25 candidates per
+domain and use archive-derived seeds to initialize the population.
 
-Table~\ref{tab:baseline-optimized} includes the B5 results alongside B1--B4.
-B5 was evaluated under the same frozen, corrected scorer as
-B1--B4, in the same pipeline run, with its final genome archived
-(\texttt{best\_genome\_B5.json}).
-The MSGA-seeded system achieves empathy 0.439, safety 0.900, structure
-1.000, and overall fitness 0.695, closely matching B4's 0.703
-(Table~\ref{tab:baseline-optimized}). We read this as evidence
-that the GA converges to a similar high-fitness region regardless of
-manually designed domain seeds (B4) versus archive-based domain-coverage
-seeds (B5), and that MSGA-style initialization is a viable alternative
-to manual seed design, removing the need for domain expertise in constructing
-the initial seed set. Because B5 was run as a single seed rather than
-across five independent runs, we do not report a paired significance test
-or bootstrap interval for the B4-vs-B5 comparison specifically; extending
-B5 to a multi-seed comparison on the same footing as
-Table~\ref{tab:significance} remains a natural next step and is listed in
-Section~\ref{sec:limitations}.
+B5 was evaluated under the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}) as B1--B4, in the same pipeline
+run, with its final genome archived as \texttt{best\_genome\_B5.json}. It
+achieves empathy 0.439, safety 0.900, structure 1.000, and fitness 0.695,
+compared with B4's fitness of 0.703
+(Table~\ref{tab:baseline-optimized}). The 0.008-point difference is close to
+the resolution limit implied by the single-evaluation noise floor
+(Section~\ref{sec:automatic-scoring}) and rests on one B5 evaluation; we
+therefore do not interpret it as reliable evidence of a difference between B4
+and B5. Within the present search space, this result suggests that
+MSGA-inspired domain-coverage initialization can provide an alternative to
+manually designed seed genomes. B5 was run once; repeated MSGA-initialised runs are required before drawing a
+statistical comparison with B4.
 
-\subsubsection{Characterising Pre-Trained Bangla LLMs in Zero-Shot Mode (B6--B8)}
+\subsubsection{Zero-Shot Bangla LLM Characterisation (B6--B8)}
 \label{sec:llm-baselines}
 
-Table~\ref{tab:baseline-optimized} also includes three pre-trained Bangla
-language models evaluated in zero-shot mode on a fixed 400-prompt subsample
-of the same 575-prompt validation set used for B1--B5 (drawn with the same
-random seed, $\mathrm{seed}=7$): mT5-small~\cite{mt5_2021} (B6),
-BanglaT5~\cite{banglat5_2022} (B7), and BanglaGPT~\cite{banglagpt_2023} (B8).
-The subsample, rather than the full 575 prompts, was used to limit the
-computational cost of beam-search decoding three separate models; because it
-is drawn from the same validation split with the same seed rather than a
-different or independently-drawn set, B6--B8 scores remain directly
-comparable to B1--B5 on the same underlying prompt population. We frame
-B6--B8 explicitly as a
-\emph{characterisation} of off-the-shelf Bangla LLM behaviour on this task,
-not as a competing system: none of the three received task-specific
-fine-tuning, in-context examples, or the template structure that defines
-EvoRiri, so the comparison is not a like-for-like contest between an
-LLM-based and a non-LLM-based approach. These models received natural
-language prompts constructed by the same \texttt{build\_realistic\_user\_prompt()}
-function used in B1--B5, providing a fair input format comparison given this
-characterisation goal.
+For context, Table~\ref{tab:baseline-optimized} reports three pre-trained
+Bangla language models evaluated in zero-shot mode: mT5-small
+\cite{mt5_2021} (B6; \texttt{google/mt5-small}), BanglaT5
+\cite{banglat5_2022} (B7; \texttt{csebuetnlp/banglat5}), and BanglaGPT
+\cite{banglagpt_2023} (B8; \texttt{shahidul034/BanglaGPT}). These conditions
+are not GA genomes and receive no task-specific fine-tuning, in-context
+examples, or EvoRiri response templates. They are evaluated on the same fixed
+400-prompt seed-7 validation subsample as B1--B5. The underlying user messages
+are constructed using \texttt{build\_realistic\_user\_prompt()} and wrapped in
+a common English instruction template requesting an empathetic and helpful
+assistant response.
 
-All three models fail substantially on this task. B6 (mT5-small) produces
-only sentinel tokens (\texttt{<extra\_id\_0>}) because mT5-small is a
-masked span-filling model not designed for open-ended generation; it
-scores zero on empathy and structure. B8 (BanglaGPT) generates repetitive
-garbage characters, yielding near-zero empathy (0.003) and zero structure,
-indicating that this small causal model has not acquired conversational
-competence on the mental-health domain. B7 (BanglaT5) produces the highest
-scores among the three (empathy 0.064, structure 0.094, fitness 0.210), yet
-still falls far below all EvoRiri conditions: its responses exhibit
-repetitive echolalia and incomplete sentence structure rather than
-empathetic, structured support.
-
-The fitness gap between B4 (0.703) and the best pre-trained LLM (B7: 0.210)
-is $0.703 - 0.210 = 0.493$ points. We read this as characterising the gap
-between generic zero-shot Bangla generation and a purpose-built, optimised
-generator, rather than as evidence that EvoRiri outperforms LLM-based
-approaches in general. A fine-tuned or carefully prompted larger LLM might
-close much of this gap, and that comparison is left to future work.
-EvoRiri's advantage over B6--B8 as measured here stems not from model scale
-but from the combination of an interpretable risk-aware generator and
-genetic optimisation of its response policy, evaluated under the same
-scoring pipeline used throughout this study.
+All three unadapted checkpoints produce poor conversational outputs under this
+configuration. B6 generates sentinel tokens such as
+\texttt{<extra\_id\_0>}, yielding zero empathy and structure scores; this is
+consistent with the T5-style span-corruption pretraining framework of
+mT5~\cite{mt5_2021}. B7 achieves the strongest component scores of the three
+(empathy 0.064, safety 0.426, structure 0.094, and fitness $-0.366$), but
+frequently produces repeated assistant prefixes, repeated user text, or
+incomplete sentences. B8 generates repetitive character sequences, with
+empathy 0.003, safety 0.426, zero structure, and fitness $-0.448$. These
+results describe zero-shot behavior under the present prompts and decoding
+settings, not the performance of fine-tuned or instruction-following Bangla
+LLMs. BanglaT5, for example, reports multi-turn dialogue results after
+task-specific training~\cite{banglat5_2022}.All B6--B8 values are computed using the same full per-example fitness pipeline
+as B1--B5.
 
 \subsection{Statistical Significance of Baseline Comparisons}
 \label{sec:significance}
 
-To assess whether the performance improvement of the GA-optimised system is
-statistically reliable, we applied the Wilcoxon signed-rank
-test~\cite{wilcoxon1945} across five independent runs with different random
-seeds, with each run's final genome archived (Appendix~\ref{app:genomes}
-lists the manifest). For each run, we
-re-scored the archived GA genome for that seed, together with the fixed
-B1 and B2 genomes, under the frozen corrected structure scorer
-($N_{\mathrm{eval}}=400$ on the seed-7 validation split).
-Every number in this section and in
-Table~\ref{tab:significance} is a directly observed result from that
-re-score of an archived genome, with no imputed scalar correction applied
+To assess whether the GA--baseline differences were consistently positive
+across five paired seed-level re-evaluations, we applied one-sided Wilcoxon
+signed-rank tests~\cite{wilcoxon1945}. For each GA seed, we re-scored that
+seed's archived GA genome together with the fixed B1 and B2 genomes
+the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}) ($N_{\mathrm{eval}}=400$ on the
+seed-7 validation split). Every number in this section and in
+Table~\ref{tab:significance} is a directly observed result from these
+re-scores of archived genomes, with no imputed scalar correction applied
 across seeds.
 
 The GA consistently outperformed both baselines across all five runs
@@ -1575,8 +1676,8 @@ seeds), all evaluated under the same frozen scorer and stratified 80/20
 validation split (seed 7) with final genomes archived per
 seed (Appendix~\ref{app:genomes}). GA = proposed optimised system;
 B1 = minimal-structure, short-budget baseline;
-B2 = fixed $g_\mathrm{bal}$, both evaluated on
-the same per-run data sample as the corresponding GA genome.
+B2 = fixed $g_\mathrm{bal}$, all evaluated on the same fixed 400-prompt
+evaluation subsample (seed 7).
 One-sided Wilcoxon signed-rank tests give $W=15$, $p=0.031$ against both
 baselines; GA-vs-B1 differences span $[0.898, 0.933]$ (median $0.912$;
 95\% CI $[0.904, 0.928]$; $d=59.1$) and GA-vs-B2 differences span
@@ -1597,27 +1698,32 @@ Mean $\pm$ Std & $0.6993 \pm 0.0028$ & $-0.2168 \pm 0.0172$ & $0.5522 \pm 0.0098
 \end{tabular}
 \end{table}
 
-Notably, the GA fitness is highly consistent across runs (std $= 0.0028$),
-indicating stable convergence properties. In contrast, B1 shows much larger
-variability (std $= 0.0172$) despite using a fixed genome, which reflects
-stochastic variation in response generation under the per-run seed and the
-fact that B1's fitness is dominated by the response-part-budget truncation
+The GA fitness varies little across runs (std $= 0.0028$), but this figure
+is at the single-evaluation noise floor (SD $\approx 0.0027$;
+Section~\ref{sec:automatic-scoring}), so it shows that the five converged
+genomes are indistinguishable to within measurement precision rather than
+providing a separate estimate of convergence stability. B1's much larger
+spread (std $= 0.0172$) is roughly six times that floor and does reflect
+genuine variability, consistent with its fitness being dominated by the
+response-part-budget truncation
 defect discussed in
 Section~\ref{sec:interp-baseline}, whose effect on any given prompt sample
-is more sensitive to sampling than the well-optimised GA genome's is. These
-results answer RQ1: GA optimisation reliably improves response
-quality over the fixed and random baseline genomes, confirmed under the same frozen,
-corrected scorer used throughout Table~\ref{tab:baseline-optimized}.
+is more sensitive to sampling than the well-optimised GA genome's is.These results show that the reported GA-optimised configurations consistently
+achieve higher fitness than the fixed seed reference B2 and the five
+individually sampled random genomes B3 under the same fixed generation and scoring path. This does not
+establish a causal advantage of evolutionary search alone, and the separate
+equal-budget random-search comparison in section~\ref{sec:interp-baseline}shows no resolvable
+difference between methods under the present evaluation design.
 
 \subsection{Structure Component Usage}
 \label{sec:structure-analysis}
 
-Early optimization revealed structural collapse, where responses relied
-heavily on questioning while omitting grounding and actionable guidance.
-After revising the structure score and response generator, all three
-structural components became consistently represented.
-Figure~\ref{fig:structure-usage} shows the final usage of grounding,
-action, and question components.
+Early optimisation revealed structural collapse, in which responses relied
+heavily on questioning while omitting grounding and actionable guidance. After
+revising the structure scorer and response generator, all three structural
+components were consistently detected under the final scoring pipeline.
+Figure~\ref{fig:structure-usage} shows the measured usage of grounding,
+action, and question components in the reported optimised configuration.
 
 All three structural components reach a usage frequency of 1.0,
 indicating that the optimised genome ($w_c^{\star} = 0.768$) reliably
@@ -1625,25 +1731,15 @@ inserts grounding, action, and question content into every response,
 consistent with the deterministic top regime ($w_c \ge 0.55$) described
 in Section~\ref{sec:progressive-structure}.
 
-The main B1--B5 comparison
-(Table~\ref{tab:baseline-optimized}) and all five significance-test seeds
-(Table~\ref{tab:significance}) were run under one frozen scorer as the
-GA's selection pressure throughout, with every run's final
-genome archived (Appendix~\ref{app:genomes} references the manifest). Under this pipeline, B4
-reaches a validation fitness of
-0.703 (Table~\ref{tab:baseline-optimized}), and the ordinal ranking
-B4 $>$ B2 $>$ B1 and the overall
-pattern of results (near-ceiling structure, safety maintained near B2's
-level, modest empathy gain) are stable across all five significance-test
-seeds.
-
-The dataset-size, population-size, convergence, and diversity analyses,
-and the B6--B8 comparison, are discussed with their scoring-pipeline scope
-noted in Section~\ref{sec:limitations}.
-
-The corrected marker lists were derived by inspecting responses generated
-on the same held-out validation set used for reporting, rather than a
-separate development set (Section~\ref{sec:limitations}).
+All conditions reported in this manuscript were evaluated under one frozen
+scorer, with every run's final genome archived
+(Appendix~\ref{app:genomes}); the ordinal ranking B4 $>$ B2 $>$ B1 and the
+overall pattern of results are stable across all five significance-test
+seeds. The corrected marker lists were derived by inspecting responses on
+the same validation set used for reporting rather than a separate
+development set, so that split functions as a combined development and
+validation set rather than an untouched final test set
+(Section~\ref{sec:limitations}).
 
 \begin{figure}[H]
 \centering
@@ -1714,7 +1810,7 @@ unoptimised parameter setting; we recommend treating B1 primarily as a
 failure-mode illustration and B2 as the more informative non-GA comparator
 for judging the GA's own contribution (Section~\ref{sec:interp-baseline}).
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Side-by-side comparison of B1 (minimal-structure, short-budget baseline) and B4
 (GA-optimised) responses across risk levels, both generated directly by
@@ -1791,30 +1887,20 @@ grounding exercises anchor the user in the present moment, action
 suggestions provide concrete next steps, and reflective questions invite
 further disclosure.
 
-Second, escalation behaviour differs substantially by risk level
-in B4 but not in B1, for a reason distinct from a simple
-difference in generation rules. The generator's escalation rule
+Second, escalation behaviour differs substantially by risk level in B4 but
+not in B1. The generator's escalation rule
 (Section~\ref{sec:risk-escalation}) applies unconditionally to both
-B1 and B4 whenever the risk label is high, independent of genome
-weight; the difference visible in Table~\ref{tab:baseline_vs_optimized}
-instead arises from B1's minimum response-part budget ($m=256$)
-truncating escalation content before it reaches the visible response,
-via the mechanism traced in detail in Section~\ref{sec:interp-baseline}.
-B4's reported budget ($m=512$) disables this truncation entirely
-(Eq.~\eqref{eq:part-budget}), so its escalation content survives. B4
-accordingly suppresses explicit crisis language for low-risk prompts
-(where no escalation content is generated in the first place) while
-reliably surfacing escalation guidance (``contact a mental health
-professional,'' ``local emergency or helpline support'') for
-high-risk prompts. This risk-differentiation is therefore a
-consequence of both the generator's fixed escalation rule and B1's
-truncation defect rather than of the rule alone; it does not depend on
-the genome's $\theta_\mathrm{mid}$ or $\theta_\mathrm{high}$ values,
-which are not read by the generator in the present implementation.
-Consequently, the reported B1-to-B4 gains here and in
-Table~\ref{tab:baseline-optimized} combine genuine GA
-optimisation with the effect of not triggering this defect, rather
-than genetic search alone (Section~\ref{sec:interp-baseline}).
+whenever the risk label is high, independent of genome weight; the
+difference visible in Table~\ref{tab:baseline_vs_optimized} instead arises
+from B1's minimum response-part budget ($m=256$) truncating escalation
+content before it reaches the visible response, whereas B4's $m=512$
+disables truncation (Eq.~\eqref{eq:part-budget}). B4 accordingly suppresses
+explicit crisis language for low-risk prompts while reliably surfacing
+escalation guidance for high-risk ones. This risk-differentiation does not
+depend on $\theta_\mathrm{mid}$ or $\theta_\mathrm{high}$, which the
+generator does not read; and the reported B1-to-B4 gains therefore combine
+GA optimisation with the effect of not triggering this defect, as
+decomposed in Section~\ref{sec:interp-baseline}.
 
 Third, B4 responses demonstrate multilingual composition,
 weaving Bangla, Banglish, and English phrases within
@@ -1830,19 +1916,21 @@ substantially fewer lines overall and, since it lacks structural
 content, never combines Bangla and English within a grounding,
 action, or question line the way B4 does.
 
-These qualitative differences directly explain the quantitative
-gaps reported in Table~\ref{tab:baseline-optimized}: the more than 58-fold
-structure improvement (0.017 to 1.000), the safety gap (0.472 to
-0.905), and the empathy improvement (0.269 to 0.430) all correspond
-to observable, interpretable differences in response content, though
-as discussed above the safety and structure gaps specifically over B1
-partly reflect the truncation defect rather than genetic optimisation
-alone.
+These qualitative differences are consistent with the quantitative gaps
+reported in Table~\ref{tab:baseline-optimized}: structure differs by $+0.983$
+(0.017 to 1.000), safety by $+0.433$ (0.472 to 0.905), and empathy by $+0.161$
+(0.269 to 0.430). These differences correspond to observable differences in
+response content. However, the safety and structure differences in the B1--B4
+comparison partly reflect B1's response-part-budget truncation defect rather
+than genetic optimisation alone.
 
-The empathy gain is worth flagging on its own terms: a $+0.161$
-absolute change (60\% relative) is modest next to the more than 58-fold
-structure gain and the near-doubling of safety, and it is the smallest
-of the three automatic-metric improvements by a wide margin. Read in
+The empathy gain is worth flagging on its own terms: the $+0.161$ absolute
+difference from B1 to B4 is smaller than the corresponding differences in
+structure ($+0.983$) and safety ($+0.433$). Thus, empathy is the smallest of
+the three automatic-metric differences in the B1--B4 comparison. The structure
+and safety differences should nevertheless be interpreted cautiously, because
+B1 also carries the short response-part-budget truncation defect discussed in
+Section~\ref{sec:interp-baseline}. Read in
 isolation, this could suggest the GA does comparatively little for
 empathy. Section~\ref{sec:human_eval} complicates that reading: the
 same B1-vs-B4 comparison, rated blind by clinical psychologists, shows
@@ -1871,7 +1959,8 @@ panel would be.
 
 We sampled 30 response pairs from the baseline vs.\ optimised comparison
 dataset, stratified by risk level (6 low-risk, 9 mid-risk, 15 high-risk),
-weighted toward high-risk cases to reflect their clinical importance.
+stratified by risk level (6 low-risk, 9 mid-risk, and 15 high-risk items),
+approximately matching the corpus risk distribution.
 For each item, annotators were shown the user prompt and two responses
 labeled A and B in randomised order, without knowing which system
 generated each response (rater-blinded; the researchers preparing and
@@ -1885,7 +1974,7 @@ rated both responses on three dimensions using a 1--5 scale:
 and \emph{Helpfulness} (concrete, actionable support).
 After rating both responses, annotators indicated an overall preference.
 Inter-annotator agreement was measured using Krippendorff's
-alpha~\cite{krippendorff2011} and pairwise percentage agreement
+alpha~\cite{krippendorff2007reliability} and pairwise percentage agreement
 within one scale point.
 
 \subsubsection{Results}
@@ -1917,33 +2006,30 @@ would already achieve; a B2-vs-B4 clinician comparison, which we did not
 run, would speak more directly to that latter question, and we list it as
 a required follow-up in Section~\ref{sec:limitations}.
 
-This resolves the tension flagged in Section~\ref{sec:qualcomp}: on the
-automatic proxy, empathy showed the smallest of the three gains
-(0.269 to 0.430, 60\% relative), well behind the safety and structure
-improvements. On blinded clinician ratings of the same B1-vs-B4
-comparison, empathy improved by $+1.68$, similar in magnitude
-to the safety ($+1.77$) and helpfulness ($+1.95$) gains
-and significant at $p<0.001$; we have not, however, formally tested
-whether these three effects are statistically equal to one another (e.g.\
-via a system-by-dimension interaction test), so we describe them as
-similar in magnitude rather than as confirmed to be statistically
-indistinguishable. The two measurements agree on
-direction, both favour B4, but not on how large the empathy improvement is.
-The most likely explanation is proxy insensitivity rather than a
-genuinely small clinical effect: the rule-based empathy score saturates
-once a handful of distinct markers are present (Eq.~\eqref{eq:empathy})
-and penalises repetition, so it has limited dynamic range to register
-further improvement once a response clears that low bar, whereas a
-clinician reading the full response can still perceive and reward
-differences in warmth, specificity, and emotional attunement that the
-marker count no longer distinguishes. This is a concrete instance of
-the proxy-validity limitation discussed in
-Section~\ref{sec:limitations}: here the proxy appears to
-\emph{under-credit} a real improvement rather than over-credit a
-spurious one, which is the opposite failure direction from the
-marker-stuffing case in Section~\ref{sec:scoring-bottleneck} and
-underscores that the rule-based scores are not a reliable stand-in for
-clinical judgement in either direction.
+These findings help interpret the tension flagged in Section~\ref{sec:qualcomp}
+on the automatic proxy. In the B1--B4 comparison, the automatic empathy
+difference is $0.161$, smaller than the corresponding structure and safety
+differences. On blinded clinician ratings of the same comparison, however,
+empathy improved by 1.68 points, similar in magnitude to the safety (1.77) and
+helpfulness (1.95) differences. We have not,
+however, formally tested whether these three effects are statistically equal
+to one another (e.g.\ via a system-by-dimension interaction test), so we
+describe them as similar in magnitude rather than as confirmed to be
+statistically indistinguishable.
+
+The two measurements agree in direction, both favouring B4, but not in the
+apparent magnitude of the empathy improvement. One plausible explanation is
+limited sensitivity of the marker-based proxy: the rule-based empathy score
+saturates once a handful of distinct markers are present
+(Eq.~\eqref{eq:empathy}) and penalises repetition, so it has limited dynamic
+range to register further differences once a response clears that low bar.
+Clinicians reading the full response may still perceive and reward differences
+in warmth, specificity, and emotional attunement that the marker count does
+not distinguish. This is a concrete instance of the proxy-validity limitation
+discussed in Section~\ref{sec:limitations}: in this B1-vs-B4 comparison, the
+proxy may under-credit an improvement perceived by clinician raters, whereas
+the marker-stuffing case in Section~\ref{sec:scoring-bottleneck} illustrates
+the opposite risk of over-crediting surface-level phrasing. 
 
 \begin{table}[H]
 \centering
@@ -1989,48 +2075,42 @@ categories in general.
 \subsubsection{Correcting for Pseudoreplication}
 \label{sec:pseudorep}
 
-The 150 annotator-item ratings per condition (5 annotators $\times$
-30 items) are not 150 independent observations, since ratings from the
-same annotator are correlated across items and ratings of the same item
-are correlated across annotators; a naive paired $t$-test on the raw
-annotator-item pairs would understate uncertainty. We instead report
-inference at the level of the 30 items -- the genuine unit of independent
-replication -- by averaging the 5 raters' scores per item and condition
-before computing paired differences. This yields the same mean item-level
-improvements as the raw annotator-item means in Table~\ref{tab:human_eval}
-($+1.68$ Empathy, $+1.77$ Safety, $+1.95$ Helpfulness), now with correctly
-calibrated 95\% confidence intervals, all well clear of zero, and remains
-highly significant under both paired $t$-tests and Wilcoxon signed-rank
-tests. A complementary linear-mixed-model analysis (crossed random effects
-for item and rater) yields numerically identical point estimates,
-confirming the result is not an artefact of the aggregation step. Full
-statistics for all three checks are in Appendix~\ref{app:humaneval}.
+The 150 annotator-item ratings per condition are not 150 independent
+observations, since ratings are correlated within annotator and within
+item. We therefore report inference at the level of the 30 items, the
+genuine unit of independent replication, by averaging the 5 raters' scores
+per item and condition before computing paired differences. This yields
+the same mean improvements as the raw annotator-item means in
+Table~\ref{tab:human_eval} with correctly calibrated uncertainty, and
+remains highly significant under paired $t$-tests, Wilcoxon signed-rank
+tests, and a crossed linear mixed model. Full statistics for all three
+checks are in Appendix~\ref{app:humaneval}.
 
 \subsubsection{Inter-Annotator Agreement}
 
-We compute Krippendorff's alpha using the \texttt{krippendorff} Python
-package (interval level of measurement) over the 60 blinded response units
-that annotators actually rated (30 items $\times$ 2 responses per item, with
-system identity withheld during annotation), arranged as a $5 \times 60$
-reliability matrix (5 raters $\times$ 60 units) with no missing ratings.
-This yields $\alpha = 0.56$ for Empathy, $\alpha = 0.58$ for Safety, and
-$\alpha = 0.61$ for Helpfulness, indicating moderate-to-substantial
-agreement by widely used interpretive conventions for this statistic. To
-characterise the uncertainty in these estimates, we additionally report
-95\% confidence intervals from a percentile bootstrap (2{,}000 resamples
-of the 60 units, with replacement): $[0.48, 0.62]$ for Empathy,
-$[0.50, 0.64]$ for Safety, and $[0.54, 0.66]$ for Helpfulness. Pairwise
-percentage agreement within one scale point is correspondingly high:
-86.0\% (Empathy), 87.2\% (Safety), and 85.2\% (Helpfulness).
+We computed Krippendorff's alpha using the \texttt{krippendorff} Python
+package with an interval difference function over the 60 blinded response
+units (30 items $\times$ 2 responses), yielding a $5 \times 60$ reliability
+matrix with no missing ratings. Alpha was $0.56$ for Empathy, $0.58$ for
+Safety, and $0.61$ for Helpfulness; percentile-bootstrap 95\% confidence
+intervals from 2{,}000 resamples were $[0.48, 0.62]$, $[0.50, 0.64]$, and
+$[0.54, 0.66]$, respectively.
 
-$\alpha$ is computed jointly over the full set of 60 blinded units
-the annotators actually saw (30 items $\times$ 2 responses per item, system
-identity withheld), which is the methodologically appropriate calculation
-for this rater-blinded design.
+Krippendorff suggested $\alpha \geq 0.800$ when coded data are to be
+considered reliably interpretable by other scholars, and $\alpha \geq 0.667$
+as a minimum for drawing only tentative conclusions; he also cautioned that
+these values are not universal cutoffs \cite{krippendorff2004reliability}.
+All point estimates and upper confidence bounds fall below $0.667$.
+Accordingly, we interpret the 1--5 ratings as directional comparative
+evidence, rather than as calibrated absolute quality measurements.
 
-Consistent with this substantial-agreement result, B4 was
-preferred over B1 in 146 of 150 (97.3\%) annotator-item judgements,
-with full five-annotator unanimity on 27 of 30 items.
+Pairwise agreement within one scale point was 86.0\% for Empathy, 87.2\%
+for Safety, and 85.2\% for Helpfulness, indicating that large rater
+divergences were uncommon. The preference results reported above provide
+separate evidence of a strongly directional B4-over-B1 preference; thus,
+we interpret the human evaluation as directional rather than as calibrated
+absolute quality measurement.
+
 
 \subsubsection{Validation of Automatic Metrics}
 
@@ -2111,56 +2191,55 @@ aggregate scores.
 \subsection{Scoring Function as Bottleneck}
 \label{sec:scoring-bottleneck}
 
-Our experiments demonstrate that the scoring and generation pipeline, not
-the GA algorithm, is the primary source of the discrepancies documented in
-this work. This finding replicates a
-well-known pattern in reinforcement learning and evolutionary optimization
-literature: reward hacking, where an agent achieves high reward through
-unintended behavioral shortcuts~\cite{amodei2016concrete}. In our context,
-several distinct failure modes were observed and corrected or documented:
+Our trace analyses indicate that the scoring and generation pipeline, rather
+than the GA search procedure itself, is the primary source of the
+discrepancies documented in this work. The first four failure modes
+illustrate reward hacking, in which an optimiser exploits an unintended
+shortcut in the stated objective rather than achieving the underlying
+intended behaviour~\cite{amodei2016concrete}. In our context, we observed
+and either corrected or documented five distinct failure modes.
 
-First, \textit{question-only structural collapse}: the initial structure score
-rewarded question presence without requiring grounding or action, leading the
-GA to generate responses consisting almost entirely of reflective questions.
-Corrected by replacing the continuous, unbounded reward with the discrete
-component-count lookup of Eq.~\eqref{eq:structure}, under which a
-question-only response satisfies exactly one component and is capped at
-$0.20$.
+First, \textit{question-only structural collapse}: the initial structure
+score rewarded question presence without requiring grounding or actionable
+guidance, leading the GA to generate responses consisting almost entirely of
+reflective questions. We corrected this by replacing the continuous,
+unbounded reward with the discrete component-count lookup in
+Eq.~\eqref{eq:structure}, under which a question-only response satisfies
+exactly one component and is capped at $0.20$.
 
 Second, \textit{empathy marker stuffing}: the initial empathy score rewarded
-marker count linearly, incentivizing responses that repeated validation phrases.
-Corrected by introducing the stuffing penalty when total marker hits exceed~3.
+marker count linearly, incentivising responses that repeated validation
+phrases. We corrected this by introducing a stuffing penalty when total
+marker hits exceed~3.
 
 Third, \textit{safety saturation}: the initial safety score saturated quickly,
-providing no gradient signal to distinguish between adequate and excellent
-crisis responses. Corrected by introducing smooth safety soft thresholds,
-though we note (Section~\ref{sec:automatic-scoring}) that the current soft
-threshold of 0.94 is itself unattainable for any mid-risk response and so
-does not fully resolve this issue for that risk category.
+providing little selection signal to distinguish adequate from stronger
+crisis responses. We introduced smooth safety soft thresholds, although the
+current threshold of $0.94$ is unattainable for any mid-risk response
+(Section~\ref{sec:automatic-scoring}) and therefore does not fully resolve
+this limitation for that risk category.
 
 Fourth, \textit{structure-marker coverage gap}: an incomplete keyword list
 undercounted genuinely inserted structural components for a subset of
-high-risk responses (Section~\ref{sec:structure-analysis}), which we
-corrected by expanding the marker lists.
+high-risk responses (Section~\ref{sec:structure-analysis}). We corrected
+this by expanding the marker lists.
 
 Fifth, \textit{response-part-budget truncation}: B1's minimal response-part
-budget silently drops escalation content appended late in the assembly
-order (Section~\ref{sec:interp-baseline}), which is a generator
-implementation defect rather than a scoring-function issue per se, but
-which we group here because, like the scoring issues above, it was only
-detected through tracing individual responses rather than through
-aggregate metrics.
+budget silently drops escalation content appended late in the assembly order
+(Section~\ref{sec:interp-baseline}). This is a generator implementation
+defect rather than a scoring-function issue per se, but we include it here
+because, like the preceding issues, it was detected through tracing
+individual responses rather than through aggregate metrics.
 
-The interpretability of the genome and the modular scoring design were
-essential enablers of diagnosing all five issues: because each score
-component and generation step corresponded to a specific behavioral
-dimension, failure modes could be diagnosed, attributed, and (where
-corrected) fixed individually. The first four are unified in the single
-frozen scoring pipeline used for the GA runs reported in this manuscript
-(Section~\ref{sec:structure-analysis}); the fifth (response-part-budget
-truncation) is a defect specific to the B1 baseline's construction rather
-than to the GA's own scoring or search process, and is tracked separately
-as a required baseline correction (Section~\ref{sec:limitations}).
+The interpretability of the genome and the modular scoring design enabled
+these diagnoses: each score component and generation step corresponded to a
+specific behavioural dimension, allowing failure modes to be attributed and,
+where possible, corrected individually. The first four issues concern the
+scoring or objective-design pipeline used the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}). The fifth is specific to B1's
+construction rather than to the GA's scoring or search process, and is
+tracked separately as a required baseline correction
+(Section~\ref{sec:limitations}).
+
 
 \subsection{Data Efficiency and Practical Deployment}
 \label{sec:data-efficiency}
@@ -2169,58 +2248,46 @@ The dataset-size experiments, using nested training subsets and a
 pre-specified TOST equivalence test (Section~\ref{sec:dataset-size}), show
 that mean validation fitness stays within a narrow 0.0068-point band
 across all tested sizes ($N=100$ to $N=2297$) with no monotonic trend.
-Formal statistical equivalence was not established at the tested
-margin ($\varepsilon=0.01$), most plausibly reflecting limited power at five seeds
-per condition rather than a genuine effect of dataset size
-(Section~\ref{sec:limitations}); the practical
-deployment recommendation below should accordingly be read as suggestive
-rather than as a formally confirmed data-efficiency guarantee. Mean runtime on our test hardware, from
-this same nested-subset run, increases from 15.9 seconds at $N=100$ to 47.0
-seconds at $N=300$ and 98.4 seconds at $N=600$, then rises sharply to 478.2
-seconds at $N=1200$ before dropping back to 205.6 seconds for the full
-dataset ($N=2297$); this non-monotonic pattern (discussed further below)
-means the practical guidance below is drawn from fitness stability rather
-than from a clean runtime-scaling argument. In any case, larger datasets provide no
-apparent performance benefit within the range tested.
+TOST establishes statistical equivalence to the full-dataset condition at
+the pre-specified margin ($\varepsilon=0.01$) for $N=100$, $N=300$, and
+$N=1200$; only $N=600$ falls marginally outside the margin, coinciding with
+the experiment's largest seed-level dispersion and not forming a monotonic
+pattern with subset size (Section~\ref{sec:dataset-size}). Mean runtime across the same nested-subset
+run ranges from 15.9\,s at $N=100$ to 478.2\,s at $N=1200$, without a
+monotonic trend (Figure~\ref{fig:runtime}); the guidance below therefore
+rests on fitness stability rather than on runtime scaling. Larger datasets
+provide no apparent performance benefit within the range tested.
 
 For resource-constrained settings such as community mental-health NGOs or
-university counselling services in Bangladesh, this data efficiency, if
-confirmed under a higher-powered replication, would be practically significant:
-the framework would require only $N=100$--$300$ de-identified
-support interactions to calibrate the GA, achievable within a short
-deployment pilot. The template-based generator also requires no GPU
+university counselling services in Bangladesh, these findings motivate
+testing whether useful calibration may be possible with datasets on the
+order of 100--300 de-identified support interactions, a scale achievable
+within a short deployment pilot. We frame this as a hypothesis for future
+testing rather than an established property. Equivalence at
+$\varepsilon=0.01$ was demonstrated for $N=100$ and $N=300$ under the frozen
+scorer, but the margin is roughly three times the evaluation noise standard
+deviation (Section~\ref{sec:automatic-scoring}), the prompts are synthetic
+reconstructions, and the validation split also served scorer development;
+the result therefore concerns fitness stability under this proxy scorer
+rather than demonstrated calibration quality on real interactions.
+The template-based generator also requires no GPU
 infrastructure or LLM API calls during inference, making it deployable on
 standard hardware. However, these practical advantages must be weighed against
 the limitations discussed below: the dataset must cover a sufficiently diverse
 range of risk levels and themes, and the scoring functions must be validated
 against local clinical norms before deployment.
 
-The computational complexity of the framework is determined primarily by three
-factors: population size $P$, number of generations $T$, and evaluation subset
-size $|\mathcal{I}|$. Since fitness evaluation dominates runtime (each
-evaluation requires generating and scoring $|\mathcal{I}|$ responses), the
-practical complexity per GA run can be approximated as
-$\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$. For the main experiment settings
-($P = 100$, $T = 20$, $|\mathcal{I}| = 600$), this corresponds to
-approximately 1,200,000 response generation and scoring operations per run.
-This algorithmic count is fixed once $|\mathcal{I}|$ saturates at its cap of
-600, and so should not continue to grow with dataset size once $N \geq 600$.
-Our measured wall-clock runtimes are not consistent with a clean plateau at
-$N \geq 600$: runtime rises sharply to 478.2 seconds at $N=1200$ before
-falling to 205.6 seconds at the full dataset size.
-We attribute this to system-level timing variability on
-non-dedicated consumer hardware, e.g.\ background processes, thermal
-throttling, and disk I/O contention across sequentially-run experiment
-blocks, rather than to any property of the algorithm itself; the
-$\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$ operation count, which is what
-the complexity argument above actually establishes, is unaffected by this
-wall-clock variability, though we acknowledge that a runtime pattern this
-variable across reruns limits how much weight the specific shape of
-Figure~\ref{fig:runtime} should be given; total wall-clock time, not its
-shape across $N$, is the more reliable takeaway. This contrasts favourably with conventional LLM
-training and fine-tuning approaches, which typically require substantial GPU
-infrastructure, consistent with reported large-scale training and fine-tuning
-costs for LLMs~\cite{when_llms_meet_ea2025}.
+Fitness evaluation dominates runtime, so cost per GA run is approximately
+$\mathcal{O}(P \cdot T \cdot |\mathcal{I}|)$ --- about 1.2M generate-and-score
+operations at $P=100$, $T=20$, $|\mathcal{I}|=600$. Because $|\mathcal{I}|$ is
+capped at 600, this count does not grow with dataset size beyond $N=600$.
+Measured wall-clock times do not show the corresponding plateau
+(Figure~\ref{fig:runtime}), which we attribute to timing variability on
+non-dedicated consumer hardware rather than to any algorithmic property; the
+total runtime (minutes, not GPU-hours) is the reliable takeaway, not its shape
+across $N$. This contrasts with fine-tuning or RLHF-based approaches, which
+typically require GPU infrastructure unavailable in the deployment settings
+this framework targets.
 
 \begin{figure}[H]
 \centering
@@ -2243,126 +2310,159 @@ into the stochastic mid-regime a naive equal-floor construction would
 otherwise produce.
 
 The baseline comparison results reveal important insights about the sources
-of performance gain. The near-zero structure score of B1 (0.017) confirms
-that unoptimised generation produces almost entirely unstructured responses,
-despite the underlying phrase banks containing grounding, action, and question
-components. This demonstrates that without genome-driven weight configuration,
-the generator defaults to minimal structural output. The negative fitness of
-B1 ($-0.227$) is primarily driven by its low safety score (0.472), which we
-trace to the response-part-budget truncation mechanism described in
+of performance gain. The near-zero structure score of B1 (0.013 in the common 400-prompt
+re-evaluation) shows that this minimal-weight configuration produces almost
+entirely unstructured responses, despite the underlying phrase banks
+containing grounding, action, and question components. Its negative fitness
+($-0.194$) is primarily driven by low safety (0.475), which we trace to the
+response-part-budget truncation mechanism described in
 Section~\ref{sec:part-budget} (B1's $m=256$ setting silently drops
-escalation content for high-risk prompts) rather than to any failure of
-the risk-aware escalation rule itself.
+escalation content for high-risk prompts) rather than to failure of the
+fixed risk-aware escalation rule itself.
 
-This is a genuine software-design defect in the generator, not merely an
-unoptimised parameter setting, since it silently removes mandatory crisis
-content regardless of the user's actual risk level. We constructed a
-bug-fixed variant, B1-fixed, using the same minimal genome weights
-($w_e=0.10$, $w_s=0.80$, $w_c=0.10$) but with \texttt{memory\_window}
-increased from 256 to 512 to disable the truncation defect while changing
-nothing else, isolating its effect from the GA's weight optimisation. This
-lets us decompose the B1-to-B4 gains reported throughout this manuscript
-into two components: the effect of removing truncation alone
-(B1$\to$B1-fixed) and the remaining effect of GA weight optimisation once
-truncation is no longer a confound (B1-fixed$\to$B4). The decomposition is
-strikingly clean along dimension lines. Of the total B1-to-B4 safety gain
-(0.433 points), 98.8\% (0.428 points) is recovered simply by disabling
-truncation (B1: 0.472 $\to$ B1-fixed: 0.900), with GA optimisation
-contributing almost nothing further (B1-fixed: 0.900 $\to$ B4: 0.905) --
-safety in this framework is overwhelmingly a truncation-defect story, not
-a genome-optimisation story. Structure shows the opposite pattern: across
-repeated evaluation runs, B1 and B1-fixed's structure scores are
-statistically indistinguishable (B1: mean $0.015$, SD $0.0008$; B1-fixed:
-mean $0.015$, SD $0.0007$; difference $0.18$ combined SDs, well within
-run-to-run stochastic noise), confirming that truncation was never
-meaningfully suppressing
-structure in the first place (since $w_c=0.10$ already places both
-conditions in the deterministic bottom, no-structure regime,
-Section~\ref{sec:progressive-structure}); essentially all of the
-B1-to-B4 structure gain is attributable to the GA
-discovering a high-$w_c$ genome, not to truncation. Overall fitness splits
-roughly evenly between the two effects (54\% from removing truncation,
-46\% from GA optimisation), reflecting the roughly equal fitness weight
-placed on safety and structure in the coefficients $A,B,C$
-(Table~\ref{tab:hyperparams-scoring}). Like the question-only-collapse and
-empathy-marker-stuffing failures (Appendix~\ref{app:failure},
-Section~\ref{sec:scoring-bottleneck}), this was found only by tracing
-individual responses, not by inspecting aggregate scores; the reported GA
-genome ($m^{\star}=512$) does not itself exhibit the defect, since any
-$m > 256$ disables the truncation cap. Future generator revisions should
-either filter internal tags before truncation, or reorder assembly so
-escalation content precedes empathy content and cannot be discarded
-regardless of $m$.
+This is a genuine generator-design defect rather than merely an unoptimised
+parameter setting, because it can silently remove required crisis content. To
+isolate its effect, we re-evaluated B1, B1-fixed, and B4 using one frozen
+generation and scoring path on the identical fixed 400-prompt validation
+subsample. B1-fixed differs from B1 only in \texttt{memory\_window} (512
+rather than 256).
 
-The gap between B2 and B4 is the more informative comparison for isolating
-the specific contribution of evolutionary search, since B2 does not share
-B1's truncation defect. The balanced seed genome already achieves high safety (0.903) but
-leaves substantial room for structural improvement (0.648 vs.\ 1.000). The GA
-discovers that a high structure weight ($w_c^{\star} \approx 0.77$ for the
-reported genome) consistently
-produces better outcomes than the balanced initialisation. We verified
+\begin{table}[H]
+  \centering
+  \caption{Controlled truncation diagnostic. B1, B1-fixed, and B4 were
+  re-evaluated using the same fixed generation and scoring path on the
+  identical fixed 400-prompt validation subsample. B1-fixed differs from B1
+  only in \texttt{memory\_window} (512 rather than 256). Values are from one
+  common re-evaluation run and are interpreted as a diagnostic pattern rather
+  than as noise-free effect estimates.}
+  \label{tab:truncation-diagnostic}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{Condition} & \textbf{Empathy} & \textbf{Safety} &
+    \textbf{Structure} & \textbf{Fitness} \\
+    \midrule
+    B1       & 0.273 & 0.475 & 0.013 & $-0.194$ \\
+    B1-fixed & 0.323 & 0.905 & 0.012 & 0.277 \\
+    B4       & 0.436 & 0.903 & 1.000 & 0.700 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:truncation-diagnostic} shows that removing truncation raises
+Safety from 0.475 to 0.905 and Fitness from $-0.194$ to 0.277, while leaving
+Structure essentially unchanged at approximately 0.012. Empathy also rises
+from 0.273 to 0.323, suggesting that truncation removes response content
+beyond escalation guidance. B4 achieves essentially the same Safety score
+(0.903), but increases Structure to 1.000, Empathy to 0.436, and Fitness to
+0.700.
+
+Thus, under this common evaluation, B1's safety deficit is consistent with
+being driven primarily by the response-part-budget truncation defect, whereas
+B4's structural advantage is not: it arises in the comparison between the
+non-truncating minimal-structure configuration and B4. The total fitness
+difference is descriptively divided between removal of truncation
+($+0.471$ from B1 to B1-fixed) and the remaining B1-fixed--B4 configuration
+difference ($+0.423$). Because these values come from one common
+re-evaluation run, they should be interpreted as a controlled diagnostic
+pattern rather than precise noise-free effect estimates. The B1-fixed--B4
+difference is not a pure estimate of the GA's causal contribution because
+the conditions differ in multiple genome parameters.
+
+The B2--B4 comparison is more informative for assessing the remaining
+configuration difference, because B2 does not share B1's truncation defect.
+The balanced seed genome already achieves high safety (0.903) but leaves
+substantial room for structural improvement (0.648 vs.\ 1.000). The reported
+B4 configuration uses a high structure weight
+($w_c^{\star} \approx 0.77$), which is associated with higher structural
+completeness than the balanced initialisation. We verified
 this directly with a 12-point grid search over $w_c$ alone (holding the
 $w_e{:}w_s$ ratio fixed at the reported genome's value, so that raw
 weights already sum to 1 and genome renormalisation is a no-op at every
 grid point): the results reproduce all three structure regimes exactly at
 the thresholds stated in Section~\ref{sec:progressive-structure} --
-structure is exactly 0.000 for $w_c < 0.25$, fluctuates stochastically
-around 0.64--0.67 for $0.25 \le w_c < 0.55$, and is exactly 1.000 for
-every grid point at $w_c \ge 0.55$, with no exceptions across twelve
-points. Fitness in the deterministic regime peaks at 0.700, close to but
-still below the GA's converged 0.703 (a 0.43\% relative gap). This
-confirms, rather than merely motivates, our claim that the structure-dominant
-result does not require evolutionary search to discover: a simple grid
-sweep over one gene finds a fitness plateau nearly matching the GA's own,
+structure is effectively zero for $w_c < 0.25$ (with small residual values
+possible because of response-assembly or scoring edge cases), fluctuates
+stochastically around 0.62--0.66 for $0.25 \le w_c < 0.55$, and reaches
+1.000 for every grid point at $w_c \ge 0.55$. Fitness within the deterministic regime is not flat: it rises
+from 0.652 at $w_c = 0.55$ to a peak of 0.710 at $w_c = 0.70$, then eases
+to 0.701 at the top of the range. The reported genome's
+$w_c^{\star} = 0.768$ therefore sits on the plateau but past its peak.
+This supports the interpretation that the structure-dominant result does not
+require evolutionary search specifically to discover: a twelve-point
+sweep over a single gene reaches the same fitness region as the GA's five
+converged runs,
 consistent with the generator's deterministic structure threshold
 ($w_c \ge 0.55$; Section~\ref{sec:progressive-structure}) doing most of
 the explanatory work.
 
-We additionally ran an equal-budget random search
-(2,000 draws over the full genome space -- $w_e, w_s, w_c, \theta_\mathrm{mid},
+We additionally ran five independent equal-budget random searches
+(2,000 draws each over the full genome space -- $w_e, w_s, w_c, \theta_\mathrm{mid},
 \theta_\mathrm{high}, \gamma, d, m$ -- matching the GA's implicit budget of
 $100 \times 20 = 2{,}000$ evaluations), sampled independently of the grid
-search above. The single best genome found across these 2,000 draws
-reaches fitness $0.7068$ ($w_e=0.103$, $w_s=0.213$, $w_c=0.683$,
-$\gamma=0.176$), fractionally above the GA's single reported main-run
-fitness of $0.703$. The fairer comparison is against the five
-significance-test seeds rather than that one main-run number
-(Table~\ref{tab:significance}: range $0.6949$--$0.7027$, mean $0.6993$,
-SD $0.0028$). Against that directly re-scored distribution, the random
-search's best result exceeds all five GA seeds and sits $2.72$ standard
-deviations above the GA mean -- a higher peak than this GA seed set
-reached, not a draw within its run-to-run band. This sharpens, rather than
-softens, the grid-search finding above: for this genome space and fitness
-design, the achievable fitness ceiling is a broad plateau that undirected
-search can not only reach but, in this single 2{,}000-draw run, slightly
-overshoot relative to the five archived GA genomes. However, that
-overshoot does not establish that undirected search reaches the plateau as
-\emph{reliably} as the GA does: the 2,000 draws underlying the random
-search have a mean fitness of only $0.334$ (SD $0.324$), so most random
-genomes are far from the plateau, and one lucky peak does not show that a
-second, differently-seeded run would land there again. We therefore
-support the claim that a comparable or slightly higher \emph{peak} is
-reachable by undirected search given enough draws, while the GA's five
-seeds remain tightly clustered just below that peak; repeated
-random-search runs (and the untested hill-climbing comparison) would be
-needed to settle the reliability question, and we list both as required
-future work (Section~\ref{sec:limitations}).
+search above. Scored on the same 400-prompt subsample used for selection,
+the five best genomes reach $0.7066$--$0.7110$ (mean $0.7085$, SD
+$0.0018$), above every GA seed in Table~\ref{tab:significance}. That
+comparison is not sound: each random-search maximum is the largest of
+2,000 noisy evaluations on the very set it is reported against, whereas
+the GA's genomes were selected on optimisation-set samples and never on
+this subsample. Taking a maximum over 2,000 draws from a measurement with
+SD $\approx 0.003$ (Section~\ref{sec:automatic-scoring}) inflates the
+reported value by several standard deviations independently of genome
+quality.
+
+Re-evaluating the same ten archived genomes does not reveal a resolvable
+difference. On the 575-prompt validation
+split, GA $0.7001 \pm 0.0025$ versus RS $0.7023 \pm 0.0056$; on the
+400-prompt subsample, GA $0.7040 \pm 0.0032$ versus RS $0.7020 \pm
+0.0024$. Neither set is fully clean for this comparison: the random
+searches selected on the 400-prompt subsample, which is contained in the
+575-prompt split, so both are re-evaluations rather than held-out tests
+for RS. A re-score on the full 2,872-prompt corpus (GA
+$0.7015 \pm 0.0019$ versus RS $0.6996 \pm 0.0013$) is post-selection for
+RS but overlaps the GA's optimisation set, so it is not neutral in the
+other direction. Across all three sets the difference is
+$\approx 0.002$ with an unstable sign, well inside the single-evaluation
+noise floor.
+
+We therefore conclude that no difference between the two
+methods is resolvable under the present evaluation design, not that the
+two are equivalent; a genuinely untouched test set, evaluated only after
+selection for both methods, would be required to settle the question.
+Every random-search genome loses $0.007$--$0.012$ relative to its
+archived selection-time score while the GA genomes do not, which is
+consistent with maximisation over noisy selection-time evaluations rather
+than demonstrating superior genome quality. This pattern is consistent with
+prior work on GA-based prompt optimisation, which reports selection bias
+when candidates selected on an evaluation set perform less well on a
+separate test set. In that study, a larger-population configuration also
+showed a larger test--validation gap, which the authors interpreted as a
+higher risk of overfitting; the authors further repeated reported
+evaluations because stochastic LLM outputs produced run-to-run score
+discrepancies~\cite{gaapo2025}. 
+
+
+The 2,000 draws underlying each random search have a mean
+fitness of only $\approx 0.33$ (SD $\approx 0.33$), so most random genomes
+are far from the plateau; what the five runs establish is that undirected
+search locates the plateau consistently at this budget, not that any
+individual draw is likely to.
+
+
 The finding also suggests that safety and empathy are more easily satisfied
 by the fixed escalation rule, safety penalty terms, and phrase bank design than by genome weight
 allocation, freeing the evolutionary search to concentrate on structural
 completeness.
 
-These observations partially answer RQ2: descriptively, the GA does not
-sacrifice safety for structure (B4 maintains safety parity with B2, 0.905
-vs.\ 0.903, while dramatically improving structure, a more than 58-fold
-gain over B1 and 0.352 points over B2). However, B2 and B4 differ in
-several respects simultaneously (genome weights, response-part budget,
-and $\gamma$), so this comparison does not isolate the causal
-contribution of progressive structure enforcement or of the safety
-penalty mechanism specifically from these other differences; ablations
-that vary each mechanism independently while holding the others fixed
-would be required to answer the causal-attribution part of RQ2 directly,
-and we list them in Section~\ref{sec:limitations}.
+These observations answer RQ2 descriptively: B4 maintains safety comparable
+to B2 while substantially improving structural completeness. The grid search
+identifies the generator's deterministic structure threshold as the mechanism
+most plausibly responsible for the structural gain. We do not, however,
+attribute that gain causally to progressive structure enforcement in
+isolation: B2 and B4 differ in several respects simultaneously (genome
+weights, response-part budget, and $\gamma$), and ablations that vary each
+mechanism independently while holding the others fixed would be required to
+separate their contributions, as we note in
+Section~\ref{sec:limitations}.
 
 \subsection{Did the GA Achieve Multi-Objective Balance?}
 \label{sec:balance-discussion}
@@ -2419,27 +2519,28 @@ contexts raises ethical concerns that extend beyond algorithmic performance.
 This subsection critically examines deployment risks specific to the
 proposed framework and the Bangladeshi context.
 
-\textbf{Proxy metric misalignment.} The empathy and safety scores used in
-this work are rule-based proxies derived from keyword detection, and safety
-in particular should be understood specifically as an escalation-calibration
-proxy: it verifies that at least one escalation-language marker is present
-for the appropriate risk label, not that the response's content is free of
-harmful advice, false reassurance, contradictory instructions, invalid
-resource references, coercive language, or misinformation, none of which
-the current scorer detects. Optimising against these proxies risks producing
-responses that are \textit{metrically safe} but not \textit{clinically safe};
-Section~\ref{sec:limitations} discusses the construct-validity evidence (and
-its limits) for these proxies in full. For deployment specifically, this
-means the proxies should not be treated as a substitute for clinical
-oversight: we recommend that any deployment include ongoing
+\textbf{Proxy metric misalignment.} The empathy and safety scores are
+keyword-based proxies with the construct-validity limits detailed in
+Section~\ref{sec:limitations}; optimising against them risks producing
+responses that are \textit{metrically safe} but not \textit{clinically
+safe}. For deployment specifically, this means the proxies are not a
+substitute for clinical oversight: any deployment should include ongoing
 monitoring by qualified mental health professionals who can identify cases
 where high-scoring responses are clinically inappropriate.
 
 \textbf{Over-reliance and substitution risk.} Systems like Riri are designed
-as supplementary tools, not replacements for professional care. However,
-in Bangladesh, where access to mental health professionals is severely
-limited~\cite{koly2024stakeholder}, users experiencing acute distress may
-interact with an AI assistant as their primary or only source of support.
+as supplementary tools, not replacements for professional care. However, the
+substitution risk is heightened by the scarcity of the alternative:
+Bangladesh has an estimated 1.17 mental health professionals per 100{,}000
+population and no mental health services at primary-care or community level.
+The 2019 National Mental Health Survey found that more than 90\% of adults
+and children with a mental health condition had not sought treatment, while
+participants in a qualitative stakeholder study reported delays of 6--13
+years before seeking care, associated with stigma and low mental health
+literacy~\cite{koly2024stakeholder}. Users experiencing acute distress may
+therefore treat an AI assistant as a primary, or potentially their only,
+source of immediate support.
+
 The high structural-component usage observed in our reported system (100\%
 insertion rate) means that many responses include a referral to
 professional help where appropriate, but if no such help is
@@ -2452,44 +2553,49 @@ technique, and low-risk prompts specifically do not receive crisis
 escalation content at all (Section~\ref{sec:risk-escalation}). Future work should design
 context-aware escalation that acknowledges service availability limitations.
 
-\textbf{Cultural and linguistic validity.} The empathy marker sets used
-in this work were constructed by the research team based on common
-Bangla/Banglish expressions observed in the dataset. They have not been
-validated by clinical psychologists or community mental health workers
-familiar with Bangladeshi emotional expression norms. Different communities
-within Bangladesh (urban versus rural, different socioeconomic
-backgrounds) may use different linguistic patterns to express distress or
-respond to support. A marker set that works well for the PHQ-4 screening
-population in the training dataset may not generalise to other populations.
-The cultural specificity of empathetic language is particularly important
-given that the reported genome's high structure weight ($w_c^{\star} = 0.768$)
-means structural components dominate the response, potentially at the cost
-of culturally-appropriate emotional tone.
+\textbf{Cultural and linguistic validity.} The empathy marker sets used in
+this work were constructed by the research team from common Bangla/Banglish
+expressions observed in the dataset. They have not been validated by clinical
+psychologists or community mental-health workers familiar with Bangladeshi
+norms of emotional expression. Different communities within Bangladesh
+(urban versus rural and across socioeconomic backgrounds) may use different
+linguistic patterns to express distress; consequently, a marker set suited to
+the PHQ-4 screening population may not generalise. This is a documented
+failure mode rather than a hypothetical one: dominant sentiment-analysis
+models may misinterpret emotional restraint common in collectivist cultures
+as disengagement or low emotional involvement~\cite{ijca2025emotion}. The
+screening instrument underlying our risk labels is on firmer ground: the
+Bangla PHQ-4 has been psychometrically validated in rural and urban
+Bangladeshi community samples~\cite{banglaphq4_2026}. That validation was
+conducted in adult community samples and evaluated a screening cutoff, rather
+than the four-band severity stratification applied here to a self-referring
+digital-support population. This matters particularly because the reported
+genome's high structure weight ($w_c^{\star}=0.768$) means structural
+components dominate the response, potentially at the cost of
+culturally appropriate emotional tone.
 
 \textbf{Reward hacking in deployment.} The failure modes documented in this
 work (question-only collapse, empathy marker stuffing, the structure-marker
 coverage gap, and the response-part-budget truncation defect) were
-discovered
-through offline trace analysis before deployment. In a live deployment,
-new failure modes may emerge from interactions with real users whose
-language patterns differ from the training data. If the system is
+discovered through offline trace analysis before deployment. In a live
+deployment, new failure modes may emerge from interactions with real users
+whose language patterns differ from the training data. If the system is
 periodically re-optimised using interaction logs, the GA may discover new
 shortcuts that exploit patterns in real user behaviour. Robust deployment
-requires continuous trace monitoring, periodic human review of response
-samples, and clear mechanisms for clinical staff to flag and correct
-problematic response patterns. The interpretable genome design facilitates
-this: because generator behaviour is controlled by a small set of named
-parameters, targeted corrections can be made without rerunning the full
-optimisation pipeline.
+would require continuous trace monitoring, periodic human review of response
+samples, and clear mechanisms for clinical or designated safety reviewers to
+flag and correct problematic response patterns. The interpretable genome
+design facilitates this: because generator behaviour is controlled by a small
+set of named parameters, targeted corrections can be made without rerunning
+the full optimisation pipeline.
 
 These considerations do not invalidate the proposed framework but rather
-define the conditions under which it can be responsibly deployed. The
-framework provides a technically informative, though not yet
-fully-validated, exploration of data-efficient mental-health conversational
-optimisation. Responsible deployment requires
-it to be embedded within a broader governance structure that includes
-clinical oversight, user safety monitoring, and culturally-informed
-evaluation protocols~\cite{apa2024_advisory,harvard2024_safety}.
+define the conditions under which it could be responsibly deployed. The
+framework provides a technically informative, though not yet fully validated,
+exploration of low-resource mental-health conversational optimisation.
+Responsible deployment would require a broader governance structure including
+clinical oversight, ongoing human review of safety-relevant interactions, and
+culturally informed evaluation protocols~\cite{apa2025_advisory,harvard2024_safety,ijca2025emotion}.
 
 \textbf{Data provenance and risk-category validity.} The high-risk category
 in our dataset is populated in part by PHQ-4 scores of 9--12 alone,
@@ -2517,9 +2623,11 @@ grounds to set the question aside. We recommend that future versions of
 this dataset either implement stronger age verification at registration,
 or apply an explicit data-governance rule that filters or separately
 reviews records with a self-reported age below 18 before they are used
-for research, and we list resolving this ambiguity as a required
-correction prior to further dissemination of this dataset or findings
-derived from it.
+for research. We treat resolving this ambiguity as a prerequisite for any
+further research use of this dataset, including any onward sharing or
+reuse beyond the analyses reported here, and we report the present results
+together with the sensitivity analysis below so that readers can assess
+the extent to which they depend on the records in question.
 
 To characterise how much this ambiguity affects the reported results
 specifically, we re-evaluated the already-trained genomes for B1,
@@ -2536,12 +2644,12 @@ be included in the study at all.
 \begin{table}[H]
 \centering
 \caption{Sensitivity of reported fitness to excluding the 88 self-reported
-minor (age 13--17) records from the validation set. ``Diff/SD'' expresses
-each difference relative to that condition's own known run-to-run
-evaluation noise, where available (Table~\ref{tab:significance} for B1,
-B2, B4); B1-fixed has no established repeated-evaluation SD for
-comparison. Differences exceeding roughly 1.5$\times$ the known SD are
-flagged as exceeding normal evaluation noise.}
+minor-age records from the 575-prompt validation set. ``Diff/SD'' is the
+absolute difference between full and minor-excluded evaluations, computed
+from unrounded fitness values and divided by the condition's known run-to-run
+evaluation SD. B1-fixed has no repeated-evaluation SD available. Differences
+exceeding approximately $1.5\times$ the known SD are flagged as exceeding
+normal evaluation noise.}
 \label{tab:minors-sensitivity}
 \renewcommand{\arraystretch}{1.25}
 \begin{tabularx}{\textwidth}{
@@ -2553,7 +2661,7 @@ flagged as exceeding normal evaluation noise.}
 }
 \toprule
 \textbf{Condition} & \textbf{Full validation ($n{=}575$)} &
-\textbf{Minors excluded ($n{=}487$)} & \textbf{Diff/SD} & \textbf{Assessment} \\
+\textbf{Minors excluded ($n{=}487$)} & \textbf{Absolute difference / run-to-run SD} & \textbf{Assessment} \\
 \midrule
 B1        & $-0.216$ & $-0.223$ & 0.40$\times$ & within normal noise \\
 B1-fixed  & $0.284$  & $0.287$  & n/a          & no comparison SD available \\
@@ -2575,283 +2683,125 @@ this question, while explicitly flagging that not every reported
 condition is equally robust, and we do not treat this sensitivity check
 as a substitute for resolving the underlying governance question.
 
+
 \subsection{Limitations and Future Work}
 \label{sec:limitations}
 
-This section summarises the boundaries of the present study: methodological
-choices with known tradeoffs, measurement limitations, and aspects of the
-experimental design that constrain how the results should be interpreted.
+The following limitations define the scope of the present findings. Detailed
+diagnostic evidence is reported in the referenced sections; here we summarise
+the implications for interpretation and the corresponding priorities for
+future work.
 
-\begin{itemize}
-  \item \textbf{Prompts are synthetic reconstructions, not verbatim user
-        messages.} As detailed in Section~\ref{sec:methods}, each $x_i$ is
-        produced by \texttt{build\_realistic\_user\_prompt()} from
-        structured, analyst-labeled theme fields, applied uniformly across
-        B1--B8. This limits the paper's ecological-validity and
-        multilingual-authenticity claims: the Bangla/Banglish
-        code-switching in $x_i$ reflects programmatic phrase-bank
-        selection rather than organically observed code-switching. Because
-        higher-intensity language is constructed into prompts already
-        labeled high-risk, the distress score $h(x_i)$ used in mid-risk
-        escalation (Section~\ref{sec:risk-escalation}) is not fully
-        independent of the risk-label construction process. The findings
-        in this paper regarding risk detection and escalation calibration
-        should therefore be understood as characterising behaviour on this
-        synthetic corpus, not yet as validated on genuine, unedited user
-        messages.
+\noindent\textbf{Data, labels, and governance.}
+The prompts evaluated here are synthetic reconstructions from structured theme
+fields rather than verbatim user messages. Consequently, the findings describe
+behaviour on this synthetic corpus and do not establish ecological validity for
+authentic Bangla, Banglish, or code-switched mental-health conversations. The
+low-, mid-, and high-risk categories combine PHQ-4 severity with a keyword
+override and are not validated suicide-risk classifications. In addition, age
+is self-reported and a subset of records is labelled 13--17 years; resolving
+whether these records reflect genuine underage users or age-field error, and
+applying an explicit governance decision, is required before further research
+use of the dataset (Section~\ref{sec:ethics}).
 
-  \item \textbf{The ``high-risk'' label reflects PHQ-4 severity or an
-        explicit self-harm keyword match, not independently validated
-        suicide risk.} PHQ-4 has no suicide-risk item
-        (Section~\ref{sec:risk-labels}), so this category may include
-        severe depression/anxiety presentations without confirmed
-        suicidality alongside those with it, and both receive the same
-        crisis-escalation treatment. The risk categories in this paper are
-        best understood as support-intensity tiers derived from a
-        depression/anxiety screening instrument plus a keyword override,
-        rather than as a validated suicide-risk classification.
+\noindent\textbf{Evaluation and causal attribution.}
+The validation split also contributed to scorer development, so it should be
+understood as a combined development--validation set rather than an untouched
+final test set. B1 contains a response-part-budget truncation defect, making it
+primarily a failure-mode reference rather than a clean unoptimised baseline.
+Although B2 provides the most informative fixed non-GA reference, B2 and B4
+differ in multiple configuration settings; their comparison therefore does not
+isolate the causal contribution of evolutionary search. The B1-fixed
+truncation diagnostic is based on a single re-evaluation and should be read as
+a diagnostic pattern rather than as a precise causal-effect estimate.
+Likewise, no evaluation set is untouched by both the GA and equal-budget
+random-search selection procedures, so the present study cannot resolve
+whether either method has a general advantage. B5 was evaluated in one run only
+and requires repeated MSGA-initialised runs for a reliable comparison.
+Finally, the nested dataset-size and population-size experiments establish
+equivalence at the pre-specified TOST margin for all tested population sizes
+and for three of the four tested dataset sizes, but on five seeds per
+condition and with a margin of $\varepsilon=0.01$ that is roughly three times
+the single-evaluation noise standard deviation; the result bounds the size of
+any effect rather than showing that the conditions are identical.
 
-  \item \textbf{All GA runs and baseline comparisons in this manuscript
-        share one consistent scoring pipeline.} The main B1--B5 comparison
-        (Table~\ref{tab:baseline-optimized}), the five-seed significance
-        analysis (Table~\ref{tab:significance}), the dataset-size and
-        population-size sensitivity analyses, the convergence and
-        diversity figures, and the B6--B8 pre-trained-LLM comparison were
-        all produced under the same scorer, with
-        per-seed genomes archived (Appendix~\ref{app:genomes}). B6--B8
-        were originally scored under an earlier version of the structure
-        marker list; we directly rescored their already-generated
-        responses under the current, corrected marker list and confirmed
-        all three models' empathy, safety, and structure scores are
-        unchanged, since none of them insert genuine grounding, action, or
-        question content for the corrected marker list to newly detect
-        (sentinel tokens or repetitive, non-conversational output;
-        Section~\ref{sec:llm-baselines}). The
-        corrected structure-marker list itself was derived by inspecting
-        responses on the same held-out validation set used for reporting,
-        rather than a separate development set. B5 (MSGA)
-        reflects a single run rather than the five independent seeds used
-        for B4, and its additional 500 preliminary genome evaluations are
-        not reflected in any evaluation-budget comparison.
+\noindent\textbf{Measurement and human evaluation.}
+Generation is stochastic, giving repeated evaluations of the same genome an
+observed fitness standard deviation of approximately 0.003. Differences near
+this scale, including the B4--B5 and GA--random-search differences, are not
+resolvable under the present evaluation design. The dataset-size and
+population-size differences are of this same order, and each condition
+contributes only five independent GA seeds; the equivalence tests reported
+for them therefore bound the size of any difference at the pre-specified
+$\varepsilon=0.01$ margin, which is roughly three times that noise standard
+deviation, rather than resolving the individual differences or showing the
+conditions to be identical. The baseline significance tests use only five GA seeds: their
+one-sided Wilcoxon result establishes directional consistency across those
+runs, but does not provide a precise estimate of population-level uncertainty.
+Reported population ``diversity'' is fitness dispersion rather than direct
+genome-space diversity. The automatic empathy and safety scores are
+keyword-based proxies that cannot fully capture contextual appropriateness,
+emotional attunement, sarcasm, negation, or culturally specific expression.
+The clinician evaluation compares B1 with B4 rather than B2 with B4; its
+raters also contributed to the earlier risk-label design, and inter-rater
+agreement supports directional preference rather than calibrated absolute
+quality claims. Future work should use an independent panel, an anchored rating
+rubric, and a B2--B4 comparison.
 
-  \item \textbf{B1-fixed isolates the truncation-defect effect from GA
-        weight optimisation for the quantitative comparison only.} The
-        decomposition in Section~\ref{sec:interp-baseline} uses a
-        single-point evaluation of B1-fixed, consistent with how B3, B4,
-        and B5 are also reported, and evaluates B1-fixed on the full
-        $N=2{,}872$ dataset rather than the 575-prompt validation set used
-        for B1--B5 (Table~\ref{tab:baseline-optimized}), so the
-        decomposition compares scores computed on different prompt
-        populations. The qualitative comparison
-        (Section~\ref{sec:qualcomp}) and the human evaluation
-        (Section~\ref{sec:human_eval}) are both built on B1 in its
-        original (truncated) form rather than B1-fixed.
-
-  \item \textbf{The human evaluation compares B1 and B4 only, and its
-        raters are not fully independent of the study.} B2 -- the
-        competently hand-configured, non-defective baseline that isolates
-        the GA's specific contribution most directly -- is not included in
-        the human evaluation. The five participating psychologists also
-        contributed to the risk-labeling design
-        (Section~\ref{sec:risk-labels}) earlier in the project, so they
-        are not fully independent of the system under evaluation in the
-        way an external panel recruited solely for evaluation would be.
-        The rating design is rater-blinded (annotators did not know which
-        system produced each response) rather than double-blind (the
-        researchers who prepared and analysed the response pairs were not
-        themselves blinded to system identity).
-
-  \item \textbf{RQ2's causal-attribution question is not isolated by the
-        comparisons reported here.} The B2-vs-B4 comparison
-        conflates several genome dimensions that differ simultaneously
-        between B2 and B4 (weights, response-part budget, and $\gamma$),
-        so it does not attribute the observed structure/safety gains
-        cleanly to progressive structure enforcement or to the safety
-        penalty mechanism specifically. Ablations that vary each
-        mechanism independently while holding the others fixed would be
-        required to answer this part of RQ2 directly.
-
-  \item \textbf{RQ4 (does the GA reach high-fitness regions more reliably
-        than equal-budget undirected search) is answered only partially.}
-        A 12-point grid search over $w_c$ alone and a
-        2,000-draw equal-budget random search over the full genome
-        (Section~\ref{sec:interp-baseline}) both confirm that the
-        generator's deterministic structure threshold accounts for the
-        structure-dominant finding without requiring evolutionary search:
-        the random search's best genome (fitness $0.7068$) exceeds all five
-        GA significance-test seeds and lies $2.72$~SD above their mean
-        (Table~\ref{tab:significance}), so undirected search found a
-        higher peak than this GA seed set in the single equal-budget run
-        we conducted. We do not read the GA's tighter seed cluster as
-        evidence of a higher ceiling, only of more consistent landings
-        just below that random-search peak. This comparison is still based
-        on a single random-search run, however, whereas the GA reliability
-        claim rests on five independent runs; establishing whether
-        undirected search reaches this peak as \emph{reliably} as the GA
-        lands near it (rather than only sometimes, given the 2,000 draws'
-        own high variance, mean $0.334$, SD $0.324$) would require
-        repeated random-search runs at the same budget, which we did not
-        conduct. The corresponding hill-climbing comparison also
-        remains untested.
-
-  \item \textbf{RQ3's answer is descriptive rather than a formally
-        established equivalence.} The nested-subset
-        experiments (Section~\ref{sec:dataset-size}) use a pre-specified TOST
-        equivalence margin ($\varepsilon=0.01$), which no comparison
-        reached, despite a narrow observed spread (a 0.0068-point band
-        across dataset sizes, and a maximum difference of 0.0025 from the
-        $P=100$ reference for population size). This most
-        plausibly reflects limited statistical power at five seeds per
-        condition rather than a genuine practically important effect of
-        dataset or population size, but the study does not have direct
-        evidence to distinguish the two explanations with confidence.
-
-  \item \textbf{Reported ``population diversity'' is fitness dispersion, a
-        proxy for genome-space diversity rather than a direct measure of
-        it.} The variance plotted in Figure~\ref{fig:diversity-curve} can
-        diverge from genuine genotype diversity in the presence of
-        inactive genes, threshold effects, and behaviourally equivalent
-        categorical values.
-
-  \item \textbf{Construct validity of rule-based proxy metrics.} The
-        empathy and safety metrics are keyword-based, which is a genuine
-        validity limitation rather than only a favourable design tradeoff.
-        Keyword detection cannot distinguish genuine emotional attunement
-        from surface phrasing that happens to match a marker list, cannot
-        detect sarcasm, negation, or context-dependent meaning, and can be
-        gamed by repetition or marker-stuffing, as documented in
-        Section~\ref{sec:scoring-bottleneck}. The safety score specifically
-        should be understood as verifying escalation-marker presence
-        calibrated to risk label, not as verifying the absence of harmful
-        advice, false reassurance, contradictory instructions, invalid
-        resources, coercive language, or misinformation
-        (Section~\ref{sec:ethics}). The human evaluation
-        (Section~\ref{sec:human_eval}) provides partial, directional
-        support for these proxies on the specific B1-vs-B4 comparison
-        tested, but does not establish that proxy scores track clinical
-        judgement in absolute terms or across the full space of genomes
-        the GA can reach. Because the GA optimises directly against these
-        proxies, any systematic proxy--clinician divergence risks being
-        amplified rather than corrected by evolutionary search.
-
-  \item \textbf{The mid-risk safety scoring rule has a structural
-        asymmetry.} The best attainable mid-risk safety score (0.85, with
-        escalation present) sits below the fitness function's soft
-        threshold (0.94), so every mid-risk response incurs the associated
-        penalty regardless of its quality. This is an asymmetry in the
-        current reward design across risk categories, not a finding that
-        mid-risk responses are themselves less safe.
-
-  \item \textbf{The evolved distress-gating parameter's practical
-        significance is not established.} The direct distress-gating
-        penalty term (Section~\ref{sec:risk-escalation}) cannot
-        distinguish between different values of $\gamma$ in a correctly
-        functioning generator, since escalation is already guaranteed in
-        the regime where the penalty applies, regardless of $\gamma$.
-        $\gamma^{\star}$'s small evolved magnitude ($\approx 0.059$)
-        should therefore not be read as confirmed evidence that the fixed
-        distress threshold already captures most useful escalation signal
-        for this dataset, since the penalty term that might have produced
-        such evidence does not functionally distinguish $\gamma$ values in
-        the relevant range.
-
-  \item \textbf{The framework addresses single-turn interactions only.}
-        All experiments evaluate single-turn prompt-response pairs. Real
-        mental-health conversations are multi-turn, where risk levels may
-        escalate across turns and emotional context accumulates; recent
-        work argues that dialogue-level, rather than single-turn, safety
-        evaluation is the more appropriate unit for mental-health
-        chatbots, since risk-relevant cues accumulate across a
-        conversation~\cite{journey2026}, and that concerning chatbot
-        behaviour can escalate across turns in ways that vary by user
-        vulnerability profile~\cite{vail2026}. A preliminary exploratory
-        analysis of the evolved $\gamma$ parameter across 36{,}113 real
-        mid-risk conversation turns found that $\gamma$'s practical effect
-        on escalation decisions is a step function rather than a smooth
-        relationship, with a saturation threshold at approximately
-        $\gamma \approx 0.086$ (2.41\% of turns flip status at this
-        boundary) that coincides precisely with where the effective
-        relaxed threshold crosses the dominant distress-score cluster in
-        that dataset -- the same fitness-neutral-drift phenomenon
-        documented for $\theta_\mathrm{mid}$/$\theta_\mathrm{high}$ in
-        Appendix~\ref{app:genomes}, here with a specific quantitative
-        explanation. This 36{,}113-turn conversation dataset is a separate
-        data extraction, pulled later than and independent of the
-        2{,}872-prompt PHQ-4-derived corpus used for every other result in
-        this manuscript; it was used solely for this one narrow $\gamma$
-        analysis and was not used anywhere in the GA search, training, or
-        evaluation reported elsewhere. It was collected and de-identified
-        through the same consent and de-identification pipeline as the
-        main corpus (Section~\ref{sec:methods}), but it is not itself
-        formally described in this manuscript as a distinct secondary
-        dataset, with its own sample accounting, extraction date, and
-        preprocessing pipeline. We therefore present this specific
-        finding as a preliminary, scoped observation about $\gamma$'s
-        behaviour rather than as a validated multi-turn result, and
-        recommend formally documenting this dataset's provenance
-        separately before reporting it at full length in future work.
-        The
-        integer field \texttt{memory\_window} was originally named with
-        multi-turn context retention in mind, but in the present
-        single-turn system it only implements the response-part budget
-        $m$ (Section~\ref{sec:part-budget}); a true conversational memory
-        window is a distinct, unimplemented capability.
-
-  \item \textbf{Limited cultural validation.} The Bangla/Banglish empathy
-        marker sets were constructed by the research team and reflect
-        common expressions observed in this dataset; they have not been
-        separately validated by community mental health workers in
-        Bangladesh, and Bangla emotional-expression norms are only
-        partially captured as a result.
-
-  \item \textbf{Limited seed count for baseline significance testing.}
-        The Wilcoxon signed-rank comparisons (Section~\ref{sec:significance})
-        use five independent GA runs, the smallest sample for which a
-        one-sided Wilcoxon test can reject at $\alpha=0.05$; at this
-        sample size, $p=0.03125$ is attained whenever all five paired
-        differences agree in sign, so the $p$-value itself is
-        uninformative beyond confirming directional consistency. Effect
-        sizes and bootstrap confidence intervals reported alongside the
-        $p$-values (Table~\ref{tab:significance}) are large and well clear
-        of zero on the directly observed data, but a larger number of
-        independent seeds would give a more conventional significance test
-        and a tighter estimate of run-to-run variability.
-
-  \item \textbf{No personalisation.} The optimised genome is a single
-        policy applied uniformly across all users. Individual differences
-        in preference for directive versus reflective responses, or in
-        comfort with Bangla versus English, are not modelled.
-\end{itemize}
+\noindent\textbf{Scope and deployment.}
+The framework evaluates single-turn, template-based responses rather than
+multi-turn dialogue. It therefore cannot assess longer-horizon risks such as
+emotional dependence, reassurance loops, belief reinforcement, or changes in
+risk across a conversation. The current mid-risk safety rule applies a penalty
+even when its highest attainable safety score is reached, and some genome genes
+are inactive or only weakly identified by the present objective. The reported
+policy is also not personalised: one fixed genome is applied to all users,
+without modelling individual language preferences or preferences for directive
+versus reflective support. Future work should evaluate authentic conversational
+data under appropriate governance, use independent test sets and repeated
+seeded generations, validate the metrics with local clinical and community
+stakeholders, and extend the objective to multi-turn, clinician-audited safety
+outcomes.
 
 Natural extensions of this work include:
 \begin{enumerate}
-  \item Multi-turn sequential genome
-policies, where the GA optimises escalation and structure decisions
-conditioned on full conversation history, motivated both by the clinical
-literature on dialogue-level safety evaluation~\cite{journey2026,vail2026}
-and by the preliminary $\gamma$-saturation finding above.
-  \item A more
-robust generator design that decouples response-length truncation from
-internal template/safety tags, or reorders assembly so escalation content
-cannot be discarded regardless of the response-part budget, closing the
-class of defect that B1 illustrates by construction rather than only by
-comparison against B1-fixed.
-  \item Multi-objective evolutionary algorithms
-that maintain explicit Pareto fronts over empathy, safety, and structure,
-making trade-offs visible to a clinician rather than collapsing them into
-a single scalar fitness.
-  \item Learned empathy and safety evaluators trained
-on clinician-validated data, replacing the current rule-based proxy
-scores.
-  \item Human preference alignment via direct annotator feedback
-integrated into the fitness function.
-  \item An independent
-clinician-in-the-loop evaluation, including B2 and a non-truncating B1
-variant alongside B4, with mental health professionals rating response
-quality in a live deployment setting.
-  \item Multilingual expansion
-beyond Bangla/Banglish/English to other South Asian languages where
-mental-health support infrastructure is similarly limited.
+  \item Multi-turn sequential genome policies, in which the GA optimises
+  escalation and structural decisions conditioned on conversation history.
+  This direction is motivated by work arguing that mental-health chatbot safety
+  should be evaluated at the dialogue level and that risk-relevant effects can
+  accumulate across extended interactions~\cite{journey2026}. It may also
+  provide selection pressure on $\gamma$, which the present single-turn
+  objective cannot identify (Appendix~\ref{app:distress-penalty}).
+
+  \item A more robust generator design that separates response-length
+  truncation from internal template and safety-control tokens, or reorders
+  response assembly so that escalation content is inserted before
+  lower-priority content and cannot be discarded by the response-part budget.
+  This would prevent the class of defect illustrated by B1 by construction,
+  rather than merely diagnosing it through comparison with B1-fixed.
+
+  \item Multi-objective evolutionary algorithms that maintain explicit Pareto
+  fronts over empathy, safety, and structure, making trade-offs visible to a
+  clinician rather than collapsing them into a single scalar fitness.
+
+  \item Learned empathy and safety evaluators trained and validated on
+  independently clinician-annotated data, replacing or complementing the
+  current rule-based proxy scores.
+
+  \item Human-feedback-informed evaluation, in which independently collected
+  clinician and user ratings are used to validate or refine the fitness
+  function, with safety-critical criteria retained separately rather than
+  reduced to a single preference score.
+
+  \item An independent clinician-in-the-loop evaluation, including B2 and a
+  non-truncating B1 variant alongside B4, with mental-health professionals
+  rating blinded response pairs under a controlled evaluation protocol. Any
+  subsequent live deployment study would require separate clinical oversight,
+  governance, and safety monitoring.
+
+  \item Multilingual expansion beyond Bangla/Banglish/English to other South
+  Asian languages where mental-health support infrastructure is similarly
+  limited.
 \end{enumerate}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2863,36 +2813,31 @@ conversational agent operating in Bangla, Banglish, and English. By evolving an
 interpretable genome controlling a structured generator, the system achieves
 substantial improvements in response structure and overall fitness, maintaining
 an already-strong escalation-calibration safety proxy and modestly increasing empathy relative
-to a fixed, hand-designed baseline genome. These
-headline results (Table~\ref{tab:baseline-optimized}) and the accompanying
-significance analysis (Table~\ref{tab:significance}) come from a single,
-consistent scoring pipeline covering the main B1--B5 comparison, all five
-significance-test runs, the dataset-size and population-size sensitivity
-analyses, the convergence and diversity figures, and the pre-trained-LLM
-comparison (B6--B8), with per-seed genomes
-archived throughout; B6--B8's responses were directly rescored under the
-current structure marker list and confirmed unchanged
-(Section~\ref{sec:llm-baselines}).
+to a fixed, hand-designed baseline genome. All results come from a single,
+consistent scoring pipeline with per-seed genomes archived throughout.
 Decomposing the largest baseline gap (B1 to B4) shows it splits between a
 software-level response-truncation effect and genuine genome optimisation
 in different proportions for safety and structure respectively
-(Section~\ref{sec:interp-baseline}); a grid search and an equal-budget
-random search over the genome space both reach comparable fitness without
-evolutionary search, indicating the structure-dominant result reflects a
+(Section~\ref{sec:interp-baseline}); a grid search and five equal-budget
+random searches over the genome space reach the same fitness region as the
+GA, indicating the structure-dominant result reflects a
 broadly reachable fitness plateau for this genome space and fitness
 design rather than something evolutionary search was specifically
-required to find (Section~\ref{sec:interp-baseline}). Dataset-size and population-size
-sensitivity are best described qualitatively as a tight, non-monotonic
-range rather than as formally established statistical equivalence
+required to find (Section~\ref{sec:interp-baseline}). Final fitness is statistically equivalent to the full-dataset condition for
+the tested nested subsets $N=100$, $N=300$, and $N=1200$, but not for
+$N=600$, at the pre-specified equivalence margin of $\pm0.01$ fitness points.
+Final fitness is statistically equivalent across all tested population sizes
+from $P=30$ to $P=400$ relative to $P=100$
 (Sections~\ref{sec:dataset-size} and~\ref{sec:population-size}). The
 study illustrates how
 evolutionary algorithms can optimize non-differentiable, value-laden objectives,
 and highlights the role of scoring design, trace-based evaluation, and
 careful baseline construction in reporting AI systems for mental-health
-support. The framework's data efficiency, interpretability, and deployment
-feasibility on standard hardware make it a promising foundation for
-resource-constrained mental-health applications in multilingual settings,
-within the scope and limitations detailed in Section~\ref{sec:limitations}.
+support. The framework's observed low-data performance stability, its
+interpretability, and its deployment feasibility on standard hardware make
+it a promising foundation for resource-constrained mental-health
+applications in multilingual settings, within the scope and limitations
+detailed in Section~\ref{sec:limitations}.
 
 
 \authorcontributions{Conceptualization, J.R. and M.M.J.K.;
@@ -2914,22 +2859,33 @@ knowingly collect or use data from users under 18 for research. Users provided
 informed consent within the application at the point of data
 collection, acknowledging that anonymised interaction data may be
 used for research purposes. No personally identifiable information
-was retained. As the data were collected in the course of standard
-service delivery and fully anonymised prior to research use, formal
-ethical review was not required under applicable institutional
-guidelines. The study was conducted in accordance with the
+was retained, and the prompts analysed in this study are synthetic
+reconstructions from structured summary fields rather than verbatim
+user text (Section~\ref{sec:methods}). Research use of the
+de-identified data was authorised by the data controller's internal
+research team, which determined that secondary analysis of fully
+anonymised service-delivery data did not require external ethics
+review. We note explicitly that this determination was made
+internally by the organisation that operates the application, and
+that the corresponding author is affiliated with that organisation
+(see Conflicts of Interest); it was not issued by an independent
+institutional review board or ethics committee. The study was
+conducted in accordance with the
 Declaration of Helsinki. As noted in Section~\ref{sec:ethics}, age at
 registration is self-reported and not independently verified, and a
 subset of records (14.7\%) carry a self-reported age of 13--17; we
 cannot determine from the data alone whether this reflects genuine
-underage users or self-report error, and we list resolving this
+underage users or self-report error. We treat resolving this
 ambiguity, via stronger age verification or explicit filtering of
-under-18 self-reports prior to research use, as a required
-correction.}
+under-18 self-reports, as a prerequisite for any further research use
+of this dataset, and we report a sensitivity analysis
+(Section~\ref{sec:ethics}) showing that the headline result reported here
+is not materially affected by excluding the records concerned.}
 
 \informedconsent{Informed consent was obtained from all
 participants via the mental-health support application at the
-point of data collection. Users acknowledged that anonymised
+point of data collection. Users were informed that their interaction
+data would be anonymised, and acknowledged that anonymised
 interaction data may be used for research purposes. No personally
 identifiable information was retained and no individual
 participants can be identified from the published data.}
@@ -3110,12 +3066,13 @@ $\theta_{\mathrm{mid}}^{\star}=0.588$, $\theta_{\mathrm{high}}^{\star}=0.700$).
         \sum_{i \in \mathcal{I}_t} f_i(g)$, averaged over the
         $|\mathcal{I}_t|=600$ prompts sampled from the optimisation set at
         generation $t$ (Eq.~\eqref{eq:global}), and the validation fitness
-        $F_{\mathrm{val}}(g) = \frac{1}{575}\sum_{i \in V} f_i(g)$, averaged
-        over the separate, fixed 575-prompt held-out validation set. The
+        $F_{\mathrm{val}}(g) = \frac{1}{400}\sum_{i \in V_{400}} f_i(g)$,
+        averaged over the fixed 400-prompt subsample of the separate,
+        validation set. The
         reported validation fitness $F_{\mathrm{val}}(g^{\star}) \approx
         0.703$ (Table~\ref{tab:baseline-optimized}) is computed on this
-        held-out set, not on any single generation's 600-prompt training
-        sample; the two quantities use different, non-overlapping prompt
+        validation subsample, not on any single generation's 600-prompt
+        training sample; the two quantities use different, non-overlapping prompt
         populations and are not directly interchangeable, though both use
         the same per-example fitness formula. The single-example value
         above is lower than the reported $F_{\mathrm{val}}(g^{\star})$
@@ -3171,22 +3128,20 @@ rather than list a gene the genetic algorithm never actually evolves.
 \subsection{Genome Evolution Across Generations}
 \label{app:genome-evolution}
 
-The reported genome (Table~\ref{tab:hyperparams-ga}) is comparable in
-fitness to, though not the single highest among, the five independent
-significance-test seeds (Table~\ref{tab:significance}: seed fitnesses
-0.6949--0.7027, versus 0.703 for the genome reported in the main text); we
-describe it as the ``reported genome'' rather than the ``best genome'' for
-this reason, since the main-run validation score sits only just above the
-five-seed band and we have not performed a formal top-1 selection across
-all six runs conducted. Table~\ref{tab:genome_evolution} shows representative genome configurations
+The reported genome (Table~\ref{tab:hyperparams-ga}) scores 0.703, just
+above the band spanned by the five independent significance-test seeds
+(Table~\ref{tab:significance}: 0.6949--0.7027). We describe it as the
+``reported genome'' rather than the ``best genome'' because we performed no
+formal top-1 selection across the six runs conducted, and because a
+0.003-point margin is inside the single-evaluation noise floor
+(Section~\ref{sec:automatic-scoring}). Table~\ref{tab:genome_evolution} shows representative genome configurations
 at three stages of the GA run: the balanced seed initialisation, an
 intermediate generation, and the final converged genome.
 
 \begin{table}[H]
 \centering
 \caption{Representative genome configurations at three GA stages, from the
-main run conducted under the frozen, corrected structure scorer
-(Section~\ref{sec:structure-analysis}).
+main run conducted under the frozen scoring pipeline (Section~\ref{sec:frozen-scorer}).
 $w_e$, $w_s$, $w_c$ are empathy, safety, and structure weights
 (renormalised to sum to 1). $\theta_\mathrm{mid}$, $\theta_\mathrm{high}$
 are reserved escalation-threshold genes that are evolved alongside the
@@ -3375,72 +3330,135 @@ we have not directly measured.
 
 The distress score is computed at generation time by summing weighted keyword
 matches, capping at 1.0, and applying a small penalty for marker stuffing
-(>3 distinct signals). This stuffing penalty is a clinically
-questionable design choice on its own terms: the practice of discounting a
-score for having ``too many'' matched markers is appropriate for the
-empathy-marker-stuffing failure mode described in
+(>3 distinct signals). This penalty is clinically questionable on its own
+terms: discounting a score for matching ``too many'' markers is appropriate
+for the empathy-marker-stuffing failure mode of
 Section~\ref{sec:scoring-bottleneck}, where markers reflect the
-\emph{generator's} output and repetition is a sign of gaming, but the same
-logic does not straightforwardly transfer to a \emph{user's} distress
-signal: a prompt containing several distinct distress indicators (e.g.,
-hopelessness, isolation, and self-harm language together) plausibly warrants
-more concern, not less. We verified computationally that this penalty has no
-effect on any escalation decision reported in this paper, in two independent
-ways. First, an exhaustive combinatorial check over the full keyword set
-confirms that the smallest possible sum
-of any four matched keywords is $2.45$, already far above both the $1.0$ cap
-and the distress threshold $\tau_h=0.65$; every combination of four or more
-matched keywords therefore saturates to the $1.0$ cap and is reduced by the
-penalty to at most $0.95$ -- still far above $\tau_h$ under any evolved
-$\gamma$ in its bounded range
-$[0, 0.2]$. Second, and more directly, we checked the penalty's trigger
-condition (more than three distinct matched keywords) against every
-fitness prompt used in this work --- the concatenated
+\emph{generator's} output and repetition signals gaming, but the same logic
+does not transfer to a \emph{user's} distress signal, where several distinct
+indicators (hopelessness, isolation, and self-harm language together)
+plausibly warrant more concern rather than less.
+
+We verified computationally that the penalty is nonetheless inert here. Its
+trigger condition (more than three distinct matched keywords) is never
+satisfied on any prompt entering the fitness pipeline --- the concatenated
 \texttt{common\_themes}\,/\texttt{thought\_progression} text that
-\texttt{compute\_distress\_score()} receives at generation and evaluation
-time --- and found that it is never satisfied: the maximum number of
-distinct distress-keyword matches on any such prompt is two, so the
-penalty does not fire even once on the data that actually enters the
-fitness pipeline. (Clinician \texttt{risk\_assessment} notes can match
-four or more keywords in a handful of rows if scanned as free text, but
-those notes are used only for risk-label construction, not as the
-distress-score input.) The penalty is therefore inert in practice for this
-dataset and keyword set on both theoretical and empirical grounds, though
-this does not resolve the underlying clinical concern; a design that does
-not risk discounting more severe presentations would be preferable in
-future revisions.
+\texttt{compute\_distress\_score()} receives --- where the maximum number of
+distinct matches is two. (Clinician \texttt{risk\_assessment} notes can match
+four or more if scanned as free text, but those are used only for risk-label
+construction, not as the distress-score input.) No escalation decision
+reported in this paper is affected. This does not resolve the underlying
+design concern: a scorer that cannot discount more severe presentations
+would be preferable in future revisions.
 
 \section{Equivalence Tests and Sensitivity Statistics}
 \label{app:equivalence}
 
+\subsection{Equivalence Testing Procedure}
+\label{app:tost-method}
+
+Equivalence was assessed with Schuirmann's two one-sided tests (TOST). The
+primary analysis treats the two conditions as \emph{independent samples} and
+uses the Welch unequal-variance $t$ statistic with Welch--Satterthwaite
+degrees of freedom, at a pre-specified margin of $\varepsilon=0.01$ fitness
+points and $\alpha=0.05$. Independent-samples Welch TOST is appropriate here
+because each condition is run with its own five GA seeds and the conditions
+differ markedly in seed-level dispersion (standard deviations from 0.0016 to
+0.0073), so equal variances cannot be assumed.
+
+Equivalence requires rejecting both one-sided nulls,
+$H_0^{-}\colon \Delta \le -\varepsilon$ (an upper-tail test) and
+$H_0^{+}\colon \Delta \ge +\varepsilon$ (a lower-tail test), where $\Delta$
+is the difference in mean validation fitness between a condition and its
+reference. The reported TOST $p$-value is
+$\max(p_{\mathrm{lower}}, p_{\mathrm{upper}})$. Intervals are reported at the
+$(1-2\alpha) = 90\%$ level, which is the level corresponding to the TOST
+decision: equivalence holds exactly when the 90\% confidence interval lies
+entirely inside $(-\varepsilon, +\varepsilon)$. A 95\% interval is
+\emph{not} the correct reference interval for a TOST decision at
+$\alpha=0.05$ and is not reported for these tests. Each condition
+contributes five independent GA seeds, scored under the frozen pipeline
+(Section~\ref{sec:frozen-scorer}). The implementation depends on SciPy only;
+all nine tests were independently reproduced with a second, established
+implementation as a numerical check.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\caption{TOST equivalence tests for dataset size (against the full-dataset
+condition $N=2297$) and population size (against $P=100$). Independent-samples
+Welch TOST, margin $\varepsilon=0.01$ fitness points, $\alpha=0.05$, five GA
+seeds per condition. Intervals are 90\% confidence intervals, the level
+matching the TOST decision at this $\alpha$. The TOST $p$-value is
+$\max(p_{\mathrm{lower}}, p_{\mathrm{upper}})$, and the final column reports
+whether equivalence at $\varepsilon=0.01$ is established
+(i.e.\ whether TOST $p < \alpha$). Mean differences are given to five decimal
+places and interval bounds to four; $p$-values are given to three significant
+figures.}
+\label{tab:tost}
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{
+  >{\raggedright\arraybackslash}p{1.25cm}
+  >{\raggedleft\arraybackslash}p{1.45cm}
+  >{\centering\arraybackslash}p{3.2cm}
+  >{\raggedleft\arraybackslash}p{1.6cm}
+  >{\raggedleft\arraybackslash}p{1.6cm}
+  >{\raggedleft\arraybackslash}p{1.6cm}
+  >{\centering\arraybackslash}p{1.2cm}
+}
+\toprule
+\textbf{Comp.} & \textbf{Mean diff.} & \textbf{90\% CI} &
+$\boldsymbol{p}_{\mathbf{lower}}$ & $\boldsymbol{p}_{\mathbf{upper}}$ &
+\textbf{TOST} $\boldsymbol{p}$ & \textbf{Equiv.?} \\
+\midrule
+\multicolumn{7}{l}{\textit{Dataset size, nested subsets (reference $N=2297$)}} \\
+\midrule
+$N=100$  & $+0.00122$ & $[-0.0051, +0.0075]$ & $0.00615$ & $0.0168$ & $0.0168$ & Yes \\
+$N=300$  & $-0.00198$ & $[-0.0067, +0.0027]$ & $0.00678$ & $7.69\times10^{-4}$ & $0.00678$ & Yes \\
+$N=600$  & $+0.00475$ & $[-0.0024, +0.0119]$ & $0.00340$ & $0.101$ & $0.101$ & No \\
+$N=1200$ & $+0.00290$ & $[-0.0008, +0.0066]$ & $3.34\times10^{-4}$ & $0.00527$ & $0.00527$ & Yes \\
+\midrule
+\multicolumn{7}{l}{\textit{Population size (reference $P=100$)}} \\
+\midrule
+$P=30$  & $+0.00111$ & $[-0.0024, +0.0046]$ & $5.02\times10^{-4}$ & $0.00146$ & $0.00146$ & Yes \\
+$P=50$  & $-0.00000$ & $[-0.0045, +0.0045]$ & $0.00332$ & $0.00331$ & $0.00332$ & Yes \\
+$P=200$ & $+0.00210$ & $[-0.0002, +0.0044]$ & $7.17\times10^{-6}$ & $1.26\times10^{-4}$ & $1.26\times10^{-4}$ & Yes \\
+$P=300$ & $-0.00117$ & $[-0.0051, +0.0028]$ & $0.00304$ & $0.00107$ & $0.00304$ & Yes \\
+$P=400$ & $+0.00253$ & $[-0.0012, +0.0063]$ & $4.39\times10^{-4}$ & $0.00461$ & $0.00461$ & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Dataset-Size Equivalence Testing}
 \label{app:dataset-tost}
 
-Dataset-size equivalence to the full-dataset ($N=2297$) condition was
-tested using two one-sided tests (TOST) at a pre-specified margin of
-$\varepsilon=0.01$ fitness points. None of the four comparisons
-($N=100,300,600,1200$ vs.\ $N=2297$) established equivalence at this
-margin (all TOST $p \ge 0.986$), despite raw mean differences all below
-0.005 and 95\% confidence intervals on the difference no wider than
-$[-0.007, 0.013]$ across any comparison. TOST requires the entire
-confidence interval to fall within $\pm\varepsilon$, and with only five
-seeds per condition these intervals are wide relative to
-$\varepsilon=0.01$ even when point estimates are close, which we consider
-the most plausible explanation for the non-equivalence result (rather than
-a genuine practically important effect of dataset size).
+Three of the four nested subset sizes are statistically equivalent to the
+full-dataset condition at $\varepsilon=0.01$ (Table~\ref{tab:tost}).
+$N=600$ is the exception, failing the upper one-sided test
+($p_{\mathrm{upper}}=0.101$) while passing the lower test
+($p_{\mathrm{lower}}=0.00340$): its mean is 0.0048 points above $N=2297$ and
+its 90\% confidence interval reaches $+0.0119$, marginally beyond
+$+\varepsilon$. That condition also carries the largest seed-level standard
+deviation in the experiment (0.0073, against 0.0017 at $N=1200$), and the
+four tested sizes do not form a monotonic pattern: both the smallest and the
+largest subsets tested meet the margin. We report these observations without
+claiming to have established why $N=600$ behaves differently, and we do not
+generalise the equivalence result to untested subset sizes: the claim applies
+to $N=100$, $N=300$, and $N=1200$ as tested.
 
 \subsection{Population-Size Equivalence Testing}
 \label{app:population-tost}
 
-Population-size equivalence to the $P=100$ condition was tested using the
-same TOST procedure and margin. None of the five comparisons
-($P=30,50,200,300,400$ vs.\ $P=100$) established equivalence (all TOST
-$p \ge 0.994$), for the same power-and-margin reasons as the dataset-size
-result. Raw mean differences here are smaller than in the dataset-size
-experiment (all below 0.0026 fitness points, versus a 0.0068-point band
-across dataset sizes), and every 95\% confidence interval on the difference
-is no wider than $[-0.0054, 0.0065]$. Mean runtime ranges from 64 seconds at
-$P=30$ to a non-monotonic peak of 882 seconds at $P=200$.
+All five population sizes are statistically equivalent to $P=100$ at
+$\varepsilon=0.01$ (Table~\ref{tab:tost}). Raw mean differences are smaller
+than in the dataset-size experiment (all at or below 0.0025 fitness points,
+versus a 0.0068-point band across dataset sizes), and the widest 90\%
+confidence interval is $[-0.0051, +0.0028]$ at $P=300$, so no interval
+approaches the margin. Mean runtime, by contrast, ranges from 64 seconds at
+$P=30$ to a non-monotonic peak of 882 seconds at $P=200$, so the
+computational cost of larger populations buys no fitness gain detectable at
+this margin.
 
 \section{Human Evaluation Statistical Details}
 \label{app:humaneval}

@@ -1,0 +1,245 @@
+{
+  "total_runtime_sec": 18999.52261018753,
+  "dataset_size_summary": [
+    {
+      "dataset_size": 100,
+      "mean_fitness": 0.7008378629032259,
+      "std_fitness": 0.006278704281224016,
+      "mean_runtime_sec": 15.854033279418946,
+      "n_seeds": 5
+    },
+    {
+      "dataset_size": 300,
+      "mean_fitness": 0.6976403225806453,
+      "std_fitness": 0.004196932804776237,
+      "mean_runtime_sec": 46.9573935508728,
+      "n_seeds": 5
+    },
+    {
+      "dataset_size": 600,
+      "mean_fitness": 0.7043722983870968,
+      "std_fitness": 0.007254195021114616,
+      "mean_runtime_sec": 98.39848494529724,
+      "n_seeds": 5
+    },
+    {
+      "dataset_size": 1200,
+      "mean_fitness": 0.7025167741935485,
+      "std_fitness": 0.0016682294471950267,
+      "mean_runtime_sec": 478.2022132396698,
+      "n_seeds": 5
+    },
+    {
+      "dataset_size": 2297,
+      "mean_fitness": 0.6996207258064517,
+      "std_fitness": 0.0038206923105062475,
+      "mean_runtime_sec": 205.6154537677765,
+      "n_seeds": 5
+    }
+  ],
+  "dataset_size_equivalence": [
+    {
+      "dataset_size": 100,
+      "vs_full": 2297,
+      "mean_diff": 0.001217137096774179,
+      "se": 0.0032869383073803604,
+      "df": 6.605129319971885,
+      "p_lower": 0.006148540026439538,
+      "p_upper": 0.016841877686440545,
+      "tost_p_value": 0.016841877686440545,
+      "ci_lower": -0.005066694581870148,
+      "ci_upper": 0.007500968775418506,
+      "ci_level": 0.9,
+      "cohens_d": 0.23419517438760326,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "dataset_size": 300,
+      "vs_full": 2297,
+      "mean_diff": -0.001980403225806393,
+      "se": 0.0025381857575586743,
+      "df": 7.930451644468758,
+      "p_lower": 0.006776970061817788,
+      "p_upper": 0.0007690898928702667,
+      "tost_p_value": 0.006776970061817788,
+      "ci_lower": -0.00670565323685618,
+      "ci_upper": 0.002744846785243394,
+      "ci_level": 0.9,
+      "cohens_d": -0.4934693893418225,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "dataset_size": 600,
+      "vs_full": 2297,
+      "mean_diff": 0.004751572580645069,
+      "se": 0.003666634291442921,
+      "df": 6.06062956422891,
+      "p_lower": 0.003395497857672527,
+      "p_upper": 0.10089865850875854,
+      "tost_p_value": 0.10089865850875854,
+      "ci_lower": -0.00236061426312458,
+      "ci_upper": 0.011863759424414718,
+      "ci_level": 0.9,
+      "cohens_d": 0.8195958815696046,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": false
+    },
+    {
+      "dataset_size": 1200,
+      "vs_full": 2297,
+      "mean_diff": 0.0028960483870967835,
+      "se": 0.0018644398204313377,
+      "df": 5.471677703277462,
+      "p_lower": 0.0003343261190659782,
+      "p_upper": 0.005272824713297447,
+      "tost_p_value": 0.005272824713297447,
+      "ci_lower": -0.0007905166462104083,
+      "ci_upper": 0.006582613420403975,
+      "ci_level": 0.9,
+      "cohens_d": 0.9823979317459652,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    }
+  ],
+  "population_size_summary": [
+    {
+      "population_size": 30,
+      "mean_fitness": 0.7017526209677419,
+      "std_fitness": 0.0035924731789389467,
+      "mean_runtime_sec": 64.4691885471344,
+      "n_seeds": 5
+    },
+    {
+      "population_size": 50,
+      "mean_fitness": 0.7006433467741935,
+      "std_fitness": 0.004699210755257406,
+      "mean_runtime_sec": 118.45554242134094,
+      "n_seeds": 5
+    },
+    {
+      "population_size": 100,
+      "mean_fitness": 0.7006468145161292,
+      "std_fitness": 0.0016082864393125577,
+      "mean_runtime_sec": 662.054948091507,
+      "n_seeds": 5
+    },
+    {
+      "population_size": 200,
+      "mean_fitness": 0.7027504838709678,
+      "std_fitness": 0.0021615794522543016,
+      "mean_runtime_sec": 882.3402730464935,
+      "n_seeds": 5
+    },
+    {
+      "population_size": 300,
+      "mean_fitness": 0.699473427419355,
+      "std_fitness": 0.0041222683108059896,
+      "mean_runtime_sec": 850.9699772357941,
+      "n_seeds": 5
+    },
+    {
+      "population_size": 400,
+      "mean_fitness": 0.7031771370967743,
+      "std_fitness": 0.003874606393229927,
+      "mean_runtime_sec": 376.5510639667511,
+      "n_seeds": 5
+    }
+  ],
+  "population_size_equivalence": [
+    {
+      "population_size": 30,
+      "vs_baseline": 100,
+      "mean_diff": 0.0011058064516127342,
+      "se": 0.0017602527552753532,
+      "df": 5.54143869956879,
+      "p_lower": 0.0005019708280962501,
+      "p_upper": 0.0014649060410404661,
+      "tost_p_value": 0.0014649060410404661,
+      "ci_lower": -0.0023660475979153436,
+      "ci_upper": 0.004577660501140812,
+      "ci_level": 0.9,
+      "cohens_d": 0.39731419569435705,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "population_size": 50,
+      "vs_baseline": 100,
+      "mean_diff": -3.467741935714308e-06,
+      "se": 0.0022212234013355586,
+      "df": 4.924376569417071,
+      "p_lower": 0.003317624222616768,
+      "p_upper": 0.0033082154675353253,
+      "tost_p_value": 0.003317624222616768,
+      "ci_lower": -0.004494568767229315,
+      "ci_upper": 0.004487633283357886,
+      "ci_level": 0.9,
+      "cohens_d": -0.0009873804542077924,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "population_size": 200,
+      "vs_baseline": 100,
+      "mean_diff": 0.002103669354838633,
+      "se": 0.001204907548261249,
+      "df": 7.389841859853096,
+      "p_lower": 7.173483682243012e-06,
+      "p_upper": 0.00012586489770161037,
+      "tost_p_value": 0.00012586489770161037,
+      "ci_lower": -0.00016113422810734536,
+      "ci_upper": 0.004368472937784612,
+      "ci_level": 0.9,
+      "cohens_d": 1.104215276066087,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "population_size": 300,
+      "vs_baseline": 100,
+      "mean_diff": -0.00117338709677417,
+      "se": 0.001978872471745056,
+      "df": 5.190136769585021,
+      "p_lower": 0.0030366698158034887,
+      "p_upper": 0.001071537894183323,
+      "tost_p_value": 0.0030366698158034887,
+      "ci_lower": -0.005128867601865388,
+      "ci_upper": 0.002782093408317048,
+      "ci_level": 0.9,
+      "cohens_d": -0.37501919460091765,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    },
+    {
+      "population_size": 400,
+      "vs_baseline": 100,
+      "mean_diff": 0.002530322580645117,
+      "se": 0.0018761215298234222,
+      "df": 5.338619173477417,
+      "p_lower": 0.00043909697790495036,
+      "p_upper": 0.004607014832568562,
+      "tost_p_value": 0.004607014832568562,
+      "ci_lower": -0.0011978228715828184,
+      "ci_upper": 0.006258468032873052,
+      "ci_level": 0.9,
+      "cohens_d": 0.8529919243074572,
+      "epsilon": 0.01,
+      "alpha": 0.05,
+      "is_equivalent": true
+    }
+  ],
+  "tost_method": "Schuirmann TOST, independent samples, Welch (unequal-variance) t with Welch-Satterthwaite df; SciPy only. Interval reported is the 90% interval matching the TOST decision at alpha=0.05.",
+  "tost_epsilon": 0.01,
+  "tost_alpha": 0.05,
+  "provenance": "Equivalence statistics recomputed by recompute_equivalence_from_raw.py from dataset_size_corrected_raw.csv and population_size_corrected_raw.csv. Per-seed fitness values are unchanged from the original GA runs; only the equivalence statistics were recomputed after fixing swapped one-sided tails in tost_equivalence. Superseded artifacts kept as *_prebugfix.*"
+}
