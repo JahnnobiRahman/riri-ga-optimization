@@ -40,6 +40,7 @@ The final contribution of the paper is a **diagnostic case study of reward desig
 
 | If you want to… | Read |
 |---|---|
+| Get the idea without technical background | [`PLAIN_LANGUAGE_SUMMARY.md`](PLAIN_LANGUAGE_SUMMARY.md) |
 | Understand the study | [`paper/main.pdf`](paper/main.pdf) (current manuscript) |
 | See what the reviewers asked and how it was answered | [`paper/response_to_reviewers.md`](paper/response_to_reviewers.md) (round 1) and [`paper/reviewer4_round2_reply.md`](paper/reviewer4_round2_reply.md) (round 2) |
 | Understand the code | Section 4 of this README, then [`src/`](src/) |
