@@ -1,0 +1,53 @@
+======================================================================
+RANDOM SEARCH WITH EQUAL BUDGET (n=2000)
+======================================================================
+
+Loading validation data...
+Loaded 575 validation prompts
+
+Running random search: 2000 genome evaluations at seed=42
+(This will take a while - progress printed every 200 evaluations)
+
+  [eval 1/2000] NEW BEST: fitness=0.2827 (w_e=0.155, w_s=0.596, w_c=0.249, m=512)
+  [eval 2/2000] NEW BEST: fitness=0.4226 (w_e=0.669, w_s=0.136, w_c=0.195, m=512)
+  [eval 3/2000] NEW BEST: fitness=0.5570 (w_e=0.427, w_s=0.279, w_c=0.294, m=768)
+  [eval 4/2000] NEW BEST: fitness=0.5594 (w_e=0.427, w_s=0.311, w_c=0.261, m=768)
+  [eval 12/2000] NEW BEST: fitness=0.5599 (w_e=0.180, w_s=0.335, w_c=0.485, m=1024)
+  [eval 13/2000] NEW BEST: fitness=0.5689 (w_e=0.348, w_s=0.272, w_c=0.380, m=512)
+  [eval 22/2000] NEW BEST: fitness=0.6574 (w_e=0.264, w_s=0.145, w_c=0.591, m=512)
+  [eval 64/2000] NEW BEST: fitness=0.6750 (w_e=0.485, w_s=0.060, w_c=0.455, m=1024)
+  [eval 129/2000] NEW BEST: fitness=0.6758 (w_e=0.522, w_s=0.212, w_c=0.266, m=512)
+  [eval 154/2000] NEW BEST: fitness=0.6990 (w_e=0.108, w_s=0.205, w_c=0.687, m=512)
+  ...checkpoint 200/2000: best=0.6990, mean=0.3072 ± 0.3327
+  [eval 345/2000] NEW BEST: fitness=0.6999 (w_e=0.084, w_s=0.220, w_c=0.696, m=1024)
+  ...checkpoint 400/2000: best=0.6999, mean=0.3268 ± 0.3211
+  [eval 510/2000] NEW BEST: fitness=0.7068 (w_e=0.103, w_s=0.213, w_c=0.683, m=768)
+  ...checkpoint 600/2000: best=0.7068, mean=0.3295 ± 0.3201
+  ...checkpoint 800/2000: best=0.7068, mean=0.3256 ± 0.3214
+  ...checkpoint 1000/2000: best=0.7068, mean=0.3250 ± 0.3235
+  ...checkpoint 1200/2000: best=0.7068, mean=0.3247 ± 0.3240
+  ...checkpoint 1400/2000: best=0.7068, mean=0.3281 ± 0.3239
+  ...checkpoint 1600/2000: best=0.7068, mean=0.3347 ± 0.3200
+  ...checkpoint 1800/2000: best=0.7068, mean=0.3359 ± 0.3218
+  ...checkpoint 2000/2000: best=0.7068, mean=0.3337 ± 0.3239
+
+======================================================================
+RANDOM SEARCH RESULTS
+======================================================================
+
+Best fitness found: 0.7068
+
+Best genome:
+  w_e=0.1033, w_s=0.2133, w_c=0.6835
+  theta_mid=0.5164, theta_high=0.9295
+  gamma=0.1763, d=0, m=768
+
+Mean fitness across all 2000 random draws: 0.3337 ± 0.3239
+
+                       Comparison to GA:
+               GA reported fitness (B4): 0.703
+                     Random search best: 0.7068
+                             Difference: -0.0038
+
+Saved: experiments/baseline_comparison/random_search_equal_budget.json
+======================================================================

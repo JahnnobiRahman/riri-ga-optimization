@@ -18,12 +18,12 @@ import numpy as np
 import pandas as pd
 
 sys.path.append("src")
-from evaluation.scoring import score_empathy, score_safety, score_structure
+from evaluation.scoring import score_empathy, score_safety, score_structure, length_penalty
+from evaluation.fitness import compute_per_example_fitness
 from evaluation.risk_labeling import label_risk
 from generation.user_prompt_builder import build_realistic_user_prompt
 
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
-import torch
+# Lazy-import torch / transformers inside evaluate_model (heavy; avoid import hang at startup).
 
 # ─────────────────────────────────────────────
 # Configuration
@@ -104,7 +104,7 @@ def load_data(path, seed, n):
 # Generation helpers
 # ─────────────────────────────────────────────
 
-def generate_seq2seq(model, tokenizer, prompt, max_new_tokens):
+def generate_seq2seq(model, tokenizer, prompt, max_new_tokens, torch):
     inputs = tokenizer(
         prompt, return_tensors="pt", truncation=True, max_length=512
     )
@@ -118,7 +118,7 @@ def generate_seq2seq(model, tokenizer, prompt, max_new_tokens):
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
 
 
-def generate_causal(model, tokenizer, prompt, max_new_tokens):
+def generate_causal(model, tokenizer, prompt, max_new_tokens, torch):
     inputs = tokenizer(
         prompt, return_tensors="pt", truncation=True, max_length=512
     )
@@ -140,10 +140,14 @@ def generate_causal(model, tokenizer, prompt, max_new_tokens):
 # ─────────────────────────────────────────────
 
 def evaluate_model(model_key, model_cfg, data):
-    print(f"\n{'='*50}")
-    print(f"Evaluating {model_key} ({model_cfg['hf_id']})")
-    print(f"{'='*50}")
+    print(f"\n{'='*50}", flush=True)
+    print(f"Evaluating {model_key} ({model_cfg['hf_id']})", flush=True)
+    print(f"{'='*50}", flush=True)
 
+    import torch
+    from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
+
+    print("  Loading tokenizer/model...", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(model_cfg["hf_id"])
 
     if model_cfg["type"] == "seq2seq":
@@ -153,19 +157,26 @@ def evaluate_model(model_key, model_cfg, data):
             model_cfg["hf_id"], trust_remote_code=True
         )
     model.eval()
+    print(f"  Model ready; scoring {len(data)} prompts with shared fitness", flush=True)
 
     empathy_scores, safety_scores, structure_scores = [], [], []
+    fitness_scores = []
     responses = []
 
     for i, row in data.iterrows():
-        prompt = PROMPT_TEMPLATE.format(prompt=row["user_prompt"])
+        user_text = row["user_prompt"]
+        prompt = PROMPT_TEMPLATE.format(prompt=user_text)
         risk   = row["risk_label"]
 
         try:
             if model_cfg["type"] == "seq2seq":
-                response = generate_seq2seq(model, tokenizer, prompt, MAX_NEW_TOKENS)
+                response = generate_seq2seq(
+                    model, tokenizer, prompt, MAX_NEW_TOKENS, torch
+                )
             else:
-                response = generate_causal(model, tokenizer, prompt, MAX_NEW_TOKENS)
+                response = generate_causal(
+                    model, tokenizer, prompt, MAX_NEW_TOKENS, torch
+                )
         except Exception as e:
             print(f"  [!] Generation failed for row {i}: {e}")
             response = ""
@@ -173,24 +184,30 @@ def evaluate_model(model_key, model_cfg, data):
         e = score_empathy(response)
         s = score_safety(response, risk)
         c = score_structure(response)
+        l = length_penalty(response)
+        # Same per-example fitness as GA / B1–B5 (penalties, bonuses, distress term)
+        f_i = compute_per_example_fitness(
+            response, risk, user_prompt=user_text, e=e, s=s, c=c, l=l
+        )
 
         empathy_scores.append(e)
         safety_scores.append(s)
         structure_scores.append(c)
+        fitness_scores.append(f_i)
         responses.append(response)
 
         if i % 50 == 0:
-            print(f"  [{i}/{len(data)}] empathy={e:.3f} safety={s:.3f} structure={c:.3f}")
-
-    # Fitness — same weights as B1-B5
-    A, B, C = 0.40, 0.40, 0.15
-    fitness_scores = [A*e + B*s + C*c
-                      for e, s, c in zip(empathy_scores, safety_scores, structure_scores)]
+            print(
+                f"  [{i}/{len(data)}] empathy={e:.3f} safety={s:.3f} "
+                f"structure={c:.3f} fitness={f_i:.3f}",
+                flush=True,
+            )
 
     results = {
         "model":         model_key,
         "hf_id":         model_cfg["hf_id"],
         "n_samples":     len(data),
+        "scoring":       "compute_per_example_fitness (shared with GA / B1–B5)",
         "empathy":       round(float(np.mean(empathy_scores)),   3),
         "safety":        round(float(np.mean(safety_scores)),    3),
         "structure":     round(float(np.mean(structure_scores)), 3),
@@ -198,6 +215,7 @@ def evaluate_model(model_key, model_cfg, data):
         "empathy_std":   round(float(np.std(empathy_scores)),    3),
         "safety_std":    round(float(np.std(safety_scores)),     3),
         "structure_std": round(float(np.std(structure_scores)),  3),
+        "fitness_std":   round(float(np.std(fitness_scores)),    3),
         "sample_responses": responses[:5],
     }
 
@@ -210,7 +228,6 @@ def evaluate_model(model_key, model_cfg, data):
     del model
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-
     return results
 
 
@@ -219,11 +236,11 @@ def evaluate_model(model_key, model_cfg, data):
 # ─────────────────────────────────────────────
 
 def main():
-    print("Loading dataset with natural language prompts...")
+    print("Loading dataset with natural language prompts...", flush=True)
     data = load_data(DATA_PATH, SEED, N_SAMPLES)
-    print(f"Loaded {len(data)} validation prompts")
-    print(f"Risk distribution:\n{data['risk_label'].value_counts()}")
-    print(f"\nSample prompt:\n{data['user_prompt'].iloc[0]}\n")
+    print(f"Loaded {len(data)} validation prompts", flush=True)
+    print(f"Risk distribution:\n{data['risk_label'].value_counts()}", flush=True)
+    print(f"\nSample prompt:\n{data['user_prompt'].iloc[0]}\n", flush=True)
 
     all_results = {}
 

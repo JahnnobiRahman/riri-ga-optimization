@@ -1,0 +1,189 @@
+{
+  "B1": {
+    "empathy": 0.268625,
+    "safety": 0.47162499999999996,
+    "structure": 0.017,
+    "len_penalty": 0.0,
+    "distress_score": 0.0735,
+    "fitness": -0.2269103110599078
+  },
+  "B2": {
+    "empathy": 0.37987499999999996,
+    "safety": 0.9035,
+    "structure": 0.6485,
+    "len_penalty": 0.0,
+    "distress_score": 0.0735,
+    "fitness": 0.5559513248847927
+  },
+  "B3_mean": {
+    "empathy": 0.343925,
+    "safety": 0.7317499999999999,
+    "structure": 0.4729,
+    "fitness": 0.28396499423963145
+  },
+  "B3_std": {
+    "empathy": 0.05362896838463332,
+    "safety": 0.21034584616768642,
+    "structure": 0.37958680166728664,
+    "fitness": 0.38488814273497224
+  },
+  "B3_runs": [
+    {
+      "path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/b3_random_genomes/random_genome_1_seed_7.json",
+      "seed": 7,
+      "metrics": {
+        "empathy": 0.38712500000000005,
+        "safety": 0.9003749999999999,
+        "structure": 1.0,
+        "len_penalty": 0.0,
+        "distress_score": 0.0735,
+        "fitness": 0.6609627016129034
+      },
+      "genome": {
+        "p_id": 1,
+        "w_s": 0.18110348666798415,
+        "w_e": 0.25684445190422267,
+        "w_c": 0.5620520614277932,
+        "memory_window": 512,
+        "theta_mid": 0.5419450514880834,
+        "theta_high": 0.8888305078674933,
+        "gamma": 0.07897855477705731
+      }
+    },
+    {
+      "path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/b3_random_genomes/random_genome_2_seed_8.json",
+      "seed": 8,
+      "metrics": {
+        "empathy": 0.39425,
+        "safety": 0.902875,
+        "structure": 0.6385,
+        "len_penalty": 0.0,
+        "distress_score": 0.0735,
+        "fitness": 0.5641221486175116
+      },
+      "genome": {
+        "p_id": 1,
+        "w_s": 0.32179264073352415,
+        "w_e": 0.38355835935459953,
+        "w_c": 0.2946489999118762,
+        "memory_window": 1024,
+        "theta_mid": 0.6593022678075924,
+        "theta_high": 0.8431430011017468,
+        "gamma": 0.0012823999548584376
+      }
+    },
+    {
+      "path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/b3_random_genomes/random_genome_3_seed_9.json",
+      "seed": 9,
+      "metrics": {
+        "empathy": 0.38137499999999996,
+        "safety": 0.9066249999999999,
+        "structure": 0.6539999999999999,
+        "len_penalty": 0.0,
+        "distress_score": 0.0735,
+        "fitness": 0.5650843029953918
+      },
+      "genome": {
+        "p_id": 1,
+        "w_s": 0.08705056295636983,
+        "w_e": 0.4362074621713112,
+        "w_c": 0.476741974872319,
+        "memory_window": 1024,
+        "theta_mid": 0.6799226213936204,
+        "theta_high": 0.879532694939064,
+        "gamma": 0.026960747207430337
+      }
+    },
+    {
+      "path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/b3_random_genomes/random_genome_4_seed_10.json",
+      "seed": 10,
+      "metrics": {
+        "empathy": 0.279375,
+        "safety": 0.45849999999999996,
+        "structure": 0.018500000000000003,
+        "len_penalty": 0.0,
+        "distress_score": 0.0735,
+        "fitness": -0.20605072004608288
+      },
+      "genome": {
+        "p_id": 0,
+        "w_s": 0.46980509201522097,
+        "w_e": 0.31082291553460295,
+        "w_c": 0.21937199245017608,
+        "memory_window": 256,
+        "theta_mid": 0.6751252829010526,
+        "theta_high": 0.8493616884515823,
+        "gamma": 0.07009598177909455
+      }
+    },
+    {
+      "path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/b3_random_genomes/random_genome_5_seed_11.json",
+      "seed": 11,
+      "metrics": {
+        "empathy": 0.2775,
+        "safety": 0.49037499999999995,
+        "structure": 0.0535,
+        "len_penalty": 0.0,
+        "distress_score": 0.0735,
+        "fitness": -0.1642934619815668
+      },
+      "genome": {
+        "p_id": 0,
+        "w_s": 0.1954256324766839,
+        "w_e": 0.10539077082530163,
+        "w_c": 0.6991835966980146,
+        "memory_window": 256,
+        "theta_mid": 0.6325694643054436,
+        "theta_high": 0.9196410986033711,
+        "gamma": 0.006914438086281116
+      }
+    }
+  ],
+  "B4": {
+    "empathy": 0.43,
+    "safety": 0.9047499999999999,
+    "structure": 1.0,
+    "len_penalty": 0.0,
+    "distress_score": 0.0735,
+    "fitness": 0.7032020161290324
+  },
+  "B5": {
+    "empathy": 0.43912499999999993,
+    "safety": 0.9003749999999999,
+    "structure": 1.0,
+    "len_penalty": 0.0,
+    "distress_score": 0.0735,
+    "fitness": 0.6950993951612905
+  },
+  "wilcoxon": {
+    "GA_vs_B1": {
+      "statistic": 15.0,
+      "p_value": 0.03125
+    },
+    "GA_vs_B2": {
+      "statistic": 15.0,
+      "p_value": 0.03125
+    }
+  },
+  "ga_fitness_runs": [
+    0.7003929435483872,
+    0.704563306451613,
+    0.7047252016129033,
+    0.7045810483870969,
+    0.7012600806451613
+  ],
+  "b1_fitness_runs": [
+    -0.20648162442396312,
+    -0.2090204493087557,
+    -0.19841359447004606,
+    -0.23182436635944698,
+    -0.23802851382488474
+  ],
+  "b2_fitness_runs": [
+    0.5381444988479264,
+    0.5554619815668204,
+    0.5596969470046084,
+    0.5614703917050692,
+    0.5464699020737328
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "n_evaluations": 2000,
+  "seed": 42,
+  "best_fitness": 0.7068298737727912,
+  "best_genome": {
+    "w_e": 0.1032572260772096,
+    "w_s": 0.21325388544799742,
+    "w_c": 0.6834888884747929,
+    "theta_mid": 0.5164279329843988,
+    "theta_high": 0.9294754860077862,
+    "gamma": 0.17631039626365522,
+    "p_id": 0,
+    "memory_window": 768
+  },
+  "mean_fitness_all_draws": 0.33365244903826896,
+  "std_fitness_all_draws": 0.323862596732536,
+  "ga_reported_fitness": 0.703,
+  "difference_ga_minus_random": -0.0038298737727912036
+}

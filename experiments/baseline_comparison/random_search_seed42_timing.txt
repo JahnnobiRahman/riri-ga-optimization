@@ -1,0 +1,42 @@
+======================================================================
+RANDOM SEARCH — equal budget, evaluate_breakdown(n=400)
+Seeds: [42] | draws/run: 2000
+======================================================================
+Val rows: 575 (assert OK) | n_eval_prompts=400
+
+── Run seed=42 ──
+  [seed 42 eval 1/2000] NEW BEST: fitness=0.2876 (w_c=0.249, m=512)
+  [seed 42 eval 2/2000] NEW BEST: fitness=0.4286 (w_c=0.195, m=512)
+  [seed 42 eval 3/2000] NEW BEST: fitness=0.5692 (w_c=0.294, m=768)
+  [seed 42 eval 4/2000] NEW BEST: fitness=0.5713 (w_c=0.261, m=768)
+  [seed 42 eval 13/2000] NEW BEST: fitness=0.5722 (w_c=0.380, m=512)
+  [seed 42 eval 22/2000] NEW BEST: fitness=0.6692 (w_c=0.591, m=512)
+  [seed 42 eval 64/2000] NEW BEST: fitness=0.6700 (w_c=0.455, m=1024)
+  [seed 42 eval 88/2000] NEW BEST: fitness=0.6715 (w_c=0.396, m=512)
+  [seed 42 eval 100/2000] NEW BEST: fitness=0.6718 (w_c=0.483, m=1024)
+  [seed 42 eval 110/2000] NEW BEST: fitness=0.6802 (w_c=0.293, m=1024)
+  [seed 42 eval 154/2000] NEW BEST: fitness=0.7013 (w_c=0.687, m=512)
+  ...seed 42 checkpoint 200/2000: best=0.7013, mean=0.3074 ± 0.3350, elapsed=20.9s
+  [seed 42 eval 345/2000] NEW BEST: fitness=0.7083 (w_c=0.696, m=1024)
+  ...seed 42 checkpoint 400/2000: best=0.7083, mean=0.3265 ± 0.3237, elapsed=41.8s
+  ...seed 42 checkpoint 600/2000: best=0.7083, mean=0.3294 ± 0.3227, elapsed=63.3s
+  ...seed 42 checkpoint 800/2000: best=0.7083, mean=0.3255 ± 0.3245, elapsed=84.1s
+  ...seed 42 checkpoint 1000/2000: best=0.7083, mean=0.3249 ± 0.3267, elapsed=104.9s
+  ...seed 42 checkpoint 1200/2000: best=0.7083, mean=0.3246 ± 0.3270, elapsed=126.0s
+  ...seed 42 checkpoint 1400/2000: best=0.7083, mean=0.3279 ± 0.3269, elapsed=147.4s
+  ...seed 42 checkpoint 1600/2000: best=0.7083, mean=0.3348 ± 0.3229, elapsed=168.3s
+  ...seed 42 checkpoint 1800/2000: best=0.7083, mean=0.3360 ± 0.3247, elapsed=189.3s
+  ...seed 42 checkpoint 2000/2000: best=0.7083, mean=0.3337 ± 0.3269, elapsed=210.5s
+  DONE seed 42: best=0.7083 mean=0.3337 ± 0.3269 elapsed=210.5s
+
+======================================================================
+SUMMARY
+======================================================================
+  seed 42: best=0.7083  draw μ±σ=0.3337±0.3269  top10=[0.7083, 0.7064, 0.7039, 0.7013, 0.7011, 0.7007, 0.7007, 0.7003, 0.6990, 0.6988]
+  vs GA mean 0.6993: 1/1 exceed
+  vs GA band max 0.7027: 1/1 exceed
+
+Saved: experiments/baseline_comparison/random_search_five_seed.json
+real 211.74
+user 185.50
+sys 24.05

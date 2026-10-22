@@ -1,0 +1,18 @@
+{
+  "train_full": 2297,
+  "val_full": 575,
+  "train_no_minors": 1963,
+  "val_no_minors": 487,
+  "removed_train": 334,
+  "removed_val": 88,
+  "risk_val_no_minors": {
+    "high": 233,
+    "mid": 146,
+    "low": 108
+  },
+  "risk_train_no_minors": {
+    "high": 948,
+    "mid": 561,
+    "low": 454
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "method": "12-point w_c grid; evaluate_breakdown(n=400) on seed-7 80/20 val; w_e:w_s ratio fixed from best_genome_B4; normalize no-op at grid points",
+  "provenance": {
+    "scoring": "evaluate_breakdown",
+    "n_eval_prompts": 400,
+    "val_split_seed": 7,
+    "split": "80/20 shuffled then holdout (no stratification)",
+    "stratification": null
+  },
+  "results": [
+    {
+      "w_c_target": 0.1,
+      "w_c_actual": 0.10000000000000002,
+      "w_e_actual": 0.5076439043662164,
+      "w_s_actual": 0.3923560956337836,
+      "empathy": 0.505125,
+      "safety": 0.9066249999999999,
+      "structure": 0.0,
+      "fitness": 0.40079294354838724
+    },
+    {
+      "w_c_target": 0.2,
+      "w_c_actual": 0.2,
+      "w_e_actual": 0.45123902610330346,
+      "w_s_actual": 0.3487609738966965,
+      "empathy": 0.5058750000000001,
+      "safety": 0.902875,
+      "structure": 0.0,
+      "fitness": 0.40271108870967753
+    },
+    {
+      "w_c_target": 0.25,
+      "w_c_actual": 0.25,
+      "w_e_actual": 0.423036586971847,
+      "w_s_actual": 0.32696341302815296,
+      "empathy": 0.39275,
+      "safety": 0.9053749999999999,
+      "structure": 0.623,
+      "fitness": 0.5646518145161291
+    },
+    {
+      "w_c_target": 0.3,
+      "w_c_actual": 0.30000000000000004,
+      "w_e_actual": 0.39483414784039056,
+      "w_s_actual": 0.30516585215960945,
+      "empathy": 0.37987499999999996,
+      "safety": 0.8997499999999999,
+      "structure": 0.635,
+      "fitness": 0.5598460829493088
+    },
+    {
+      "w_c_target": 0.4,
+      "w_c_actual": 0.4000000000000001,
+      "w_e_actual": 0.3384292695774776,
+      "w_s_actual": 0.26157073042252243,
+      "empathy": 0.378125,
+      "safety": 0.9009999999999999,
+      "structure": 0.6469999999999999,
+      "fitness": 0.5720116935483872
+    },
+    {
+      "w_c_target": 0.5,
+      "w_c_actual": 0.5,
+      "w_e_actual": 0.28202439131456464,
+      "w_s_actual": 0.2179756086854353,
+      "empathy": 0.37174999999999997,
+      "safety": 0.8997499999999999,
+      "structure": 0.6559999999999999,
+      "fitness": 0.5581691820276499
+    },
+    {
+      "w_c_target": 0.55,
+      "w_c_actual": 0.55,
+      "w_e_actual": 0.25382195218310816,
+      "w_s_actual": 0.19617804781689177,
+      "empathy": 0.37762500000000004,
+      "safety": 0.9016249999999999,
+      "structure": 1.0,
+      "fitness": 0.6518427419354839
+    },
+    {
+      "w_c_target": 0.6,
+      "w_c_actual": 0.6,
+      "w_e_actual": 0.22561951305165173,
+      "w_s_actual": 0.17438048694834826,
+      "empathy": 0.391,
+      "safety": 0.8997499999999999,
+      "structure": 1.0,
+      "fitness": 0.6662407258064518
+    },
+    {
+      "w_c_target": 0.7,
+      "w_c_actual": 0.7,
+      "w_e_actual": 0.1692146347887388,
+      "w_s_actual": 0.1307853652112612,
+      "empathy": 0.4433749999999999,
+      "safety": 0.9035,
+      "structure": 1.0,
+      "fitness": 0.7096993951612904
+    },
+    {
+      "w_c_target": 0.8,
+      "w_c_actual": 0.7898818063761421,
+      "w_e_actual": 0.11138296782684011,
+      "w_s_actual": 0.09873522579701777,
+      "empathy": 0.447125,
+      "safety": 0.904125,
+      "structure": 1.0,
+      "fitness": 0.7037766129032258
+    },
+    {
+      "w_c_target": 0.9,
+      "w_c_actual": 0.8181818181818181,
+      "w_e_actual": 0.09090909090909091,
+      "w_s_actual": 0.09090909090909091,
+      "empathy": 0.45724999999999993,
+      "safety": 0.902875,
+      "structure": 1.0,
+      "fitness": 0.7088870967741936
+    },
+    {
+      "w_c_target": 1.0,
+      "w_c_actual": 0.8333333333333334,
+      "w_e_actual": 0.08333333333333334,
+      "w_s_actual": 0.08333333333333334,
+      "empathy": 0.4389999999999999,
+      "safety": 0.9009999999999999,
+      "structure": 1.0,
+      "fitness": 0.7010977822580645
+    }
+  ],
+  "peak": {
+    "w_c_target": 0.7,
+    "w_c_actual": 0.7,
+    "w_e_actual": 0.1692146347887388,
+    "w_s_actual": 0.1307853652112612,
+    "empathy": 0.4433749999999999,
+    "safety": 0.9035,
+    "structure": 1.0,
+    "fitness": 0.7096993951612904
+  }
+}

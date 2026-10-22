@@ -37,6 +37,8 @@ __pycache__/
 *.out
 *.synctex.gz
 missfont.log
+# build.sh mutex; only present while a build is running
+paper/.main.build.lock/
 stdin.aux
 stdin.log
 stdin.pdf
@@ -81,3 +83,17 @@ __pycache__/
 !experiments/baseline_comparison/equivalence_tost_table.csv
 !experiments/baseline_comparison/dataset_size_equivalence_prebugfix.csv
 !experiments/baseline_comparison/population_size_equivalence_prebugfix.csv
+
+# Local archives, template copies and backups (not part of the project)
+*.zip
+*.orig
+paper/Archive/
+paper/Definitions_backup_*/
+paper/mdpi_template_new/
+paper/test.*
+
+# Record-derived example text (theme fields from real records) — privacy.
+experiments/baseline_comparison/b1_fixed_qualitative_examples.json
+
+# Run logs of the revision experiments are part of the audit trail.
+!experiments/revision/results/**/*.log

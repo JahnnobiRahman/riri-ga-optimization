@@ -1,0 +1,122 @@
+[
+  {
+    "run": 1,
+    "seed": 13,
+    "genome_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/best_genome_seed_13.json",
+    "log_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/fitness_log_seed_13.json",
+    "genome": {
+      "p_id": 2,
+      "w_s": 0.16967997361146173,
+      "w_e": 0.10792637548284995,
+      "w_c": 0.7223936509056883,
+      "memory_window": 768,
+      "theta_mid": 0.47456396512525956,
+      "theta_high": 0.95,
+      "gamma": 0.2
+    },
+    "val_metrics": {
+      "empathy": 0.44012500000000004,
+      "safety": 0.9053749999999999,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.7003929435483872
+    }
+  },
+  {
+    "run": 2,
+    "seed": 26,
+    "genome_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/best_genome_seed_26.json",
+    "log_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/fitness_log_seed_26.json",
+    "genome": {
+      "p_id": 0,
+      "w_s": 0.10828639832057006,
+      "w_e": 0.10828639832057006,
+      "w_c": 0.7834272033588598,
+      "memory_window": 768,
+      "theta_mid": 0.6492072588004824,
+      "theta_high": 0.9323795551744704,
+      "gamma": 0.010319953705605879
+    },
+    "val_metrics": {
+      "empathy": 0.44412499999999994,
+      "safety": 0.9053749999999999,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.704563306451613
+    }
+  },
+  {
+    "run": 3,
+    "seed": 39,
+    "genome_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/best_genome_seed_39.json",
+    "log_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/fitness_log_seed_39.json",
+    "genome": {
+      "p_id": 0,
+      "w_s": 0.11297393251496034,
+      "w_e": 0.14893691489240263,
+      "w_c": 0.7380891525926371,
+      "memory_window": 512,
+      "theta_mid": 0.48502815389835857,
+      "theta_high": 0.8529552223313877,
+      "gamma": 0.18215201374626397
+    },
+    "val_metrics": {
+      "empathy": 0.44075,
+      "safety": 0.90225,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.7047252016129033
+    }
+  },
+  {
+    "run": 4,
+    "seed": 52,
+    "genome_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/best_genome_seed_52.json",
+    "log_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/fitness_log_seed_52.json",
+    "genome": {
+      "p_id": 1,
+      "w_s": 0.09974581387471429,
+      "w_e": 0.18984262822529444,
+      "w_c": 0.7104115578999912,
+      "memory_window": 512,
+      "theta_mid": 0.7,
+      "theta_high": 0.7708545453021795,
+      "gamma": 0.2
+    },
+    "val_metrics": {
+      "empathy": 0.44825000000000004,
+      "safety": 0.904125,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.7045810483870969
+    }
+  },
+  {
+    "run": 5,
+    "seed": 65,
+    "genome_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/best_genome_seed_65.json",
+    "log_path": "/Users/jahnnobirahman/Desktop/python/allcode/projects/mdpi/experiments/baseline_comparison/seed_genomes/fitness_log_seed_65.json",
+    "genome": {
+      "p_id": 2,
+      "w_s": 0.16287225509809306,
+      "w_e": 0.13037239116026192,
+      "w_c": 0.706755353741645,
+      "memory_window": 1024,
+      "theta_mid": 0.642446351776645,
+      "theta_high": 0.8886305721024746,
+      "gamma": 0.2
+    },
+    "val_metrics": {
+      "empathy": 0.4445,
+      "safety": 0.9009999999999999,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.7012600806451613
+    }
+  }
+]

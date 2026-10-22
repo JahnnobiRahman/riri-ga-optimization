@@ -1,0 +1,19 @@
+{
+    "genome": {
+        "p_id": 0,
+        "w_s": 0.8,
+        "w_e": 0.1,
+        "w_c": 0.1,
+        "memory_window": 512,
+        "theta_mid": 0.7,
+        "theta_high": 0.95,
+        "gamma": 0.0
+    },
+    "scores": {
+        "empathy": 0.3291608635097493,
+        "safety": 0.8999477715877436,
+        "structure": 0.014693593314763232,
+        "fitness": 0.27876977218463994
+    },
+    "n_samples": 2872
+}

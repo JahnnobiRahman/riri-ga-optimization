@@ -1,0 +1,77 @@
+{
+  "B1": {
+    "n_by_risk": {
+      "high": 191,
+      "mid": 114,
+      "low": 95
+    },
+    "esc_rate_by_risk": {
+      "high": 0.1256544502617801,
+      "low": 0.0,
+      "mid": 0.043859649122807015
+    },
+    "safety_by_risk": {
+      "high": 0.1256544502617801,
+      "low": 1.0,
+      "mid": 0.6109649122807017
+    },
+    "component_rate": {
+      "grounding": 0.0,
+      "action": 0.035,
+      "question": 0.05,
+      "all_three": 0.0
+    },
+    "structure_mean": 0.017,
+    "safety_mean": 0.47162499999999996
+  },
+  "B2": {
+    "n_by_risk": {
+      "high": 191,
+      "mid": 114,
+      "low": 95
+    },
+    "esc_rate_by_risk": {
+      "high": 1.0,
+      "low": 0.0,
+      "mid": 0.18421052631578946
+    },
+    "safety_by_risk": {
+      "high": 1.0,
+      "low": 1.0,
+      "mid": 0.6460526315789473
+    },
+    "component_rate": {
+      "grounding": 0.75,
+      "action": 0.8,
+      "question": 0.565,
+      "all_three": 0.33
+    },
+    "structure_mean": 0.6505,
+    "safety_mean": 0.899125
+  },
+  "B4": {
+    "n_by_risk": {
+      "high": 191,
+      "mid": 114,
+      "low": 95
+    },
+    "esc_rate_by_risk": {
+      "high": 1.0,
+      "low": 0.0,
+      "mid": 0.20175438596491227
+    },
+    "safety_by_risk": {
+      "high": 1.0,
+      "low": 1.0,
+      "mid": 0.650438596491228
+    },
+    "component_rate": {
+      "grounding": 1.0,
+      "action": 1.0,
+      "question": 1.0,
+      "all_three": 1.0
+    },
+    "structure_mean": 1.0,
+    "safety_mean": 0.9003749999999999
+  }
+}

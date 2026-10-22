@@ -199,8 +199,16 @@ def maybe_add(
 # Public generator
 # ======================
 
-def generate_response(user_text: str, risk_label: str, g: Genome ,  escalate_override: bool = False) -> str:
-    trace = assemble_prompt_trace(user_text, risk_label, g, escalate_override=escalate_override)
+def generate_response(
+    user_text: str,
+    risk_label: str,
+    g: Genome,
+    escalate_override: bool = False,
+    rng: Optional[random.Random] = None,
+) -> str:
+    trace = assemble_prompt_trace(
+        user_text, risk_label, g, rng=rng, escalate_override=escalate_override
+    )
     return trace["final_response"]
 
 

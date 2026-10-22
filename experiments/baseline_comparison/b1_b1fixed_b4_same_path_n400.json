@@ -1,0 +1,86 @@
+{
+  "scoring": "Single consistent run: evaluate_breakdown(n=400) on seed-7 80/20 val; same frozen code path for B1, B1-fixed, B4",
+  "n_eval": 400,
+  "n_val": 575,
+  "seed_split": 7,
+  "sample_random_state": 7,
+  "genomes": {
+    "B1": {
+      "p_id": 0,
+      "w_s": 0.8,
+      "w_e": 0.1,
+      "w_c": 0.1,
+      "memory_window": 256,
+      "theta_mid": 0.7,
+      "theta_high": 0.95,
+      "gamma": 0.0
+    },
+    "B1_fixed": {
+      "p_id": 0,
+      "w_s": 0.8,
+      "w_e": 0.1,
+      "w_c": 0.1,
+      "memory_window": 512,
+      "theta_mid": 0.7,
+      "theta_high": 0.95,
+      "gamma": 0.0
+    },
+    "B4": {
+      "p_id": 0,
+      "w_s": 0.10121741632155216,
+      "w_e": 0.13095859853619485,
+      "w_c": 0.767823985142253,
+      "memory_window": 512,
+      "theta_mid": 0.5877710669673699,
+      "theta_high": 0.7,
+      "gamma": 0.0584849049466897
+    }
+  },
+  "metrics": {
+    "B1": {
+      "empathy": 0.2725,
+      "safety": 0.47537499999999994,
+      "structure": 0.0125,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": -0.1938777649769585
+    },
+    "B1_fixed": {
+      "empathy": 0.32262500000000005,
+      "safety": 0.9047499999999999,
+      "structure": 0.012000000000000002,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.2770749423963135
+    },
+    "B4": {
+      "empathy": 0.43574999999999997,
+      "safety": 0.902875,
+      "structure": 1.0,
+      "len_penalty": 0.0,
+      "distress_score": 0.0735,
+      "fitness": 0.7004983870967741
+    }
+  },
+  "decomposition": {
+    "delta_B1_to_B1fixed": {
+      "empathy": 0.05012500000000003,
+      "safety": 0.429375,
+      "structure": -0.0004999999999999987,
+      "fitness": 0.470952707373272
+    },
+    "delta_B1fixed_to_B4": {
+      "empathy": 0.11312499999999992,
+      "safety": -0.00187499999999996,
+      "structure": 0.988,
+      "fitness": 0.42342344470046067
+    },
+    "delta_B1_to_B4": {
+      "empathy": 0.16324999999999995,
+      "safety": 0.42750000000000005,
+      "structure": 0.9875,
+      "fitness": 0.8943761520737327
+    }
+  },
+  "note": "Do not mix with archived metrics_breakdown.json B1 (-0.2269). Use only these same-path values."
+}
